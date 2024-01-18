@@ -40,12 +40,14 @@ public class Token {
         RETURN, // 'return'
         STRUCT, // 'struct'
         SIZEOF, // 'sizeof'
+        CONTINUE, // 'continue'
+        BREAK, // 'break'
 
         // include
         INCLUDE, // '#include'
 
-        // SpecialCharWithoutSingleQuote = One of the following 31 characters: ` ~ @ ! $ # ^ * % & ( ) [ ] { } < > + = _ – | / \ ; : , . ? "
-        // SpecialCharWithoutDoubleQuote = One of the following 31 characters: ` ~ @ ! $ # ^ * % & ( ) [ ] { } < > + = _ – | / \ ; : , . ? '
+        // SpecialCharWithoutSingleQuote = One of the following 30 characters: ` ~ @ ! $ # ^ * % & ( ) [ ] { } < > + = _ - | / ; : , . ? "
+        // SpecialCharWithoutDoubleQuote = One of the following 30 characters: ` ~ @ ! $ # ^ * % & ( ) [ ] { } < > + = _ - | / ; : , . ? '
         // WhiteSpace                    = ' '
         // EscapedChar                   = '\a' | '\b' | '\n' | '\r' | '\t' | '\\' | '\'' | '\"' | '\0'
         // literals

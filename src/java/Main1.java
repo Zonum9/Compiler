@@ -12,9 +12,9 @@ import java.io.*;
 public class Main1 {
 
     private static final String LOGFILE = "out.log";
+    private static final int UNKNOWN_EXCEPTION = 1;
     private static final int FILE_NOT_FOUND = 2;
     private static final int IO_EXCEPTION   = 3;
-    private static final int UNKNOWN_EXCEPTION = 4;
     private static final int MODE_FAIL      = 254;
     private static final int LEXER_FAIL     = 250;
     private static final int PARSER_FAIL    = 245;
@@ -58,6 +58,7 @@ public class Main1 {
         }  catch (Throwable t) {
             t.printStackTrace();
             logThrowableWithoutMessage(t);
+	    System.exit(UNKNOWN_EXCEPTION);
         }
     }
 
