@@ -83,7 +83,7 @@ public class Token {
         INVALID // in case we cannot recognise a character as part of a valid token
     }
 
-
+/* */
     public final Category category;
     public final String data;
     public final Position position;

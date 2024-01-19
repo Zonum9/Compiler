@@ -1,0 +1,4 @@
+#!/bin/bash
+java -cp bin Main1 -lexer tests/charCharacters.c
+echo
+echo 'did you remember to build?'
