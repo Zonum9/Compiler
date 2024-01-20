@@ -1,0 +1,8 @@
+java.lang.Throwable:
+lexer.Scanner.peek(Scanner.java:46)
+lexer.Scanner.next(Scanner.java:53)
+lexer.Tokeniser.handleSingleQuote(Tokeniser.java:165)
+lexer.Tokeniser.nextToken(Tokeniser.java:109)
+lexer.Tokeniser.nextToken(Tokeniser.java:58)
+Main1.compile(Main1.java:100)
+Main1.main(Main1.java:57)

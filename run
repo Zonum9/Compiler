@@ -1,4 +1,5 @@
 #!/bin/bash
-java -cp bin Main1 -lexer tests/charCharacters.c
-echo
-echo 'did you remember to build?'
+clear
+java -cp bin Main1 -lexer tests/fibonacci.c
+exit_code=$?
+exit $exit_code
