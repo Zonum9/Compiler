@@ -1,0 +1,23 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Main1",
+            "request": "launch",
+            "mainClass": "Main1",
+            "projectName": "comp520-coursework-w2024_bbd0a409",
+            "args": "-lexer tests/fibonacci.c"
+        },
+        {
+            "type": "java",
+            "name": "FSA",
+            "request": "launch",
+            "mainClass": "lexer.FSA",
+            "projectName": "comp520-coursework-w2024_bbd0a409"
+        }
+    ]
+}

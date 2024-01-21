@@ -1,0 +1,228 @@
+package lexer;
+
+import java.util.HashMap;
+import java.util.Set;
+
+import lexer.Token.Category;
+
+public class FSA {
+
+    private static class Key{
+        State key1;
+        Character key2;        
+
+        public Key(State key1,Character key2){
+            assert key1!= null && key2!=null;
+            this.key1=key1;
+            this.key2=key2;
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this==obj) return true;
+            if (obj==null || getClass()!=obj.getClass()) return false;
+    
+            Key temp = (Key) obj;    
+            // Compare each field for equality
+            if (!key1.equals(temp.key1)) return false;
+            if (!key2.equals(temp.key2)) return false;    
+            return true;
+        }
+        @Override
+        public int hashCode() {
+            return 31 * key1.hashCode() + key2.hashCode();
+        }
+        @Override
+        public String toString() {            
+            return "("+key1.toString()+", "+key2+")";
+        }
+    }
+
+    static HashMap<Key,State> transitionMap= new HashMap<>();
+
+    private static void populateMap (String s){
+        State state=State.INTIAL_STATE;        
+        for (int i =1; i <= s.length();i++){
+            char currentChar=s.charAt(i-1);
+            Key key = new Key(state, Character.toLowerCase(currentChar));
+            state = State.valueOf(s.substring(0,i));
+            transitionMap.put(key,state);
+
+            for (char c = 0; c < 128; c++) {
+                key =new Key(state, c);
+                if(!canBeInIdentifier(c))
+                    transitionMap.put(key, State.IDENTIFIER_F);
+                else if (!transitionMap.containsKey(key))
+                    transitionMap.put(key, State.IDENTIFIER);
+                }
+        }
+        for (char c = 0; c < 128; c++) {
+            if(canBeInIdentifier(c))
+                transitionMap.put(new Key(state, c), State.IDENTIFIER);
+            else
+                transitionMap.put(new Key(state,c),State.valueOf(state.toString()+"_F"));
+        }
+    }
+
+    private static boolean canBeInIdentifier(char c){
+        if (!Character.isAlphabetic(c) && !Character.isDigit(c) && c != '_')
+            return false;
+        return true;
+    }
+
+    static {
+        populateMap("INT");        
+        populateMap("VOID");
+        populateMap("CHAR");
+        populateMap("IF");
+        populateMap("ELSE");
+        populateMap("WHILE");
+        populateMap("RETURN");
+        populateMap("STRUCT");
+        populateMap("SIZEOF");
+        populateMap("CONTINUE");
+        populateMap("BREAK");        
+        transitionMap.put(new Key(State.INTIAL_STATE,'_'), State.IDENTIFIER);
+        
+        
+    }
+
+    public static void main(String[] args) {
+        State cs= State.INTIAL_STATE;
+        cs= updateState(cs, 'V');
+        cs= updateState(cs, 'O');
+        cs= updateState(cs, 'I');
+        cs= updateState(cs, 'D');
+        cs= updateState(cs, ' ');
+
+    }
+
+    private static StringBuilder currentData= new StringBuilder();
+
+    public static String getCurrentData(){
+        String s = currentData.toString();
+        currentData.setLength(0);
+        return s;
+    }
+
+    public static State updateState(State currentState, char c) {
+        if(currentState==State.INTIAL_STATE){
+            currentData.setLength(0);
+        }
+        State newState=transitionMap.getOrDefault(new Key(currentState,c),State.INVALID);
+        //do not append the character to the data if the state is final (this caracter is not part of the state)
+        if (!finalStates.contains(newState))
+            currentData.append(c);
+        return newState;
+    }
+
+    //state being provided must be a final state for this to work
+    public static Category sateToTokenCat(State state) {
+        if (!finalStates.contains(state))
+            return null;
+        String strCurrentState=state.toString();
+        String cat= strCurrentState.substring(0,strCurrentState.length()-2);
+        return Category.valueOf(cat);
+    }
+    
+    public final static Set<State> finalStates= Set.of(
+        State.INT_F,
+        State.VOID_F,
+        State.CHAR_F,
+        State.ELSE_F,
+        State.WHILE_F,
+        State.RETURN_F,
+        State.STRUCT_F,
+        State.SIZEOF_F,
+        State.CONTINUE_F,
+        State.BREAK_F,
+        State.IDENTIFIER_F,
+        State.IF_F
+    );
+
+    public enum State{
+        INTIAL_STATE,
+        
+        IDENTIFIER,
+        IDENTIFIER_F,
+
+        I,
+        IF,
+        IF_F,
+
+        IN,
+        INT,
+        INT_F,
+
+        V,
+        VO,
+        VOI,
+        VOID, 
+        VOID_F,
+
+        C,
+        CH,
+        CHA,
+        CHAR, 
+        CHAR_F,
+
+        // keywords
+        E,
+        EL,
+        ELS,
+        ELSE,   
+        ELSE_F,
+
+        W,
+        WH,
+        WHI,
+        WHIL,
+        WHILE,  
+        WHILE_F,
+
+        R,
+        RE,
+        RET,
+        RETU,
+        RETUR,
+        RETURN, 
+        RETURN_F,
+
+        S,
+        ST,
+        STR,
+        STRU,
+        STRUC,
+        STRUCT, 
+        STRUCT_F,
+
+        SI,
+        SIZ,
+        SIZE,
+        SIZEO,
+        SIZEOF,
+        SIZEOF_F,
+
+        CO,
+        CON,
+        CONT,
+        CONTI,
+        CONTIN,
+        CONTINU,
+        CONTINUE, 
+        CONTINUE_F,
+
+        B,
+        BR,
+        BRE,
+        BREA,
+        BREAK,
+        BREAK_F,
+
+        INVALID
+    }
+
+   
+
+    
+
+}

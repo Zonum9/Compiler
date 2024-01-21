@@ -1,10 +1,11 @@
 package lexer;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 import util.CompilerPass;
+
+import lexer.FSA.State;
 
 /**
  * @author cdubach
@@ -25,6 +26,7 @@ public class Tokeniser extends CompilerPass {
         incError();
     }
 
+    State currentState= State.INTIAL_STATE;
 
     Map<Character,Token.Category> simpleEntries= Map.ofEntries(
         Map.entry('{',Token.Category.LBRA),
@@ -54,7 +56,7 @@ public class Tokeniser extends CompilerPass {
         char c = scanner.next();
 
         // skip white spaces between lexems
-        if (Character.isWhitespace(c))
+        if (Character.isWhitespace(c) && currentState== State.INTIAL_STATE)
             return nextToken();            
 
         //check the trivial cases
@@ -77,21 +79,31 @@ public class Tokeniser extends CompilerPass {
                 }      
                 return  new Token(Token.Category.DIV, line, column); 
             } 
+            //'#' implies include statement
+            case '#':{
+                if(hasProperInclude())
+                    return new Token(Token.Category.INCLUDE, line, column);
+                break;
+            }
             case '&':{//bitwise and or logical and
                 Token.Category cat = chooseBetweenCategory(Token.Category.AND,Token.Category.LOGAND,'&');          
                 return  new Token(cat, line, column); 
             } 
             case '|':{
                 Token.Category cat = chooseBetweenCategory(Token.Category.INVALID,Token.Category.LOGOR,'|');
-                if (cat == Token.Category.INVALID)
+                if (cat == Token.Category.INVALID){
+                    currentState=State.INVALID;
                     break;      
+                }
                 return  new Token(cat, line, column);          
             }
             case '!':{       
                 Token.Category cat = chooseBetweenCategory(Token.Category.INVALID,Token.Category.NE,'=');
-                if (cat == Token.Category.INVALID)
-                    break;      
-                return  new Token(cat, line, column);             
+                if (cat == Token.Category.INVALID){
+                    currentState= State.INVALID;
+                    break;
+                }
+                return new Token(cat, line, column);             
             }
             case '=':{
                 Token.Category cat = chooseBetweenCategory(Token.Category.ASSIGN,Token.Category.EQ,'=');          
@@ -111,16 +123,18 @@ public class Tokeniser extends CompilerPass {
                 if(!data.isPresent()){
                     line = scanner.getLine();
                     column= scanner.getColumn();
+                    currentState= State.INVALID;
                     break;
                 }
                 return new Token(Token.Category.CHAR_LITERAL,data.get(), line, column);
-            }
+            }        
             //double quote
             case '\"':{//todo test me
                 Optional<String> data=handleDoubleQuote();
                 if(!data.isPresent()){
                     line = scanner.getLine();
                     column= scanner.getColumn();
+                    currentState=State.INVALID;
                     break;
                 }
                 return new Token(Token.Category.STRING_LITERAL,data.get(), line, column);}                
@@ -130,12 +144,33 @@ public class Tokeniser extends CompilerPass {
             return  new Token(Token.Category.INT_LITERAL,data, line, column);
         }
 
-        // Token.Category = 
-        //todo all types, all keywords, IDENTIFIER, INCLUDE
-
+        if (currentState!= State.INVALID){
+            currentState = FSA.updateState(currentState,c);
+            if (FSA.finalStates.contains(currentState)){
+                String data="";
+                if (currentState == State.IDENTIFIER_F)
+                    data = FSA.getCurrentData();
+                return new Token(FSA.sateToTokenCat(currentState),data,line,column);
+            }
+            //todo all types, all keywords, IDENTIFIER, INCLUDE
+        }
+        
+        if(currentState != State.INVALID){
+            return nextToken();
+        }
+        //reset state
+        currentState=State.INTIAL_STATE;
         // if we reach this point, it means we did not recognise a valid token
         error(c, line, column);
         return new Token(Token.Category.INVALID, line, column);
+    }
+
+    private boolean hasProperInclude() {
+        for (char c: "include".toCharArray()){
+            if (!scanner.hasNext() || (c != scanner.next()))
+                return false;
+        }        
+        return true;
     }
 
     private String handleDigit(char firstChar) {
@@ -239,5 +274,4 @@ public class Tokeniser extends CompilerPass {
                 break;        
         }
     }
-
 }
