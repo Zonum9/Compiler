@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import util.CompilerPass;
 
-import lexer.FSA.State;
 
 /**
  * @author cdubach
@@ -25,8 +24,6 @@ public class Tokeniser extends CompilerPass {
         System.out.println(msg);
         incError();
     }
-
-    State currentState= State.INTIAL_STATE;
 
     Map<Character,Token.Category> simpleEntries= Map.ofEntries(
         Map.entry('{',Token.Category.LBRA),
@@ -56,7 +53,7 @@ public class Tokeniser extends CompilerPass {
         char c = scanner.next();
 
         // skip white spaces between lexems
-        if (Character.isWhitespace(c) && currentState== State.INTIAL_STATE)
+        if (Character.isWhitespace(c))
             return nextToken();            
 
         //check the trivial cases
@@ -92,7 +89,6 @@ public class Tokeniser extends CompilerPass {
             case '|':{
                 Token.Category cat = chooseBetweenCategory(Token.Category.INVALID,Token.Category.LOGOR,'|');
                 if (cat == Token.Category.INVALID){
-                    currentState=State.INVALID;
                     break;      
                 }
                 return  new Token(cat, line, column);          
@@ -100,7 +96,6 @@ public class Tokeniser extends CompilerPass {
             case '!':{       
                 Token.Category cat = chooseBetweenCategory(Token.Category.INVALID,Token.Category.NE,'=');
                 if (cat == Token.Category.INVALID){
-                    currentState= State.INVALID;
                     break;
                 }
                 return new Token(cat, line, column);             
@@ -123,7 +118,6 @@ public class Tokeniser extends CompilerPass {
                 if(!data.isPresent()){
                     line = scanner.getLine();
                     column= scanner.getColumn();
-                    currentState= State.INVALID;
                     break;
                 }
                 return new Token(Token.Category.CHAR_LITERAL,data.get(), line, column);
@@ -134,7 +128,6 @@ public class Tokeniser extends CompilerPass {
                 if(!data.isPresent()){
                     line = scanner.getLine();
                     column= scanner.getColumn();
-                    currentState=State.INVALID;
                     break;
                 }
                 return new Token(Token.Category.STRING_LITERAL,data.get(), line, column);}                
@@ -143,23 +136,14 @@ public class Tokeniser extends CompilerPass {
             String data = handleDigit(c);
             return  new Token(Token.Category.INT_LITERAL,data, line, column);
         }
-
-        if (currentState!= State.INVALID){
-            currentState = FSA.updateState(currentState,c);
-            if (FSA.finalStates.contains(currentState)){
-                String data="";
-                if (currentState == State.IDENTIFIER_F)
-                    data = FSA.getCurrentData();
-                return new Token(FSA.sateToTokenCat(currentState),data,line,column);
-            }
-            //todo all types, all keywords, IDENTIFIER, INCLUDE
-        }
         
-        if(currentState != State.INVALID){
-            return nextToken();
+
+        Token.Category fsaToken = FSA.getTokenCategory(c,scanner);
+        if (fsaToken != Token.Category.INVALID){
+            return new Token(fsaToken,FSA.getCurrentData(),line,column);
         }
-        //reset state
-        currentState=State.INTIAL_STATE;
+            //todo all types, all keywords, IDENTIFIER        
+        
         // if we reach this point, it means we did not recognise a valid token
         error(c, line, column);
         return new Token(Token.Category.INVALID, line, column);

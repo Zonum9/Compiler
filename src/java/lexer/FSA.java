@@ -37,9 +37,9 @@ public class FSA {
         }
     }
 
-    static HashMap<Key,State> transitionMap= new HashMap<>();
+    private static HashMap<Key,State> transitionMap= new HashMap<>();
 
-    private static void populateMap (String s){
+    private static void populateMapKeywords (String s){
         State state=State.INTIAL_STATE;        
         for (int i =1; i <= s.length();i++){
             char currentChar=s.charAt(i-1);
@@ -49,52 +49,58 @@ public class FSA {
 
             for (char c = 0; c < 128; c++) {
                 key =new Key(state, c);
-                if(!canBeInIdentifier(c))
+                if(!canBeInIdentifier(c,state))
                     transitionMap.put(key, State.IDENTIFIER_F);
                 else if (!transitionMap.containsKey(key))
                     transitionMap.put(key, State.IDENTIFIER);
-                }
+            }
         }
         for (char c = 0; c < 128; c++) {
-            if(canBeInIdentifier(c))
+            if(canBeInIdentifier(c,state))
                 transitionMap.put(new Key(state, c), State.IDENTIFIER);
             else
                 transitionMap.put(new Key(state,c),State.valueOf(state.toString()+"_F"));
         }
     }
 
-    private static boolean canBeInIdentifier(char c){
+    private static boolean canBeInIdentifier(char c,State currentState){
         if (!Character.isAlphabetic(c) && !Character.isDigit(c) && c != '_')
+            return false;
+        if(Character.isDigit(c) && currentState == State.INTIAL_STATE)
             return false;
         return true;
     }
 
+    private static void populateMapOthers(){
+        for (char c = 0; c < 128; c++) {
+            Key initialStateKey = new Key(State.INTIAL_STATE,c);            
+            if(!transitionMap.containsKey(initialStateKey)&& canBeInIdentifier(c,State.INTIAL_STATE))
+                transitionMap.put(initialStateKey, State.IDENTIFIER);
+            Key identifierStateKey = new Key(State.IDENTIFIER,c);
+            if(!transitionMap.containsKey(identifierStateKey)){
+                if(!canBeInIdentifier(c,State.IDENTIFIER))
+                    transitionMap.put(identifierStateKey, State.IDENTIFIER_F);   
+                else
+                    transitionMap.put(identifierStateKey, State.IDENTIFIER); 
+            }        
+        }
+    }
+
     static {
-        populateMap("INT");        
-        populateMap("VOID");
-        populateMap("CHAR");
-        populateMap("IF");
-        populateMap("ELSE");
-        populateMap("WHILE");
-        populateMap("RETURN");
-        populateMap("STRUCT");
-        populateMap("SIZEOF");
-        populateMap("CONTINUE");
-        populateMap("BREAK");        
-        transitionMap.put(new Key(State.INTIAL_STATE,'_'), State.IDENTIFIER);
-        
-        
+        populateMapOthers();
+        populateMapKeywords("INT");        
+        populateMapKeywords("VOID");
+        populateMapKeywords("CHAR");
+        populateMapKeywords("IF");
+        populateMapKeywords("ELSE");
+        populateMapKeywords("WHILE");
+        populateMapKeywords("RETURN");
+        populateMapKeywords("STRUCT");
+        populateMapKeywords("SIZEOF");
+        populateMapKeywords("CONTINUE");
+        populateMapKeywords("BREAK");
     }
 
-    public static void main(String[] args) {
-        State cs= State.INTIAL_STATE;
-        cs= updateState(cs, 'V');
-        cs= updateState(cs, 'O');
-        cs= updateState(cs, 'I');
-        cs= updateState(cs, 'D');
-        cs= updateState(cs, ' ');
-
-    }
 
     private static StringBuilder currentData= new StringBuilder();
 
@@ -104,27 +110,34 @@ public class FSA {
         return s;
     }
 
-    public static State updateState(State currentState, char c) {
-        if(currentState==State.INTIAL_STATE){
-            currentData.setLength(0);
-        }
-        State newState=transitionMap.getOrDefault(new Key(currentState,c),State.INVALID);
-        //do not append the character to the data if the state is final (this caracter is not part of the state)
-        if (!finalStates.contains(newState))
+    public static Token.Category getTokenCategory(char c,Scanner scanner) {
+        State currentState= transitionMap.get(new Key(State.INTIAL_STATE,c));
+        currentData.setLength(0);
+        currentData.append(c);
+        while(scanner.hasNext()){
+            c = scanner.peek();
+            currentState= transitionMap.get(new Key(currentState,c));
+            if(finalStates.contains(currentState) || currentState == State.INVALID){
+                break;
+            }
+            scanner.next();
             currentData.append(c);
-        return newState;
+        }
+        if (currentState == State.INVALID || !finalStates.contains(currentState))
+            return Token.Category.INVALID;
+        if(currentState != State.IDENTIFIER_F)
+            currentData.setLength(0);
+        return sateToTokenCat(currentState);
     }
 
     //state being provided must be a final state for this to work
-    public static Category sateToTokenCat(State state) {
-        if (!finalStates.contains(state))
-            return null;
+    private static Category sateToTokenCat(State state) {
         String strCurrentState=state.toString();
         String cat= strCurrentState.substring(0,strCurrentState.length()-2);
         return Category.valueOf(cat);
     }
     
-    public final static Set<State> finalStates= Set.of(
+    private final static Set<State> finalStates= Set.of(
         State.INT_F,
         State.VOID_F,
         State.CHAR_F,
@@ -139,7 +152,7 @@ public class FSA {
         State.IF_F
     );
 
-    public enum State{
+    private enum State{
         INTIAL_STATE,
         
         IDENTIFIER,
