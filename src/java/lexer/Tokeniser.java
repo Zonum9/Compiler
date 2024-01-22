@@ -61,12 +61,17 @@ public class Tokeniser extends CompilerPass {
             return new Token(simpleEntries.get(c), line, column);
         }
         
+        boolean isInvalid=false;
+
         switch (c) {            
             case '/':{//division or comment
                 if (scanner.hasNext()){    
                     if (scanner.peek() == '*'){
                         scanner.next();//consume the asterisk
-                        handleBlockComment();
+                        if(!handleBlockComment()){
+                            isInvalid=true;
+                            break;
+                        }
                         return nextToken();
                     }
                     else if (scanner.peek() == '/'){
@@ -80,6 +85,7 @@ public class Tokeniser extends CompilerPass {
             case '#':{
                 if(hasProperInclude())
                     return new Token(Token.Category.INCLUDE, line, column);
+                isInvalid=true;
                 break;
             }
             case '&':{//bitwise and or logical and
@@ -89,6 +95,7 @@ public class Tokeniser extends CompilerPass {
             case '|':{
                 Token.Category cat = chooseBetweenCategory(Token.Category.INVALID,Token.Category.LOGOR,'|');
                 if (cat == Token.Category.INVALID){
+                    isInvalid=true;
                     break;      
                 }
                 return  new Token(cat, line, column);          
@@ -96,6 +103,7 @@ public class Tokeniser extends CompilerPass {
             case '!':{       
                 Token.Category cat = chooseBetweenCategory(Token.Category.INVALID,Token.Category.NE,'=');
                 if (cat == Token.Category.INVALID){
+                    isInvalid=true;
                     break;
                 }
                 return new Token(cat, line, column);             
@@ -118,6 +126,7 @@ public class Tokeniser extends CompilerPass {
                 if(!data.isPresent()){
                     line = scanner.getLine();
                     column= scanner.getColumn();
+                    isInvalid=true;
                     break;
                 }
                 return new Token(Token.Category.CHAR_LITERAL,data.get(), line, column);
@@ -128,22 +137,22 @@ public class Tokeniser extends CompilerPass {
                 if(!data.isPresent()){
                     line = scanner.getLine();
                     column= scanner.getColumn();
+                    isInvalid=true;
                     break;
                 }
                 return new Token(Token.Category.STRING_LITERAL,data.get(), line, column);}                
         }
-        if (Character.isDigit(c)){
-            String data = handleDigit(c);
-            return  new Token(Token.Category.INT_LITERAL,data, line, column);
-        }
-        
+        if (!isInvalid){
+            if (Character.isDigit(c)){
+                String data = handleDigit(c);
+                return  new Token(Token.Category.INT_LITERAL,data, line, column);
+            }            
 
-        Token.Category fsaToken = FSA.getTokenCategory(c,scanner);
-        if (fsaToken != Token.Category.INVALID){
-            return new Token(fsaToken,FSA.getCurrentData(),line,column);
+            Token.Category fsaToken = FSA.getTokenCategory(c,scanner);
+            if (fsaToken != Token.Category.INVALID){
+                return new Token(fsaToken,FSA.getCurrentData(),line,column);
+            }     
         }
-            //todo all types, all keywords, IDENTIFIER        
-        
         // if we reach this point, it means we did not recognise a valid token
         error(c, line, column);
         return new Token(Token.Category.INVALID, line, column);
@@ -191,9 +200,28 @@ public class Tokeniser extends CompilerPass {
         //if you reached eof/new line, it means you didn't close your string correctly, invalid
         if(!scanner.hasNext() || scanner.peek() =='\n')
             return Optional.empty();
-        scanner.next(); //consume right side double quote
-        return Optional.of(data.toString());  
+        scanner.next(); //consume right side double quote        
+        return Optional.of(replaceEscapedCharacters(data.toString()));  
     }
+
+    private String replaceEscapedCharacters(String s){
+        String[][] replacements = {
+            {"\\a",String.valueOf('\u0007')},
+            {"\\b","\b"},
+            {"\\n","\n"},
+            {"\\r","\r"}, 
+            {"\\t","\t"}, 
+            {"\\\\","\\"},
+            {"\\'","\'"}, 
+            {"\\\"","\""},
+            {"\\0","\0"}
+        };
+        for (String[] pairToReplace : replacements) {
+            s=s.replace(pairToReplace[0],pairToReplace[1]);
+        }
+        return s;
+    }
+
 
     private Optional<String> handleSingleQuote() {
         //if you reached eof/new line, it means you didn't close your char correctly, invalid
@@ -218,7 +246,7 @@ public class Tokeniser extends CompilerPass {
             return Optional.empty();
         }
         scanner.next(); //consume right side single quote
-        return Optional.of(data.toString());        
+        return Optional.of(replaceEscapedCharacters(data.toString()));        
     }
 
     //checks if the current peek value is a valid character to be escaped
@@ -252,10 +280,11 @@ public class Tokeniser extends CompilerPass {
         while (scanner.hasNext() && scanner.next()!= '\n' );
     }
 
-    private void handleBlockComment() {
+    private boolean handleBlockComment() {        
         while (scanner.hasNext()){
             if(scanner.next() == '*' && scanner.hasNext() && scanner.next()== '/')
-                break;        
+                return true;        
         }
+        return false;
     }
 }
