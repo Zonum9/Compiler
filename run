@@ -2,4 +2,6 @@
 clear
 java -cp bin Main1 -lexer tests/fibonacci.c
 exit_code=$?
+echo $exit_code
+
 exit $exit_code
