@@ -17,26 +17,34 @@ class TokeniserTest {
     }
     @Test
     void commentsTest() throws IOException {
-        Tokeniser t = createTokeniser("//this is the thing that is a thing\n/*sfssfkslf;lskfsfkjlsfsfkld;lskjf*/");
+        Tokeniser t = createTokeniser("//this is the thing\\ th//a/a/sd/sdlkjld/.dsflsdkfxcxcvat is a thing\n" +
+                "/*sfssfkslf;lskfsfkjlsfsf//a/s//w//****** / *kld;lskjf*/");
         assertTokenEquals(t.nextToken(),EOF);
         t = createTokeniser("/*sfssfkslf;lskfsfkjlsfsfkld;lskjf");
         assertTokenEquals(t.nextToken(),INVALID);
-    }
-    @Test
-    void fibonacci() throws Exception {
-        File fib=new File("src/test/textFiles/fibonacci.c");
-        BufferedReader fibReference = new BufferedReader(new FileReader("src/test/referenceFiles/fibonacciOut.txt"));
-        String line;
-        Tokeniser t = new Tokeniser(new Scanner(fib));
-        while((line=fibReference.readLine())!=null) {
-            Token next = t.nextToken();
-            if (next.category == EOF)
-                break;
-            assertEquals(next.toString(), line);
-            assertEquals(t.getNumErrors(), 0);
-        }
-        assertEquals(t.getNumErrors(), 0);
 
+        t = createTokeniser("/ ");
+        assertTokenEquals(t.nextToken(),DIV);
+
+    }
+
+    @Test
+    void randomTes1() throws IOException {
+        Tokeniser t = createTokeniser("123456abc =!");
+        assertTokenEquals(t.nextToken(),INT_LITERAL,"123456");
+        assertTokenEquals(t.nextToken(),IDENTIFIER,"abc");
+        assertTokenEquals(t.nextToken(),ASSIGN);
+        assertTokenEquals(t.nextToken(),INVALID);
+    }
+
+    @Test
+    void fibonacci() throws Exception {// test to verify that any changes i make don't break existing solutions
+        assertFileEquals("src/test/referenceFiles/fibonacciOut.txt","src/test/textFiles/fibonacci.c");
+    }
+
+    @Test
+    void tictac() throws Exception {// test to verify that any changes i make don't break existing solutions
+        assertFileEquals("src/test/referenceFiles/tictactoeOut.txt","src/test/textFiles/tictactoe.c");
     }
 
     private void assertTokenEquals(Token t, Token.Category cat, String data){
@@ -50,5 +58,21 @@ class TokeniserTest {
         File f= File.createTempFile("hello",".c");
         Files.writeString(f.toPath(), content);
         return new Tokeniser(new Scanner(f));
+    }
+
+    private void assertFileEquals(String  referenceFile,String fileToTest) throws Exception {
+        File file=new File(fileToTest);
+        BufferedReader fibReference = new BufferedReader(new FileReader(referenceFile));
+        String line;
+        Tokeniser t = new Tokeniser(new Scanner(file));
+        while((line=fibReference.readLine())!=null) {
+            Token next = t.nextToken();
+
+            if (next.category == EOF)
+                break;
+            assertEquals(line,next.toString());
+        }
+        assertEquals(t.getNumErrors(), 0);
+
     }
 }
