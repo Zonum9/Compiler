@@ -7,6 +7,7 @@ import java.nio.file.Files;
 
 import static org.junit.Assert.assertEquals;
 import static lexer.Token.Category.*;
+import static org.junit.Assert.assertFalse;
 
 class TokeniserTest {
     @Test
@@ -70,7 +71,18 @@ class TokeniserTest {
 
             if (next.category == EOF)
                 break;
-            assertEquals(line,next.toString());
+            //Tokens with new lines are still considered a single token, so need to split them
+            if (next.toString().contains("\n")){
+                String[] splits= next.toString().split("\n");
+                for (int i = 0; i < splits.length; i++) {
+                    assertEquals(line,splits[i]);
+                    if (i != splits.length-1)
+                        line=fibReference.readLine();
+                    if (line == null){
+                        assertFalse(true);
+                    }
+                }
+            }
         }
         assertEquals(t.getNumErrors(), 0);
 
