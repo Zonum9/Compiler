@@ -30,7 +30,7 @@ class TokeniserTest {
     }
 
     @Test
-    void randomTes1() throws IOException {
+    void randomTest1() throws IOException {
         Tokeniser t = createTokeniser("123456abc =!");
         assertTokenEquals(t.nextToken(),INT_LITERAL,"123456");
         assertTokenEquals(t.nextToken(),IDENTIFIER,"abc");
@@ -63,10 +63,10 @@ class TokeniserTest {
 
     private void assertFileEquals(String  referenceFile,String fileToTest) throws Exception {
         File file=new File(fileToTest);
-        BufferedReader fibReference = new BufferedReader(new FileReader(referenceFile));
+        BufferedReader fileToReference = new BufferedReader(new FileReader(referenceFile));
         String line;
         Tokeniser t = new Tokeniser(new Scanner(file));
-        while((line=fibReference.readLine())!=null) {
+        while((line=fileToReference.readLine())!=null) {
             Token next = t.nextToken();
 
             if (next.category == EOF)
@@ -77,7 +77,7 @@ class TokeniserTest {
                 for (int i = 0; i < splits.length; i++) {
                     assertEquals(line,splits[i]);
                     if (i != splits.length-1)
-                        line=fibReference.readLine();
+                        line=fileToReference.readLine();
                     if (line == null){
                         assertFalse(true);
                     }
@@ -85,6 +85,7 @@ class TokeniserTest {
             }else
                 assertEquals(line,next.toString());
         }
+        fileToReference.close();
         assertEquals(t.getNumErrors(), 0);
 
     }
