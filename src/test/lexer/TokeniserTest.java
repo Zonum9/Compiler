@@ -82,7 +82,8 @@ class TokeniserTest {
                         assertFalse(true);
                     }
                 }
-            }
+            }else
+                assertEquals(line,next.toString());
         }
         assertEquals(t.getNumErrors(), 0);
 
