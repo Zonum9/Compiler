@@ -52,7 +52,7 @@ public class Tokeniser extends CompilerPass {
         // get the next character
         char c = scanner.next();
 
-        // skip white spaces between lexems
+        // skip white spaces between lexemes
         if (Character.isWhitespace(c))
             return nextToken();            
 
@@ -123,7 +123,7 @@ public class Tokeniser extends CompilerPass {
             //single quote
             case '\'':{//todo test me
                 Optional<String> data=handleSingleQuote();
-                if(!data.isPresent()){
+                if(data.isEmpty()){
                     line = scanner.getLine();
                     column= scanner.getColumn();
                     isInvalid=true;
@@ -134,7 +134,7 @@ public class Tokeniser extends CompilerPass {
             //double quote
             case '\"':{//todo test me
                 Optional<String> data=handleDoubleQuote();
-                if(!data.isPresent()){
+                if(data.isEmpty()){
                     line = scanner.getLine();
                     column= scanner.getColumn();
                     isInvalid=true;
@@ -212,7 +212,7 @@ public class Tokeniser extends CompilerPass {
             {"\\r","\r"}, 
             {"\\t","\t"}, 
             {"\\\\","\\"},
-            {"\\'","\'"}, 
+            {"\\'", "'"},
             {"\\\"","\""},
             {"\\0","\0"}
         };
@@ -246,34 +246,17 @@ public class Tokeniser extends CompilerPass {
             return Optional.empty();
         }
         scanner.next(); //consume right side single quote
-        return Optional.of(replaceEscapedCharacters(data.toString()));        
+        return Optional.of(replaceEscapedCharacters(data));
     }
 
     //checks if the current peek value is a valid character to be escaped
     private boolean checkIfEscapedChar(){
         if(!scanner.hasNext())
             return false;
-        switch (scanner.peek()) {
-            case 'a':
-                return true;                        
-            case 'b':
-                return true;
-            case 'n':
-                return true;
-            case 'r':
-                return true;
-            case 't':
-                return true;
-            case '\\':
-                return true;
-            case '\'':
-                return true;
-            case '\"':
-                return true;
-            case '0':
-                return true;
-        }
-        return false;
+        return switch (scanner.peek()) {
+            case 'a', 'b', 'n', 'r', 't', '\\', '\'', '\"', '0' -> true;
+            default -> false;
+        };
     }
 
     private void handleLineComment() {        

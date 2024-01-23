@@ -18,14 +18,16 @@ public class FSA {
         }
         @Override
         public boolean equals(Object obj) {
-            if (this==obj) return true;
-            if (obj==null || getClass()!=obj.getClass()) return false;
+            if (this==obj)
+                return true;
+            if (obj==null||getClass()!=obj.getClass())
+                return false;
     
             Key temp = (Key) obj;    
             // Compare each field for equality
-            if (!key1.equals(temp.key1)) return false;
-            if (!key2.equals(temp.key2)) return false;    
-            return true;
+            if (!key1.equals(temp.key1))
+                return false;
+            return key2.equals(temp.key2);
         }
         @Override
         public int hashCode() {
@@ -37,7 +39,7 @@ public class FSA {
         }
     }
 
-    private static HashMap<Key,State> transitionMap= new HashMap<>();
+    private static final HashMap<Key,State> transitionMap= new HashMap<>();
 
     private static void populateMapKeywords (String s){
         State state=State.INTIAL_STATE;        
@@ -59,23 +61,23 @@ public class FSA {
             if(canBeInIdentifier(c,state))
                 transitionMap.put(new Key(state, c), State.IDENTIFIER);
             else
-                transitionMap.put(new Key(state,c),State.valueOf(state.toString()+"_F"));
+                transitionMap.put(new Key(state,c),State.valueOf(state +"_F"));
         }
     }
 
     private static boolean canBeInIdentifier(char c,State currentState){
         if (!Character.isAlphabetic(c) && !Character.isDigit(c) && c != '_')
             return false;
-        if(Character.isDigit(c) && currentState == State.INTIAL_STATE)
-            return false;
-        return true;
+        return !Character.isDigit(c) || currentState != State.INTIAL_STATE;
     }
 
     private static void populateMapOthers(){
         for (char c = 0; c < 128; c++) {
             Key initialStateKey = new Key(State.INTIAL_STATE,c);            
-            if(!transitionMap.containsKey(initialStateKey)&& canBeInIdentifier(c,State.INTIAL_STATE))
+            if(!transitionMap.containsKey(initialStateKey) && canBeInIdentifier(c,State.INTIAL_STATE))
                 transitionMap.put(initialStateKey, State.IDENTIFIER);
+            else
+                transitionMap.put(initialStateKey,State.INVALID);
             Key identifierStateKey = new Key(State.IDENTIFIER,c);
             if(!transitionMap.containsKey(identifierStateKey)){
                 if(!canBeInIdentifier(c,State.IDENTIFIER))
@@ -102,7 +104,7 @@ public class FSA {
     }
 
 
-    private static StringBuilder currentData= new StringBuilder();
+    private static final StringBuilder currentData= new StringBuilder();
 
     public static String getCurrentData(){
         String s = currentData.toString();
@@ -114,7 +116,7 @@ public class FSA {
         State currentState= transitionMap.get(new Key(State.INTIAL_STATE,c));
         currentData.setLength(0);
         currentData.append(c);
-        while(scanner.hasNext()){
+        while(scanner.hasNext() && currentState != State.INVALID){
             c = scanner.peek();
             currentState= transitionMap.get(new Key(currentState,c));
             if(finalStates.contains(currentState) || currentState == State.INVALID){
@@ -123,6 +125,11 @@ public class FSA {
             scanner.next();
             currentData.append(c);
         }
+        //if the state is identifier but the loop ended, it means eof was reached. State should thus be identifier final
+        if (currentState== State.IDENTIFIER){
+            currentState=State.IDENTIFIER_F;
+        }
+
         if (currentState == State.INVALID || !finalStates.contains(currentState))
             return Token.Category.INVALID;
         if(currentState != State.IDENTIFIER_F)
