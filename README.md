@@ -321,15 +321,15 @@ If using a McGill computer, you can download the SBT locally and run it without 
 [Link for latest version of SBT](https://www.scala-sbt.org/download.html).
 
 
-### Main.java
-If you have a Main.java file in your source at the expected location, our automarker will replace it with our own version which is identical to the one we gave you originally, and will compile it!
-So if you wish to have a Main.scala source file as your main entry point, you should make sure to remove Main.java from your repo.
-Otherwise you will end up with two Main classes and nothing will work with the automarker.
+### MainX.java
+If you have a MainX.java file in your source at the expected location, our automarker will replace it with our own version which is identical to the one we gave you originally, and will compile it!
+So if you wish to have a MainX.scala source file as your main entry point, you should make sure to remove MainX.java from your repo.
+Otherwise, you will end up with two MainX classes and nothing will work with the automarker.
 
 ### Running your compiler
 
 To run your compiler, the automarker uses the following command:
 
-`java -cp bin/:PATH_TO/scala-compiler-2.13.12.jar:PATH_TO/scala-library-2.13.12.jar:PATH_TO/scala-reflect-2.13.12.jar Main`
+`java -cp bin/:PATH_TO/scala-compiler-2.13.12.jar:PATH_TO/scala-library-2.13.12.jar:PATH_TO/scala-reflect-2.13.12.jar MainX`
 
 
