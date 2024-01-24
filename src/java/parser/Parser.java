@@ -126,11 +126,11 @@ public class Parser  extends CompilerPass {
                 parseStructDecl();
             }
             else {
-                // to be completed ...
+                // to be completed ...todo
                 nextToken(); // this line should be modified/removed
             }
         }
-        // to be completed ...
+        // to be completed ...todo
 
         expect(Category.EOF);
     }
@@ -148,9 +148,50 @@ public class Parser  extends CompilerPass {
         expect(Category.STRUCT);
         expect(Category.IDENTIFIER);
         expect(Category.LBRA);
-        // to be completed ...
+        parseVarDeclaration();
+        parse0orMOreVarDeclaration();
+        expect(Category.RBRA);
+        expect(Category.SC);
+        // to be completed ...todo
     }
 
+    private void parseVarDeclaration(){
+        parseType();
+        expect(Category.IDENTIFIER);
+        parse0orMoreArray();
+        expect(Category.SC);
+    }
+    private void parse0orMOreVarDeclaration(){//todo idk what todo
+        if (lookAhead(1).category!= Category.LSBR)
+            return;
+    }
+
+    private void parse0orMoreArray(){
+        if (lookAhead(1).category!= Category.LSBR)
+            return;
+        nextToken();
+        expect(Category.INT_LITERAL);
+        expect(Category.RSBR);
+        parse0orMoreArray();
+    }
+
+    private void parseType(){
+        //if the type is struct, it must be followed by an identifier
+        if (accept(Category.STRUCT)){
+            nextToken();
+            expect(Category.IDENTIFIER);
+            return;
+        }
+        expect(Category.INT,Category.CHAR,Category.VOID);
+        parse0orMorePointers();
+    }
+
+    private void parse0orMorePointers(){
+        if (lookAhead(1).category!= Category.ASTERIX)
+            return;
+        nextToken();
+        parse0orMorePointers();
+    }
 
 
     // to be completed ...

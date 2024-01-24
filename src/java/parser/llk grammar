@@ -1,0 +1,72 @@
+program -> include_r    content'     EOF
+include_r->  (include     include_r) | eps
+include -> INCLUDE    STRING_LITERAL
+
+content_r -> (content   content_r) | eps
+content -> structdecl | vardecl | fundecl | funproto
+
+structdecl-> structtype   "{"     vardecl   vardecl_r   "}"    ";"
+
+vardecl_r -> (vardecl    vardecl_r)  | eps
+
+structtype-> STRUCT    IDENT
+
+vardecl->  type  IDENT   dimension_r    ";"
+
+dimension_r->  (dimension   dimesion_r) | eps
+dimension ->  "["    INT_LITERAL    "]"
+
+fun~ ->  type  IDENT    "("   params   ")"
+
+fundecl ->  fun~  block
+
+funproto-> fun~  ";"
+
+type->  (INT|CHAR|VOID|structtype)  star_r
+star_r ->  ("*"   star_r) | eps
+
+params->  filledParams | eps
+filledParams -> type  IDENT  multipleParams_r
+multipleParams_r -> (multipleParams     multipleParams_r) | eps
+multipleParams -> ","   type     IDENT
+
+stmt->  block
+	|WHILE   "("   exp    ")"   stmt
+	|IF    "("   exp    ")"    stmt    (ELSE  stmt)|eps
+	|RETURN       (exp|eps)     ";"
+	|exp      ";"
+	|CONTINUE      ";"
+	|BREAK     ";"
+
+
+block->  "{"     vardecl_r      stmt_r           "}"
+
+stmt_r -> (smt  stmt_r )   |  eps
+
+exp->  "("     exp       ")"  operation
+	| (IDENT       |       INT_LITERAL)  operation
+	| ("-"   |   "+")    exp   operation
+	| CHAR_LITERAL   operation
+	| STRING_LITERAL   operation
+	| (arrayaccess|fieldaccess|valueat|addressof|funcall|sizeof|typecast)    operation
+
+operation ->  (("=" | ">" | "<" | ">=" | "<=" | "!=" | "==" | "+" | "-" | "/" | "*" | "%" | "||" | "&&" )  exp   operation)   | eps
+
+funcall-> IDENT   "("   args    ")"
+args -> (exp multiargs_r | eps)
+multiargs_r ->   (multiargs multiargs_r ) | eps
+multiargs -> ","  exp
+
+
+arrayaccess -> exp    "["    exp    "]"
+
+fieldaccess->  exp  "."    IDENT
+
+
+valueat->  "*"  exp
+
+addressof->      "&"    exp
+
+sizeof->    SIZEOF      "("       type       ")"
+
+typecast->   "("    type      ")"     exp
