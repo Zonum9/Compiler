@@ -150,7 +150,63 @@ public class Parser  extends CompilerPass {
             nextToken();
             return;
         }
-//todo        parseBlock();
+        parseBlock();
+    }
+
+    private void parseBlock(){
+        expect(Category.LBRA);
+        parse0orMoreVarDeclaration();
+        parse0orMoreStatements();
+        expect(Category.RBRA);
+    }
+    private void parseWhile(){
+        expect(Category.WHILE);
+        expect(Category.LPAR);
+        parseExpression();
+        expect(Category.RPAR);
+        parseStatement();
+    }
+    private void parseExpression(){
+        //todo
+    }
+
+    private void parseIf(){
+        expect(Category.LPAR);
+        parseExpression();
+        expect(Category.RPAR);
+        parseStatement();
+        if(!accept(Category.ELSE))
+            return;
+        nextToken();//consume else
+        parseStatement();
+    }
+    private void parseReturn(){
+        expect(Category.RETURN);
+        if(accept(Category.SC))//return statement without expression
+            return;
+        parseExpression();
+    }
+
+    private void parseStatement(){
+        switch (token.category){
+            case LBRA -> parseBlock();
+            case WHILE -> parseWhile();
+            case IF -> parseIf();
+            case RETURN -> parseReturn();
+            case CONTINUE -> {expect(Category.CONTINUE); expect(Category.SC);}
+            case BREAK -> {expect(Category.BREAK); expect(Category.SC);}
+        }
+        parseExpression();
+        expect(Category.SC);
+    }
+
+    private void parse0orMoreStatements(){
+        //end of statement block
+        if (lookAhead(1).category == Category.RBRA)
+            return;
+        parseStatement();
+        parse0orMoreStatements();
+
     }
 
     private void parseParams(){

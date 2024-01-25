@@ -104,6 +104,18 @@ class Part1Tests {
     }
 
     @Test
+    void functionParser(){
+        assertParsePass("char* func (){}");
+        assertParseFail("char* func ()");
+        assertParseFail("char* func (){");
+        assertParseFail("char* func ();{}");
+        assertParsePass("char* func (int x, int y, int* z){" +
+                "int x;" +
+                "struct mystruct x;" +
+                "char* amazing[12];}");
+    }
+
+    @Test
     void declarationTest(){
         assertParsePass("void* thing [12323];");
         assertParsePass("void*** thing [12323][23];");
@@ -116,6 +128,9 @@ class Part1Tests {
         assertParsePass("void func(int a, struct mystruct b);");
         assertParsePass("struct m func();");
         assertParseFail("struct func();");
+        assertParseFail("struct func(thing);");
+        assertParseFail("struct func(thing thing);");
+        assertParseFail("void func(int a struct mystruct b);");
         assertParsePass("int ThIA_sIa0asd ();");
         assertParsePass("void func(int a);");
         assertParsePass("void func(int a,char c, void* a);");
