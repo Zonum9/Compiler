@@ -125,14 +125,49 @@ public class Parser  extends CompilerPass {
                     lookAhead(2).category == Category.LBRA) {
                 parseStructDecl();
             }
+            //if this fails, then the program is automatically not valid, since
+            //we must have a variable declaration, or a function or a struct declaration
             else {
-                // to be completed ...todo
-                nextToken(); // this line should be modified/removed
+                //a left parenthesis must mean a function
+                if(lookAhead(2).category == Category.LPAR || lookAhead(3).category==Category.LPAR) {
+                    parseFunc();
+                }else{
+                    parseVarDeclaration();
+                }
             }
         }
-        // to be completed ...todo
 
         expect(Category.EOF);
+    }
+
+    private void parseFunc(){
+        parseType();
+        expect(Category.IDENTIFIER);
+        expect(Category.LPAR);
+        parseParams();
+        expect(Category.RPAR);
+        if(accept(Category.SC)){//function prototype
+            nextToken();
+            return;
+        }
+//todo        parseBlock();
+    }
+
+    private void parseParams(){
+        //no params
+        if(!acceptType()) {
+            return;
+        }
+        parseType();//consume type
+        expect(Category.IDENTIFIER);
+        parse0orMoreParams();
+    }
+
+    private void parse0orMoreParams(){
+        if (!accept(Category.COMMA))
+            return;
+        nextToken();//consume comma
+        parseParams();
     }
 
     // includes are ignored, so does not need to return an AST node
@@ -149,10 +184,9 @@ public class Parser  extends CompilerPass {
         expect(Category.IDENTIFIER);
         expect(Category.LBRA);
         parseVarDeclaration();
-        parse0orMOreVarDeclaration();
+        parse0orMoreVarDeclaration();
         expect(Category.RBRA);
         expect(Category.SC);
-        // to be completed ...todo
     }
 
     private void parseVarDeclaration(){
@@ -161,13 +195,15 @@ public class Parser  extends CompilerPass {
         parse0orMoreArray();
         expect(Category.SC);
     }
-    private void parse0orMOreVarDeclaration(){//todo idk what todo
-        if (lookAhead(1).category!= Category.LSBR)
+    private void parse0orMoreVarDeclaration(){
+        if (!acceptType())
             return;
+        parseVarDeclaration();
+        parse0orMoreVarDeclaration();
     }
 
     private void parse0orMoreArray(){
-        if (lookAhead(1).category!= Category.LSBR)
+        if (!accept(Category.LSBR))
             return;
         nextToken();
         expect(Category.INT_LITERAL);
@@ -185,14 +221,14 @@ public class Parser  extends CompilerPass {
         expect(Category.INT,Category.CHAR,Category.VOID);
         parse0orMorePointers();
     }
+    private boolean acceptType(){
+        return accept(Category.STRUCT,Category.INT,Category.CHAR,Category.VOID);
+    }
 
     private void parse0orMorePointers(){
-        if (lookAhead(1).category!= Category.ASTERIX)
+        if (!accept(Category.ASTERIX))
             return;
         nextToken();
         parse0orMorePointers();
     }
-
-
-    // to be completed ...
 }
