@@ -1,4 +1,4 @@
-program -> include_r    content'     EOF
+program -> include_r    content_r     EOF
 include_r->  (include     include_r) | eps
 include -> INCLUDE    STRING_LITERAL
 

@@ -141,7 +141,7 @@ public class Parser  extends CompilerPass {
     }
 
     private void parseFunc(){
-        parseType();
+        parseType();//fixme getting stack overflows on wrong things
         expect(Category.IDENTIFIER);
         expect(Category.LPAR);
         parseParams();
@@ -167,7 +167,67 @@ public class Parser  extends CompilerPass {
         parseStatement();
     }
     private void parseExpression(){
-        //todo
+        switch (token.category){
+            case INT_LITERAL,CHAR_LITERAL,STRING_LITERAL -> nextToken();
+            case PLUS,MINUS,ASTERIX,AND -> {nextToken(); parseExpression();}
+            case SIZEOF -> {
+                nextToken();
+                expect(Category.LPAR);
+                parseType();
+                expect(Category.RPAR);
+            }
+            case LPAR -> {
+                nextToken();//consume "("
+                if(acceptType()) { //it's a type cast  "(" type ")" exp
+                    parseType();
+                    expect(Category.RPAR);
+                    parseExpression();
+                    return;
+                }
+                // if it's not a type cast, then it's just a "(" exp ")"
+                parseExpression();
+                expect(Category.RPAR);
+
+            }  //typecast
+            case IDENTIFIER -> {
+                //if there is a "(" after the identifier, then it must be a function call
+                if(lookAhead(1).category== Category.LPAR)
+                    parseFunctionCall();
+                else //lone identifier
+                    nextToken();
+            }
+            default -> error();
+        }
+        parseOperation();
+    }
+    private void parseFunctionCall(){
+        expect(Category.IDENTIFIER);
+        expect(Category.LBRA);
+        parseArgs();
+        expect(Category.RBRA);
+    }
+
+    private void parseArgs(){
+        if (lookAhead(1).category == Category.RBRA || lookAhead(1).category == Category.EOF)
+            return;
+        parseExpression();
+        if(lookAhead(1).category == Category.COMMA) {
+            nextToken();
+            parseArgs();
+        }
+    }
+    private void parseOperation(){
+        if (!accept(Category.ASSIGN,Category.LT,Category.GT,Category.LE,Category.GE,Category.NE,
+                Category.EQ,Category.PLUS,Category.MINUS,Category.DIV,Category.ASTERIX,
+                Category.REM,Category.LOGOR,Category.LOGAND,Category.LSBR,Category.DOT))
+            return;
+        switch (token.category){
+            case LSBR -> { nextToken(); parseExpression(); expect(Category.RSBR);} //array access
+            case DOT -> {nextToken(); expect(Category.IDENTIFIER);} //field access
+            default -> nextToken(); //all other operations just require to consume the next token
+        }
+        parseExpression();
+        parseOperation();
     }
 
     private void parseIf(){
@@ -202,7 +262,7 @@ public class Parser  extends CompilerPass {
 
     private void parse0orMoreStatements(){
         //end of statement block
-        if (lookAhead(1).category == Category.RBRA)
+        if (lookAhead(1).category == Category.RBRA || lookAhead(1).category == Category.EOF)
             return;
         parseStatement();
         parse0orMoreStatements();
