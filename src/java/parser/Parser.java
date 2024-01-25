@@ -102,6 +102,7 @@ public class Parser  extends CompilerPass {
             }
         }
         error(expected);
+//        nextToken();
     }
 
     /*
@@ -141,16 +142,16 @@ public class Parser  extends CompilerPass {
     }
 
     private void parseFunc(){
-        parseType();//fixme getting stack overflows on wrong things
+        parseType();
         expect(Category.IDENTIFIER);
         expect(Category.LPAR);
         parseParams();
         expect(Category.RPAR);
-        if(accept(Category.SC)){//function prototype
-            nextToken();
-            return;
-        }
-        parseBlock();
+        if(accept(Category.LBRA))
+            parseBlock();
+        else
+            expect(Category.SC);
+
     }
 
     private void parseBlock(){
@@ -196,41 +197,37 @@ public class Parser  extends CompilerPass {
                 else //lone identifier
                     nextToken();
             }
-            default -> error();
         }
-        parseOperation();
+        switch (token.category){
+            case LSBR -> { nextToken(); parseExpression(); expect(Category.RSBR);} //array access
+            case DOT -> {nextToken(); expect(Category.IDENTIFIER);} //field access
+            case ASSIGN,LT,GT,LE,GE,NE,EQ,PLUS,MINUS,DIV,ASTERIX,REM,LOGOR,LOGAND ->parseOperation();
+        }
     }
     private void parseFunctionCall(){
         expect(Category.IDENTIFIER);
-        expect(Category.LBRA);
+        expect(Category.LPAR);
         parseArgs();
-        expect(Category.RBRA);
+        expect(Category.RPAR);
     }
 
     private void parseArgs(){
-        if (lookAhead(1).category == Category.RBRA || lookAhead(1).category == Category.EOF)
+        if (token.category == Category.RPAR || token.category == Category.EOF)
             return;
         parseExpression();
-        if(lookAhead(1).category == Category.COMMA) {
+        if(token.category == Category.COMMA) {
             nextToken();
             parseArgs();
         }
     }
     private void parseOperation(){
-        if (!accept(Category.ASSIGN,Category.LT,Category.GT,Category.LE,Category.GE,Category.NE,
-                Category.EQ,Category.PLUS,Category.MINUS,Category.DIV,Category.ASTERIX,
-                Category.REM,Category.LOGOR,Category.LOGAND,Category.LSBR,Category.DOT))
-            return;
-        switch (token.category){
-            case LSBR -> { nextToken(); parseExpression(); expect(Category.RSBR);} //array access
-            case DOT -> {nextToken(); expect(Category.IDENTIFIER);} //field access
-            default -> nextToken(); //all other operations just require to consume the next token
-        }
+        nextToken();
         parseExpression();
-        parseOperation();
+//        parseOperation();
     }
 
     private void parseIf(){
+        expect(Category.IF);
         expect(Category.LPAR);
         parseExpression();
         expect(Category.RPAR);
@@ -245,6 +242,7 @@ public class Parser  extends CompilerPass {
         if(accept(Category.SC))//return statement without expression
             return;
         parseExpression();
+        expect(Category.SC);
     }
 
     private void parseStatement(){
@@ -255,18 +253,15 @@ public class Parser  extends CompilerPass {
             case RETURN -> parseReturn();
             case CONTINUE -> {expect(Category.CONTINUE); expect(Category.SC);}
             case BREAK -> {expect(Category.BREAK); expect(Category.SC);}
+            default -> {parseExpression();expect(Category.SC);}
         }
-        parseExpression();
-        expect(Category.SC);
+
     }
 
     private void parse0orMoreStatements(){
-        //end of statement block
-        if (lookAhead(1).category == Category.RBRA || lookAhead(1).category == Category.EOF)
-            return;
-        parseStatement();
-        parse0orMoreStatements();
-
+        while(token.category != Category.RBRA && token.category != Category.EOF) {
+            parseStatement();
+        }
     }
 
     private void parseParams(){

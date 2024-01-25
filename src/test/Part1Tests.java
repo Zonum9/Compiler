@@ -112,7 +112,13 @@ class Part1Tests {
         assertParsePass("char* func (int x, int y, int* z){" +
                 "int x;" +
                 "struct mystruct x;" +
-                "char* amazing[12];}");
+                "char* amazing[12];" +
+                "x[1];" +
+                "3+4;" +
+                "return;" +
+                "return;" +
+                "return;" +
+                "}");
     }
 
     @Test
@@ -135,6 +141,37 @@ class Part1Tests {
         assertParsePass("void func(int a);");
         assertParsePass("void func(int a,char c, void* a);");
         assertParsePass("void func(int a,char c, void* a);");
+    }
+    @Test
+    void fibParser(){
+        asserFileParsePass("src/test/textFiles/fibonacci.c");
+    }
+
+    @Test
+    void ticTacParser(){
+        asserFileParsePass("src/test/textFiles/tictactoe.c");
+    }
+
+    private void asserFileParseFail(String filename){
+        try {
+            File file=new File(filename);
+            Parser p = new Parser(new Tokeniser(new Scanner(file)));
+            p.parse();
+            assertNotEquals(0,p.getNumErrors());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void asserFileParsePass(String filename){
+        try {
+            File file=new File(filename);
+            Parser p = new Parser(new Tokeniser(new Scanner(file)));
+            p.parse();
+            assertEquals(0,p.getNumErrors());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void assertTokenEquals(Token t, Token.Category cat, String data){
