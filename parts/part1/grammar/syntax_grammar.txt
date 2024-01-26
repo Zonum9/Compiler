@@ -20,7 +20,7 @@ funproto   ::= type IDENT "(" params ")" ";"         # function prototype
 type       ::= ("int" | "char" | "void" | structtype) ("*")*
 structtype ::= "struct" IDENT
 
-params     ::= [ type IDENT ("," type IDENT)* ]
+params     ::= [ vardecl ("," vardecl)* ]
 
 stmt       ::= block
              | "while" "(" exp ")" stmt              # while loop
