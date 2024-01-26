@@ -106,9 +106,6 @@ class Part1Tests {
     @Test
     void functionParser(){
         assertParsePass("char* func (){}");
-        assertParseFail("char* func ()");
-        assertParseFail("char* func (){");
-        assertParseFail("char* func ();{}");
         assertParsePass("char* func (int x, int y, int* z){" +
                 "int x;" +
                 "struct mystruct x;" +
@@ -118,6 +115,44 @@ class Part1Tests {
                 "return;" +
                 "return;" +
                 "return;" +
+                "}");
+        assertParsePass("char* func (int x, int y, int* z){" +
+                "struct aStruct* x;" +
+                "struct aStruct x;" +
+                "struct aStruct x[123];" +
+                "fun(0);" +
+                "fun(1==2);" +
+                "fun(*x);" +
+                "fun(1,2,3,4,5,6,7);" +
+                "fun();" +
+                "fun (&hello);"+
+                "}");
+        assertParseFail("char* func (int x, int y, int* z){" +
+                "struct;}");
+        assertParsePass("void fun(){" +
+                "(struct a)x;" +
+                "}");
+        assertParseFail("void fun(){==}");
+        assertParseFail("char* func ()");
+        assertParseFail("char* func (){");
+        assertParseFail("char* func ();{}");
+    }
+
+    @Test
+    void operationsTest(){
+        assertParseFail("1+2=3==3==4==5");
+        assertParsePass("void fun(){" +
+                "1+2=3==3==4==5;" +
+                "}");
+        assertParsePass("void fun(){" +
+                "x[1+2+ex+111*omega!=x]=11;" +
+                "}");
+        assertParsePass("void fun(){" +
+                "x[1+2+ex+111*omega!=x]=11;" +
+                "&&&x&&x;" +
+                "****x;" +
+                "(struct mystruct*)hello;" +
+                "(*hello).hello;" +
                 "}");
     }
 
@@ -142,6 +177,22 @@ class Part1Tests {
         assertParsePass("void func(int a,char c, void* a);");
         assertParsePass("void func(int a,char c, void* a);");
     }
+    @Test
+    void emptyFunction(){
+        assertParsePass("char* fun(){}");
+    }
+
+    @Test
+    void tryingToStackOverflow(){//todo
+        assertParseFail("fun{");
+        assertParseFail("int fun (thing){{{{}}}");
+        assertParseFail("void func (int a,int b)");
+        assertParseFail("void func (int a,int b){" +
+                "func()}");
+        assertParsePass("void func (int a,int b){" +
+                "func();}");
+    }
+
     @Test
     void fibParser(){
         asserFileParsePass("src/test/textFiles/fibonacci.c");

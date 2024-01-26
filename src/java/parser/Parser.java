@@ -170,7 +170,7 @@ public class Parser  extends CompilerPass {
     private void parseExpression(){
         switch (token.category){
             case INT_LITERAL,CHAR_LITERAL,STRING_LITERAL -> nextToken();
-            case PLUS,MINUS,ASTERIX,AND -> {nextToken(); parseExpression();}
+            case PLUS,MINUS,ASTERIX,AND,LOGAND -> {nextToken(); parseExpression();}//include logAnd because of double ref
             case SIZEOF -> {
                 nextToken();
                 expect(Category.LPAR);
@@ -198,12 +198,19 @@ public class Parser  extends CompilerPass {
                     nextToken();
             }
         }
-        switch (token.category){
-            case LSBR -> { nextToken(); parseExpression(); expect(Category.RSBR);} //array access
-            case DOT -> {nextToken(); expect(Category.IDENTIFIER);} //field access
-            case ASSIGN,LT,GT,LE,GE,NE,EQ,PLUS,MINUS,DIV,ASTERIX,REM,LOGOR,LOGAND ->parseOperation();
-        }
+        parsePostExpression();
     }
+    private void parsePostExpression(){
+        switch (token.category){
+            case LSBR -> { nextToken(); parseExpression(); expect(Category.RSBR); parsePostExpression();} //array access
+            case DOT -> {nextToken(); expect(Category.IDENTIFIER);parsePostExpression();} //field access
+            case ASSIGN,LT,GT,LE,GE,NE,EQ,PLUS,MINUS,DIV,ASTERIX,REM,LOGOR,LOGAND -> {
+                parseOperation(); parsePostExpression();
+            }
+        }
+
+    }
+
     private void parseFunctionCall(){
         expect(Category.IDENTIFIER);
         expect(Category.LPAR);
@@ -239,8 +246,10 @@ public class Parser  extends CompilerPass {
     }
     private void parseReturn(){
         expect(Category.RETURN);
-        if(accept(Category.SC))//return statement without expression
+        if(accept(Category.SC)) {//return statement without expression
+            nextToken();
             return;
+        }
         parseExpression();
         expect(Category.SC);
     }
@@ -259,9 +268,15 @@ public class Parser  extends CompilerPass {
     }
 
     private void parse0orMoreStatements(){
-        while(token.category != Category.RBRA && token.category != Category.EOF) {
+        while(acceptStatement()) {
             parseStatement();
         }
+    }
+
+    private boolean acceptStatement(){
+        return accept(Category.LBRA,Category.WHILE,Category.IF,Category.RETURN,Category.CONTINUE,Category.BREAK, //statement
+                Category.LPAR,Category.IDENTIFIER,Category.INT_LITERAL,Category.MINUS,Category.PLUS, //exp
+                Category.CHAR_LITERAL,Category.STRING_LITERAL, Category.ASTERIX,Category.AND,Category.LOGAND,Category.SIZEOF); //exp
     }
 
     private void parseParams(){
@@ -327,9 +342,10 @@ public class Parser  extends CompilerPass {
         if (accept(Category.STRUCT)){
             nextToken();
             expect(Category.IDENTIFIER);
-            return;
         }
-        expect(Category.INT,Category.CHAR,Category.VOID);
+        else {
+            expect(Category.INT, Category.CHAR, Category.VOID);
+        }
         parse0orMorePointers();
     }
     private boolean acceptType(){
