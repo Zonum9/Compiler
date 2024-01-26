@@ -38,7 +38,7 @@ public class Tokeniser extends CompilerPass {
         Map.entry('-',Token.Category.MINUS),        
         Map.entry('%',Token.Category.REM),
         Map.entry('.',Token.Category.DOT),
-        Map.entry('*',Token.Category.ASTERIX)
+        Map.entry('*',Token.Category.ASTERISK)
     );
 
     public Token nextToken() {

@@ -1,3 +1,6 @@
+
+#note i missed some factorizations/left recursions, but they were dealt with when writing the actual code
+
 program -> include_r    content_r     EOF
 include_r->  (include     include_r) | eps
 include -> INCLUDE    STRING_LITERAL
@@ -27,6 +30,8 @@ star_r ->  ("*"   star_r) | eps
 
 params->  filledParams | eps
 filledParams -> type  IDENT  multipleParams_r
+
+
 multipleParams_r -> (multipleParams     multipleParams_r) | eps
 multipleParams -> ","   type     IDENT
 

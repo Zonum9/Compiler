@@ -46,7 +46,7 @@ class Part1Tests {
         assertTokenEquals(t.nextToken(),IDENTIFIER);
         assertTokenEquals(t.nextToken(),LBRA);
         assertTokenEquals(t.nextToken(),INT);
-        assertTokenEquals(t.nextToken(),ASTERIX);
+        assertTokenEquals(t.nextToken(),ASTERISK);
         assertTokenEquals(t.nextToken(),IDENTIFIER);
         assertTokenEquals(t.nextToken(),SC);
         assertTokenEquals(t.nextToken(),RBRA);
@@ -57,8 +57,8 @@ class Part1Tests {
     void pointerTest() throws IOException {
         Tokeniser t = createTokeniser("int**");
         assertTokenEquals(t.nextToken(),INT);
-        assertTokenEquals(t.nextToken(),ASTERIX);
-        assertTokenEquals(t.nextToken(),ASTERIX);
+        assertTokenEquals(t.nextToken(),ASTERISK);
+        assertTokenEquals(t.nextToken(),ASTERISK);
         assertTokenEquals(t.nextToken(),EOF);
     }
     @Test

@@ -8,6 +8,7 @@ import util.CompilerPass;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import static lexer.Token.Category.*;
 
 
 /**
@@ -15,7 +16,7 @@ import java.util.Queue;
  */
 public class Parser  extends CompilerPass {
 
-    private Token token;
+    private Token token;    
 
     private Queue<Token> buffer = new LinkedList<>();
 
@@ -120,17 +121,17 @@ public class Parser  extends CompilerPass {
     private void parseProgram() {
         parseIncludes();
 
-        while (accept(Category.STRUCT, Category.INT, Category.CHAR, Category.VOID)) {
-            if (token.category == Category.STRUCT &&
-                    lookAhead(1).category == Category.IDENTIFIER &&
-                    lookAhead(2).category == Category.LBRA) {
+        while (accept(STRUCT, INT, CHAR, VOID)) {
+            if (token.category == STRUCT &&
+                    lookAhead(1).category == IDENTIFIER &&
+                    lookAhead(2).category == LBRA) {
                 parseStructDecl();
             }
             //if this fails, then the program is automatically not valid, since
             //we must have a variable declaration, or a function or a struct declaration
             else {
                 //a left parenthesis must mean a function
-                if(lookAhead(2).category == Category.LPAR || lookAhead(3).category==Category.LPAR) {
+                if(lookAhead(2).category == LPAR || lookAhead(3).category==LPAR) {
                     parseFunc();
                 }else{
                     parseVarDeclaration();
@@ -138,61 +139,61 @@ public class Parser  extends CompilerPass {
             }
         }
 
-        expect(Category.EOF);
+        expect(EOF);
     }
 
     private void parseFunc(){
         parseType();
-        expect(Category.IDENTIFIER);
-        expect(Category.LPAR);
+        expect(IDENTIFIER);
+        expect(LPAR);
         parseParams();
-        expect(Category.RPAR);
-        if(accept(Category.LBRA))
+        expect(RPAR);
+        if(accept(LBRA))
             parseBlock();
         else
-            expect(Category.SC);
+            expect(SC);
 
     }
 
     private void parseBlock(){
-        expect(Category.LBRA);
+        expect(LBRA);
         parse0orMoreVarDeclaration();
         parse0orMoreStatements();
-        expect(Category.RBRA);
+        expect(RBRA);
     }
     private void parseWhile(){
-        expect(Category.WHILE);
-        expect(Category.LPAR);
+        expect(WHILE);
+        expect(LPAR);
         parseExpression();
-        expect(Category.RPAR);
+        expect(RPAR);
         parseStatement();
     }
     private void parseExpression(){
         switch (token.category){
             case INT_LITERAL,CHAR_LITERAL,STRING_LITERAL -> nextToken();
-            case PLUS,MINUS,ASTERIX,AND,LOGAND -> {nextToken(); parseExpression();}//include logAnd because of double ref
+            case PLUS,MINUS,ASTERISK,AND,LOGAND -> {nextToken(); parseExpression();}//include logAnd because of double ref
             case SIZEOF -> {
                 nextToken();
-                expect(Category.LPAR);
+                expect(LPAR);
                 parseType();
-                expect(Category.RPAR);
+                expect(RPAR);
             }
             case LPAR -> {
                 nextToken();//consume "("
                 if(acceptType()) { //it's a type cast  "(" type ")" exp
                     parseType();
-                    expect(Category.RPAR);
+                    expect(RPAR);
                     parseExpression();
                     return;
                 }
                 // if it's not a type cast, then it's just a "(" exp ")"
                 parseExpression();
-                expect(Category.RPAR);
+                expect(RPAR);
 
             }  //typecast
             case IDENTIFIER -> {
                 //if there is a "(" after the identifier, then it must be a function call
-                if(lookAhead(1).category== Category.LPAR)
+                if(lookAhead(1).category== LPAR)
                     parseFunctionCall();
                 else //lone identifier
                     nextToken();
@@ -202,27 +203,26 @@ public class Parser  extends CompilerPass {
     }
     private void parsePostExpression(){
         switch (token.category){
-            case LSBR -> { nextToken(); parseExpression(); expect(Category.RSBR); parsePostExpression();} //array access
-            case DOT -> {nextToken(); expect(Category.IDENTIFIER);parsePostExpression();} //field access
-            case ASSIGN,LT,GT,LE,GE,NE,EQ,PLUS,MINUS,DIV,ASTERIX,REM,LOGOR,LOGAND -> {
+            case LSBR -> { nextToken(); parseExpression(); expect(RSBR); parsePostExpression();} //array access
+            case DOT -> {nextToken(); expect(IDENTIFIER);parsePostExpression();} //field access
+            case ASSIGN,LT,GT,LE,GE,NE,EQ,PLUS,MINUS,DIV,ASTERISK,REM,LOGOR,LOGAND -> {
                 parseOperation(); parsePostExpression();
             }
         }
-
     }
 
     private void parseFunctionCall(){
-        expect(Category.IDENTIFIER);
-        expect(Category.LPAR);
+        expect(IDENTIFIER);
+        expect(LPAR);
         parseArgs();
-        expect(Category.RPAR);
+        expect(RPAR);
     }
 
     private void parseArgs(){
-        if (token.category == Category.RPAR || token.category == Category.EOF)
+        if (token.category == RPAR || token.category == EOF)
             return;
         parseExpression();
-        if(token.category == Category.COMMA) {
+        if(token.category == COMMA) {
             nextToken();
             parseArgs();
         }
@@ -234,24 +234,24 @@ public class Parser  extends CompilerPass {
     }
 
     private void parseIf(){
-        expect(Category.IF);
-        expect(Category.LPAR);
+        expect(IF);
+        expect(LPAR);
         parseExpression();
-        expect(Category.RPAR);
+        expect(RPAR);
         parseStatement();
-        if(!accept(Category.ELSE))
+        if(!accept(ELSE))
             return;
         nextToken();//consume else
         parseStatement();
     }
     private void parseReturn(){
-        expect(Category.RETURN);
-        if(accept(Category.SC)) {//return statement without expression
+        expect(RETURN);
+        if(accept(SC)) {//return statement without expression
             nextToken();
             return;
         }
         parseExpression();
-        expect(Category.SC);
+        expect(SC);
     }
 
     private void parseStatement(){
@@ -260,9 +260,9 @@ public class Parser  extends CompilerPass {
             case WHILE -> parseWhile();
             case IF -> parseIf();
             case RETURN -> parseReturn();
-            case CONTINUE -> {expect(Category.CONTINUE); expect(Category.SC);}
-            case BREAK -> {expect(Category.BREAK); expect(Category.SC);}
-            default -> {parseExpression();expect(Category.SC);}
+            case CONTINUE -> {expect(CONTINUE); expect(SC);}
+            case BREAK -> {expect(BREAK); expect(SC);}
+            default -> {parseExpression();expect(SC);}
         }
 
     }
@@ -274,9 +274,9 @@ public class Parser  extends CompilerPass {
     }
 
     private boolean acceptStatement(){
-        return accept(Category.LBRA,Category.WHILE,Category.IF,Category.RETURN,Category.CONTINUE,Category.BREAK, //statement
-                Category.LPAR,Category.IDENTIFIER,Category.INT_LITERAL,Category.MINUS,Category.PLUS, //exp
-                Category.CHAR_LITERAL,Category.STRING_LITERAL, Category.ASTERIX,Category.AND,Category.LOGAND,Category.SIZEOF); //exp
+        return accept(LBRA,WHILE,IF,RETURN,CONTINUE,BREAK, //statement
+                LPAR,IDENTIFIER,INT_LITERAL,MINUS,PLUS, //exp
+                CHAR_LITERAL,STRING_LITERAL, ASTERISK,AND,LOGAND,SIZEOF); //exp
     }
 
     private void parseParams(){
@@ -284,13 +284,18 @@ public class Parser  extends CompilerPass {
         if(!acceptType()) {
             return;
         }
+        //todo remove this
         parseType();//consume type
-        expect(Category.IDENTIFIER);
+        expect(IDENTIFIER);
+        //todo remove this
+
+        //parseVarDeclaration();
+
         parse0orMoreParams();
     }
 
     private void parse0orMoreParams(){
-        if (!accept(Category.COMMA))
+        if (!accept(COMMA))
             return;
         nextToken();//consume comma
         parseParams();
@@ -298,28 +303,28 @@ public class Parser  extends CompilerPass {
 
     // includes are ignored, so does not need to return an AST node
     private void parseIncludes() {
-        if (accept(Category.INCLUDE)) {
+        if (accept(INCLUDE)) {
             nextToken();
-            expect(Category.STRING_LITERAL);
+            expect(STRING_LITERAL);
             parseIncludes();
         }
     }
 
     private void parseStructDecl(){
-        expect(Category.STRUCT);
-        expect(Category.IDENTIFIER);
-        expect(Category.LBRA);
+        expect(STRUCT);
+        expect(IDENTIFIER);
+        expect(LBRA);
         parseVarDeclaration();
         parse0orMoreVarDeclaration();
-        expect(Category.RBRA);
-        expect(Category.SC);
+        expect(RBRA);
+        expect(SC);
     }
 
     private void parseVarDeclaration(){
         parseType();
-        expect(Category.IDENTIFIER);
+        expect(IDENTIFIER);
         parse0orMoreArray();
-        expect(Category.SC);
+        expect(SC);
     }
     private void parse0orMoreVarDeclaration(){
         if (!acceptType())
@@ -329,31 +334,31 @@ public class Parser  extends CompilerPass {
     }
 
     private void parse0orMoreArray(){
-        if (!accept(Category.LSBR))
+        if (!accept(LSBR))
             return;
         nextToken();
-        expect(Category.INT_LITERAL);
-        expect(Category.RSBR);
+        expect(INT_LITERAL);
+        expect(RSBR);
         parse0orMoreArray();
     }
 
     private void parseType(){
         //if the type is struct, it must be followed by an identifier
-        if (accept(Category.STRUCT)){
+        if (accept(STRUCT)){
             nextToken();
-            expect(Category.IDENTIFIER);
+            expect(IDENTIFIER);
         }
         else {
-            expect(Category.INT, Category.CHAR, Category.VOID);
+            expect(INT, CHAR, VOID);
         }
         parse0orMorePointers();
     }
     private boolean acceptType(){
-        return accept(Category.STRUCT,Category.INT,Category.CHAR,Category.VOID);
+        return accept(STRUCT,INT,CHAR,VOID);
     }
 
     private void parse0orMorePointers(){
-        if (!accept(Category.ASTERIX))
+        if (!accept(ASTERISK))
             return;
         nextToken();
         parse0orMorePointers();
