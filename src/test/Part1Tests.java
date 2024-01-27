@@ -265,15 +265,22 @@ class Part1Tests {
 
     @Test
     void fibParser(){
-        asserFileParsePass("src/test/textFiles/fibonacci.c");
+        assertFileParsePass("src/test/textFiles/fibonacci.c");
     }
 
     @Test
     void ticTacParser(){
-        asserFileParsePass("src/test/textFiles/tictactoe.c");
+        assertFileParsePass("src/test/textFiles/tictactoe.c");
     }
 
-    private void asserFileParseFail(String filename){
+    @Test
+    void mergeLinkedListParser(){
+        //code taken from https://www.geeksforgeeks.org/merge-two-sorted-linked-lists/
+        assertFileParsePass("src/test/textFiles/linkedList.c");
+
+    }
+
+    private void assertFileParseFail(String filename){
         try {
             File file=new File(filename);
             Parser p = new Parser(new Tokeniser(new Scanner(file)));
@@ -284,7 +291,7 @@ class Part1Tests {
         }
     }
 
-    private void asserFileParsePass(String filename){
+    private void assertFileParsePass(String filename){
         try {
             File file=new File(filename);
             Parser p = new Parser(new Tokeniser(new Scanner(file)));
@@ -326,6 +333,7 @@ class Part1Tests {
             throw new RuntimeException(e);
         }
     }
+
 
     private void assertFileEquals(String  referenceFile,String fileToTest) throws Exception {
         File file=new File(fileToTest);

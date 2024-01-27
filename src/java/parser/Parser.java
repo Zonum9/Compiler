@@ -130,11 +130,13 @@ public class Parser  extends CompilerPass {
             //if this fails, then the program is automatically not valid, since
             //we must have a variable declaration, or a function or a struct declaration
             else {
+                parseType();
+                //current token should be an identifier
                 //a left parenthesis must mean a function
-                if(lookAhead(2).category == LPAR || lookAhead(3).category==LPAR) {
+                if(lookAhead(1).category == LPAR) {
                     parseFunc();
                 }else{
-                    parseVarDeclaration();
+                    parseVarDeclarationWithoutType();
                 }
             }
         }
@@ -143,7 +145,6 @@ public class Parser  extends CompilerPass {
     }
 
     private void parseFunc(){
-        parseType();
         expect(IDENTIFIER);
         expect(LPAR);
         parseParams();
@@ -311,14 +312,14 @@ public class Parser  extends CompilerPass {
         expect(STRUCT);
         expect(IDENTIFIER);
         expect(LBRA);
-        parseVarDeclaration();
+        parseType();
+        parseVarDeclarationWithoutType();
         parse0orMoreVarDeclaration();
         expect(RBRA);
         expect(SC);
     }
 
-    private void parseVarDeclaration(){
-        parseType();
+    private void parseVarDeclarationWithoutType(){
         expect(IDENTIFIER);
         parse0orMoreArray();
         expect(SC);
@@ -326,7 +327,8 @@ public class Parser  extends CompilerPass {
     private void parse0orMoreVarDeclaration(){
         if (!acceptType())
             return;
-        parseVarDeclaration();
+        parseType();
+        parseVarDeclarationWithoutType();
         parse0orMoreVarDeclaration();
     }
 
