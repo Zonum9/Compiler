@@ -155,6 +155,76 @@ class Part1Tests {
                 "(*hello).hello;" +
                 "}");
     }
+    @Test
+    void emptyIfAndWhile(){
+        assertParseFail("void fun(){" +
+                "while(){}" +
+                "}");
+        assertParseFail("void fun(){" +
+                "while(true)" +
+                "}");
+        assertParseFail("void fun(){" +
+                "while(true);" +
+                "}");
+        assertParseFail("void fun(){" +
+                "if();" +
+                "}");
+        assertParseFail("void fun(){" +
+                "if(){}" +
+                "}");
+        assertParseFail("void fun(){" +
+                "if(true);" +
+                "}");
+        assertParsePass("void fun(){" +
+                "if(true){}" +
+                "}");
+        assertParsePass("void fun(){" +
+                "while(true){}" +
+                "}");
+        assertParsePass("void fun(){" +
+                "while(true){while(true){while(true){}}}" +
+                "}");
+    }
+    @Test
+    void functionApplication(){
+        assertParseFail("void fun(){" +
+                "fun()" +
+                "}");
+        assertParseFail("void fun(){" +
+                "fun(return);" +
+                "}");
+        assertParseFail("void fun(){" +
+                "fun(if);" +
+                "}");
+        assertParseFail("void fun(){" +
+                "fun(return;);" +
+                "}");
+        assertParseFail("void fun(){" +
+                "fun(if(true){});" +
+                "}");
+        assertParsePass("void fun(){" +
+                "fun();" +
+                "}");
+        assertParsePass("void fun(){" +
+                "fun(*thing);" +
+                "}");
+        assertParsePass("void fun(){" +
+                "fun(&thing);" +
+                "}");
+        assertParsePass("void fun(){" +
+                "fun((void*)thing);" +
+                "}");
+        assertParseFail("void fun(){" +
+                "fun(1+4+2/11 & 123);" +
+                "}");
+        assertParsePass("void fun(){" +
+                "fun(1+4+2/11 && 123);" +
+                "}");
+        assertParseFail("void fun(){" +
+                "fun(1+4+2/);" +
+                "}");
+    }
+
 
     @Test
     void declarationTest(){

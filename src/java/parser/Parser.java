@@ -171,7 +171,7 @@ public class Parser  extends CompilerPass {
     private void parseExpression(){
         switch (token.category){
             case INT_LITERAL,CHAR_LITERAL,STRING_LITERAL -> nextToken();
-            case PLUS,MINUS,ASTERISK,AND,LOGAND -> {nextToken(); parseExpression();}//include logAnd because of double ref
+            case PLUS,MINUS,ASTERISK,AND,LOGAND -> {nextToken(); parseExpression();}//include logAnd because of double address
             case SIZEOF -> {
                 nextToken();
                 expect(LPAR);
@@ -198,6 +198,7 @@ public class Parser  extends CompilerPass {
                 else //lone identifier
                     nextToken();
             }
+            default -> error();//do not accept empty expressions
         }
         parsePostExpression();
     }
@@ -284,13 +285,9 @@ public class Parser  extends CompilerPass {
         if(!acceptType()) {
             return;
         }
-        //todo remove this
         parseType();//consume type
         expect(IDENTIFIER);
-        //todo remove this
-
-        //parseVarDeclaration();
-
+        parse0orMoreArray();
         parse0orMoreParams();
     }
 
