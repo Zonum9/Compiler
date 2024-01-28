@@ -6,20 +6,20 @@ include_r->  (include     include_r) | eps
 include -> INCLUDE    STRING_LITERAL
 
 content_r -> (content   content_r) | eps
-content -> structdecl | vardecl | fundecl | funproto
+content -> structdecl | type vardecl |type fundecl | type funproto
 
-structdecl-> structtype   "{"     vardecl   vardecl_r   "}"    ";"
+structdecl-> structtype   "{"    type vardecl   vardecl_r   "}"    ";"
 
-vardecl_r -> (vardecl    vardecl_r)  | eps
+vardecl_r -> ( type vardecl    vardecl_r)  | eps
 
 structtype-> STRUCT    IDENT
 
-vardecl->  type  IDENT   dimension_r    ";"
+vardecl->   IDENT   dimension_r    ";"
 
 dimension_r->  (dimension   dimesion_r) | eps
 dimension ->  "["    INT_LITERAL    "]"
 
-fun~ ->  type  IDENT    "("   params   ")"
+fun~ -> IDENT    "("   params   ")"
 
 fundecl ->  fun~  block
 

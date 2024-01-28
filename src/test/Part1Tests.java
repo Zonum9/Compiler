@@ -147,9 +147,16 @@ class Part1Tests {
         assertParsePass("void fun(){" +
                 "x[1+2+ex+111*omega!=x]=11;" +
                 "}");
-        assertParsePass("void fun(){" +
+        assertParseFail("void fun(){" +
                 "x[1+2+ex+111*omega!=x]=11;" +
                 "&&&x&&x;" +
+                "****x;" +
+                "(struct mystruct*)hello;" +
+                "(*hello).hello;" +
+                "}");
+        assertParsePass("void fun(){" +
+                "x[1+2+ex+111*omega!=x]=11;" +
+                "&x&&x;" +
                 "****x;" +
                 "(struct mystruct*)hello;" +
                 "(*hello).hello;" +
@@ -253,7 +260,7 @@ class Part1Tests {
     }
 
     @Test
-    void tryingToStackOverflow(){//todo
+    void tryingToStackOverflow(){
         assertParseFail("fun{");
         assertParseFail("int fun (thing){{{{}}}");
         assertParseFail("void func (int a,int b)");
@@ -277,7 +284,19 @@ class Part1Tests {
     void mergeLinkedListParser(){
         //code taken from https://www.geeksforgeeks.org/merge-two-sorted-linked-lists/
         assertFileParsePass("src/test/textFiles/linkedList.c");
+    }
 
+    @Test
+    void idk(){
+        assertParseFail("void& fun (){}");
+        assertParsePass("void** fun (){}");
+        assertParsePass("void* fun (){}");
+        assertParseFail("void fun (){" +
+                "if(x&&&&x){}" +
+                "}");
+        assertParsePass("void fun (){" +
+                "if(x&&(x&&x)){}" +
+                "}");
     }
 
     private void assertFileParseFail(String filename){

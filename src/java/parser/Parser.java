@@ -172,7 +172,7 @@ public class Parser  extends CompilerPass {
     private void parseExpression(){
         switch (token.category){
             case INT_LITERAL,CHAR_LITERAL,STRING_LITERAL -> nextToken();
-            case PLUS,MINUS,ASTERISK,AND,LOGAND -> {nextToken(); parseExpression();}//include logAnd because of double address
+            case PLUS,MINUS,ASTERISK,AND -> {nextToken(); parseExpression();}
             case SIZEOF -> {
                 nextToken();
                 expect(LPAR);
@@ -278,7 +278,7 @@ public class Parser  extends CompilerPass {
     private boolean acceptStatement(){
         return accept(LBRA,WHILE,IF,RETURN,CONTINUE,BREAK, //statement
                 LPAR,IDENTIFIER,INT_LITERAL,MINUS,PLUS, //exp
-                CHAR_LITERAL,STRING_LITERAL, ASTERISK,AND,LOGAND,SIZEOF); //exp
+                CHAR_LITERAL,STRING_LITERAL, ASTERISK,AND,SIZEOF); //exp
     }
 
     private void parseParams(){
