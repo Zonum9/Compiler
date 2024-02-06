@@ -2,7 +2,7 @@ package util;
 
 public class CompilerPass {
 
-    private int numErrors = 0;
+    protected int numErrors = 0;
 
     public void incError() { numErrors++;}
     public int getNumErrors() { return numErrors; }

@@ -1,12 +1,17 @@
 package parser;
 
 
+import ast.Decl;
+import ast.Program;
+import ast.StructTypeDecl;
 import lexer.Token;
 import lexer.Token.Category;
 import lexer.Tokeniser;
 import util.CompilerPass;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import static lexer.Token.Category.*;
 
@@ -28,11 +33,11 @@ public class Parser  extends CompilerPass {
         this.tokeniser = tokeniser;
     }
 
-    public void parse() {
+    public Program parse() {
         // get the first token
         nextToken();
 
-        parseProgram();
+        return parseProgram();
     }
 
 
@@ -95,15 +100,16 @@ public class Parser  extends CompilerPass {
     /*
      * If the current token is equals to the expected one, then skip it, otherwise report an error.
      */
-    private void expect(Category... expected) {
+    private Token expect(Category... expected) {
         for (Category e : expected) {
             if (e == token.category) {
+                Token ret = token;
                 nextToken();
-                return;
+                return ret;
             }
         }
         error(expected);
-//        nextToken();
+        return token;
     }
 
     /*
@@ -118,14 +124,15 @@ public class Parser  extends CompilerPass {
     }
 
 
-    private void parseProgram() {
+    private Program parseProgram() {
         parseIncludes();
 
-        while (accept(STRUCT, INT, CHAR, VOID)) {
-            if (token.category == STRUCT &&
-                    lookAhead(1).category == IDENTIFIER &&
-                    lookAhead(2).category == LBRA) {
-                parseStructDecl();
+        List<Decl> decls = new ArrayList<>();
+        while (accept(Category.STRUCT, Category.INT, Category.CHAR, Category.VOID)) {
+            if (token.category == Category.STRUCT &&
+                    lookAhead(1).category == Category.IDENTIFIER &&
+                    lookAhead(2).category == Category.LBRA) {
+                decls.add(parseStructDecl());
             }
             //if this fails, then the program is automatically not valid, since
             //we must have a variable declaration, or a function or a struct declaration
@@ -141,7 +148,8 @@ public class Parser  extends CompilerPass {
             }
         }
 
-        expect(EOF);
+        expect(Category.EOF);
+        return new Program(decls);
     }
 
     private void parseFunc(){
@@ -308,15 +316,17 @@ public class Parser  extends CompilerPass {
         }
     }
 
-    private void parseStructDecl(){
-        expect(STRUCT);
-        expect(IDENTIFIER);
-        expect(LBRA);
+
+    private StructTypeDecl parseStructDecl(){
+        expect(Category.STRUCT);
+        Token id = expect(Category.IDENTIFIER);
+        expect(Category.LBRA);
         parseType();
         parseVarDeclarationWithoutType();
         parse0orMoreVarDeclaration();
         expect(RBRA);
         expect(SC);
+        return null; //todo change this
     }
 
     private void parseVarDeclarationWithoutType(){
