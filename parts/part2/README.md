@@ -300,8 +300,12 @@ The outer identifier is said to be shadowed and any use of the identifier will r
 
 A function name can only be used once for a function declaration, and once for a function prototype (if any).
 Declaring two function prototypes, or two function declarations, with the same name, is not legal.
+Every function prototype must have a corresponding function declaration (i.e. it is illegal to only have a function prototype).
+
 Before a function is allowed to be call, a function prototype or declaration must have been defined first.
+
 If both a function prototype and function declaration with the same name exists, there must have identical types (return type and arguments' type).
+
 
 ### Built-in functions
 
