@@ -16,7 +16,10 @@ public final class Block extends Stmt {
         return children;
     }
 
-    // to complete ...
+    public Block(List<VarDecl> vds, List<Stmt> stmts) {
+        this.vds = vds;
+        this.stmts = stmts;
+    }
 
 
 }

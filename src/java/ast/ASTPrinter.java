@@ -16,9 +16,14 @@ public class ASTPrinter {
                 throw new IllegalStateException("Unexpected null value");
             }
 
-            case Block ignored -> {
+            case Block blc -> {
                 writer.print("Block(");
-                // to complete
+                String delimiter = "";
+                for (ASTNode child : blc.children()) {
+                    writer.print(delimiter);
+                    delimiter = ",";
+                    visit(child);
+                }
                 writer.print(")");
             }
 
@@ -82,13 +87,32 @@ public class ASTPrinter {
                 }
                 writer.print(")");
             }
-
             case StructType st->{
                 writer.print("StructType("+st.strTypeName+")");
             }
-            default -> {}
+            case Return aReturn -> {
+                writer.print("Return(");
+                //visit return expression
+                aReturn.expr.ifPresent(this::visit);
+                writer.print(")");
+            }
 
-            // to complete ...
+            // todo ...
+            case ArrayType arrayType -> {
+            }
+            case Break aBreak -> {
+            }
+            case Continue aContinue -> {
+            }
+            case ExprStmt exprStmt -> {
+            }
+            case If anIf -> {
+            }
+            case PointerType pointerType -> {
+            }
+
+            case While aWhile -> {
+            }
         }
 
     }

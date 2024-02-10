@@ -7,10 +7,8 @@ import lexer.Token.Category;
 import lexer.Tokeniser;
 import util.CompilerPass;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
+
 import static lexer.Token.Category.*;
 
 
@@ -171,18 +169,20 @@ public class Parser  extends CompilerPass {
         expect(LBRA);
         List<VarDecl>varDecls = new ArrayList<>();
         parse0orMoreVarDeclaration(varDecls);
-        parse0orMoreStatements();//todo
+        List<Stmt> stmts = new ArrayList<>();
+        parse0orMoreStatements(stmts);//todo
         expect(RBRA);
-        return null; //todo
+        return new Block(varDecls,stmts);
     }
-    private void parseWhile(){
+    private While parseWhile(){
         expect(WHILE);
         expect(LPAR);
-        parseExpression();
+        Expr expr= parseExpression();
         expect(RPAR);
-        parseStatement();
+        Stmt stmt= parseStatement();
+        return new While(expr,stmt);
     }
-    private void parseExpression(){
+    private Expr parseExpression(){//todo
         switch (token.category){
             case INT_LITERAL,CHAR_LITERAL,STRING_LITERAL -> nextToken();
             case PLUS,MINUS,ASTERISK,AND -> {nextToken(); parseExpression();}
@@ -198,7 +198,7 @@ public class Parser  extends CompilerPass {
                     parseType();
                     expect(RPAR);
                     parseExpression();
-                    return;
+                    return null;//todo
                 }
                 // if it's not a type cast, then it's just a "(" exp ")"
                 parseExpression();
@@ -215,6 +215,7 @@ public class Parser  extends CompilerPass {
             default -> error();//do not accept empty expressions
         }
         parsePostExpression();
+        return null; //todo
     }
     private void parsePostExpression(){
         switch (token.category){
@@ -248,43 +249,50 @@ public class Parser  extends CompilerPass {
 //        parseOperation();
     }
 
-    private void parseIf(){
+    private If parseIf(){
         expect(IF);
         expect(LPAR);
-        parseExpression();
+        Expr expr= parseExpression();
         expect(RPAR);
-        parseStatement();
+        Stmt stmt= parseStatement();
         if(!accept(ELSE))
-            return;
+            return new If(expr,stmt, Optional.empty());
         nextToken();//consume else
-        parseStatement();
+        Stmt els=parseStatement();
+        return new If(expr,stmt,Optional.of(els));
     }
-    private void parseReturn(){
+    private Return parseReturn(){
         expect(RETURN);
         if(accept(SC)) {//return statement without expression
             nextToken();
-            return;
+            return new Return(Optional.empty());
         }
-        parseExpression();
+        Expr expr= parseExpression();
         expect(SC);
+        return  new Return(Optional.of(expr));
     }
 
-    private void parseStatement(){
+    private Stmt parseStatement(){
+        Stmt stmt;
         switch (token.category){
-            case LBRA -> parseBlock();
-            case WHILE -> parseWhile();
-            case IF -> parseIf();
-            case RETURN -> parseReturn();
-            case CONTINUE -> {expect(CONTINUE); expect(SC);}
-            case BREAK -> {expect(BREAK); expect(SC);}
-            default -> {parseExpression();expect(SC);}
+            case LBRA -> stmt= parseBlock();
+            case WHILE -> stmt = parseWhile();
+            case IF -> stmt = parseIf();
+            case RETURN -> stmt= parseReturn();
+            case CONTINUE -> {expect(CONTINUE); expect(SC); stmt = new Continue();}
+            case BREAK -> {expect(BREAK); expect(SC); stmt = new Break();}
+            default -> {
+                Expr expr= parseExpression();
+                stmt = new ExprStmt(expr);
+                expect(SC);
+            }
         }
-
+        return stmt;
     }
 
-    private void parse0orMoreStatements(){
+    private void parse0orMoreStatements(List<Stmt> stmts){
         while(acceptStatement()) {
-            parseStatement();
+            stmts.add(parseStatement());
         }
     }
 
