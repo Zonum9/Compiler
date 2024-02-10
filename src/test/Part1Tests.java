@@ -1,39 +1,39 @@
 import lexer.Scanner;
 import lexer.Token;
 import lexer.Tokeniser;
-import org.junit.jupiter.api.Test;
+import static lexer.Token.Category.*;
 import parser.Parser;
 
+import org.junit.jupiter.api.Test;
 import java.io.*;
-import java.nio.file.Files;
 
-import static lexer.Token.Category.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 
 class Part1Tests {
     @Test
     void basicTest() throws IOException {
-        Tokeniser t = createTokeniser("hello world");
+        Tokeniser t = Utils.createTokeniserFromString("hello world");
         assertTokenEquals(t.nextToken(),IDENTIFIER,"hello");
         assertTokenEquals(t.nextToken(),IDENTIFIER,"world");
     }
     @Test
     void commentsTest() throws IOException {
-        Tokeniser t = createTokeniser("//this is the thing\\ th//a/a/sd/sdlkjld/.dsflsdkfxcxcvat is a thing\n" +
+        Tokeniser t = Utils.createTokeniserFromString("//this is the thing\\ th//a/a/sd/sdlkjld/.dsflsdkfxcxcvat is a thing\n" +
                 "/*sfssfkslf;lskfsfkjlsfsf//a/s//w//****** / *kld;lskjf*/");
         assertTokenEquals(t.nextToken(),EOF);
-        t = createTokeniser("/*sfssfkslf;lskfsfkjlsfsfkld;lskjf");
+        t = Utils.createTokeniserFromString("/*sfssfkslf;lskfsfkjlsfsfkld;lskjf");
         assertTokenEquals(t.nextToken(),INVALID);
 
-        t = createTokeniser("/ ");
+        t = Utils.createTokeniserFromString("/ ");
         assertTokenEquals(t.nextToken(),DIV);
 
     }
 
     @Test
     void randomTest1() throws IOException {
-        Tokeniser t = createTokeniser("123456abc =!");
+        Tokeniser t = Utils.createTokeniserFromString("123456abc =!");
         assertTokenEquals(t.nextToken(),INT_LITERAL,"123456");
         assertTokenEquals(t.nextToken(),IDENTIFIER,"abc");
         assertTokenEquals(t.nextToken(),ASSIGN);
@@ -41,7 +41,7 @@ class Part1Tests {
     }
     @Test
     void structTest() throws IOException {
-        Tokeniser t = createTokeniser("struct mystruct { int* thing;};");
+        Tokeniser t = Utils.createTokeniserFromString("struct mystruct { int* thing;};");
         assertTokenEquals(t.nextToken(),STRUCT);
         assertTokenEquals(t.nextToken(),IDENTIFIER);
         assertTokenEquals(t.nextToken(),LBRA);
@@ -55,7 +55,7 @@ class Part1Tests {
     }
     @Test
     void pointerTest() throws IOException {
-        Tokeniser t = createTokeniser("int**");
+        Tokeniser t = Utils.createTokeniserFromString("int**");
         assertTokenEquals(t.nextToken(),INT);
         assertTokenEquals(t.nextToken(),ASTERISK);
         assertTokenEquals(t.nextToken(),ASTERISK);
@@ -63,7 +63,7 @@ class Part1Tests {
     }
     @Test
     void arrayTest() throws IOException {
-        Tokeniser t = createTokeniser("int[][]");
+        Tokeniser t = Utils.createTokeniserFromString("int[][]");
         assertTokenEquals(t.nextToken(),INT);
         assertTokenEquals(t.nextToken(),LSBR);
         assertTokenEquals(t.nextToken(),RSBR);
@@ -74,12 +74,12 @@ class Part1Tests {
 
     @Test
     void fibonacciLexer() throws Exception {// test to verify that any changes i make don't break existing solutions
-        assertFileEquals("src/test/referenceFiles/fibonacciOut.txt","src/test/textFiles/fibonacci.c");
+        Utils.assertFileEqualsTokenization("src/test/referenceFiles/fibonacciOut.txt","src/test/textFiles/fibonacci.c");
     }
 
     @Test
     void tictacLexer() throws Exception {// test to verify that any changes i make don't break existing solutions
-        assertFileEquals("src/test/referenceFiles/tictactoeOut.txt","src/test/textFiles/tictactoe.c");
+        Utils.assertFileEqualsTokenization("src/test/referenceFiles/tictactoeOut.txt","src/test/textFiles/tictactoe.c");
     }
 
     @Test
@@ -136,6 +136,10 @@ class Part1Tests {
         assertParseFail("char* func ()");
         assertParseFail("char* func (){");
         assertParseFail("char* func ();{}");
+    }
+    @Test
+    void missedTest(){
+        assertParseFail("void fun (int x,);");
     }
 
     @Test
@@ -328,14 +332,11 @@ class Part1Tests {
     private void assertTokenEquals(Token t, Token.Category cat){
         assertEquals(cat,t.category);
     }
-    private Tokeniser createTokeniser(String content) throws IOException{
-        File f= File.createTempFile("hello",".c");
-        Files.writeString(f.toPath(), content);
-        return new Tokeniser(new Scanner(f));
-    }
+
+
     private void assertParsePass(String stringToParse){
         try {
-            Parser p = new Parser(createTokeniser(stringToParse));
+            Parser p = new Parser(Utils.createTokeniserFromString(stringToParse));
             p.parse();
             assertEquals(0,p.getNumErrors());
         } catch (IOException e) {
@@ -345,7 +346,7 @@ class Part1Tests {
 
     private void assertParseFail(String stringToParse){
         try {
-            Parser p = new Parser(createTokeniser(stringToParse));
+            Parser p = new Parser(Utils.createTokeniserFromString(stringToParse));
             p.parse();
             assertNotEquals(0,p.getNumErrors());
         } catch (IOException e) {
@@ -354,32 +355,5 @@ class Part1Tests {
     }
 
 
-    private void assertFileEquals(String  referenceFile,String fileToTest) throws Exception {
-        File file=new File(fileToTest);
-        BufferedReader fileToReference = new BufferedReader(new FileReader(referenceFile));
-        String line;
-        Tokeniser t = new Tokeniser(new Scanner(file));
-        while((line=fileToReference.readLine())!=null) {
-            Token next = t.nextToken();
 
-            if (next.category == EOF)
-                break;
-            //Tokens with new lines are still considered a single token, so need to split them
-            if (next.toString().contains("\n")){
-                String[] splits= next.toString().split("\n");
-                for (int i = 0; i < splits.length; i++) {
-                    assertEquals(line,splits[i]);
-                    if (i != splits.length-1)
-                        line=fileToReference.readLine();
-                    if (line == null){
-                        fail();
-                    }
-                }
-            }else
-                assertEquals(line,next.toString());
-        }
-        fileToReference.close();
-        assertEquals(t.getNumErrors(), 0);
-
-    }
 }

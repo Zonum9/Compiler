@@ -33,6 +33,16 @@ public class ASTPrinter {
                 visit(fd.block);
                 writer.print(")");
             }
+            case FunProto fp -> {
+                writer.print("FunProto(");
+                visit(fp.type);
+                writer.print(","+fp.name);
+                for (VarDecl vd : fp.params) {
+                    writer.print(",");
+                    visit(vd);
+                }
+                writer.print(")");
+            }
 
             case Program p -> {
                 writer.print("Program(");
@@ -60,12 +70,23 @@ public class ASTPrinter {
             }
 
             case BaseType bt -> {
-                // to complete ...
+                writer.print(bt);
             }
 
             case StructTypeDecl std -> {
-                // to complete
+                writer.print("StructTypeDecl(");
+                visit(std.type);
+                for (ASTNode n : std.varDecls){
+                    writer.print(",");
+                    visit(n);
+                }
+                writer.print(")");
             }
+
+            case StructType st->{
+                writer.print("StructType("+st.strTypeName+")");
+            }
+            default -> {}
 
             // to complete ...
         }

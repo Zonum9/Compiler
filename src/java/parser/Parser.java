@@ -1,9 +1,7 @@
 package parser;
 
 
-import ast.Decl;
-import ast.Program;
-import ast.StructTypeDecl;
+import ast.*;
 import lexer.Token;
 import lexer.Token.Category;
 import lexer.Tokeniser;
@@ -137,13 +135,13 @@ public class Parser  extends CompilerPass {
             //if this fails, then the program is automatically not valid, since
             //we must have a variable declaration, or a function or a struct declaration
             else {
-                parseType();
+                Type t=parseType();
                 //current token should be an identifier
                 //a left parenthesis must mean a function
                 if(lookAhead(1).category == LPAR) {
-                    parseFunc();
+                    decls.add(parseFunc(t));
                 }else{
-                    parseVarDeclarationWithoutType();
+                    decls.add(parseVarDeclaration(t));
                 }
             }
         }
@@ -152,23 +150,30 @@ public class Parser  extends CompilerPass {
         return new Program(decls);
     }
 
-    private void parseFunc(){
-        expect(IDENTIFIER);
+    private Decl parseFunc(Type funType){
+        String name=expect(IDENTIFIER).data;
         expect(LPAR);
-        parseParams();
+        List<VarDecl> params = new ArrayList<>();
+        parseParams(params);
         expect(RPAR);
-        if(accept(LBRA))
-            parseBlock();
-        else
+        if(accept(LBRA)) {
+            Block block=parseBlock();
+            return new FunDecl(funType,name,params,block);
+        }
+        else {
             expect(SC);
+            return new FunProto(funType,name,params);
+        }
 
     }
 
-    private void parseBlock(){
+    private Block parseBlock(){//todo
         expect(LBRA);
-        parse0orMoreVarDeclaration();
-        parse0orMoreStatements();
+        List<VarDecl>varDecls = new ArrayList<>();
+        parse0orMoreVarDeclaration(varDecls);
+        parse0orMoreStatements();//todo
         expect(RBRA);
+        return null; //todo
     }
     private void parseWhile(){
         expect(WHILE);
@@ -289,22 +294,26 @@ public class Parser  extends CompilerPass {
                 CHAR_LITERAL,STRING_LITERAL, ASTERISK,AND,SIZEOF); //exp
     }
 
-    private void parseParams(){
+    private void parseParams(List<VarDecl> params){
         //no params
         if(!acceptType()) {
             return;
         }
-        parseType();//consume type
-        expect(IDENTIFIER);
-        parse0orMoreArray();
-        parse0orMoreParams();
+        Type type=parseType();//consume type
+        String name= expect(IDENTIFIER).data;
+        type = parse0orMoreArray(type);
+        params.add(new VarDecl(type,name));
+        parse0orMoreParams(params);
     }
 
-    private void parse0orMoreParams(){
+    private void parse0orMoreParams(List<VarDecl> params){
         if (!accept(COMMA))
             return;
         nextToken();//consume comma
-        parseParams();
+        if (!acceptType()){
+            error(STRUCT,INT,CHAR,VOID);
+        }
+        parseParams(params);
     }
 
     // includes are ignored, so does not need to return an AST node
@@ -320,56 +329,73 @@ public class Parser  extends CompilerPass {
     private StructTypeDecl parseStructDecl(){
         expect(Category.STRUCT);
         Token id = expect(Category.IDENTIFIER);
+        StructType structType = new StructType(id.data);
         expect(Category.LBRA);
-        parseType();
-        parseVarDeclarationWithoutType();
-        parse0orMoreVarDeclaration();
+        Type delcType= parseType();
+        VarDecl varDecl= parseVarDeclaration(delcType);
+        ArrayList<VarDecl> varDecls = new ArrayList<>();
+        varDecls.add(varDecl);
+        parse0orMoreVarDeclaration(varDecls);
         expect(RBRA);
         expect(SC);
-        return null; //todo change this
+        return new StructTypeDecl(structType,varDecls);
     }
 
-    private void parseVarDeclarationWithoutType(){
-        expect(IDENTIFIER);
-        parse0orMoreArray();
+    //type must be parsed before calling this
+    private VarDecl parseVarDeclaration(Type type){
+        String name = expect(IDENTIFIER).data;
+        type = parse0orMoreArray(type);
         expect(SC);
+        return new VarDecl(type,name);
+
     }
-    private void parse0orMoreVarDeclaration(){
+    private void parse0orMoreVarDeclaration(List<VarDecl> varDecls){
         if (!acceptType())
             return;
-        parseType();
-        parseVarDeclarationWithoutType();
-        parse0orMoreVarDeclaration();
+        Type declType= parseType();
+        VarDecl varDecl= parseVarDeclaration(declType);
+        varDecls.add(varDecl);
+        parse0orMoreVarDeclaration(varDecls);
     }
 
-    private void parse0orMoreArray(){
+    private Type parse0orMoreArray(Type type){
         if (!accept(LSBR))
-            return;
+            return type;
         nextToken();
-        expect(INT_LITERAL);
+        Token token = expect(INT_LITERAL);
+        int i= Integer.MIN_VALUE; //not sure what else to put
+        if (token.category == INT_LITERAL)
+            i = Integer.parseInt(token.data);
         expect(RSBR);
-        parse0orMoreArray();
+        return parse0orMoreArray(new ArrayType(type,i));
     }
 
-    private void parseType(){
+    private Type parseType(){
         //if the type is struct, it must be followed by an identifier
+        Type type;
         if (accept(STRUCT)){
             nextToken();
-            expect(IDENTIFIER);
+            type = new StructType(expect(IDENTIFIER).data);
         }
         else {
-            expect(INT, CHAR, VOID);
+            Token token = expect(INT, CHAR, VOID);
+            switch (token.category) {
+                case INT -> type = BaseType.INT;
+                case CHAR -> type = BaseType.CHAR;
+                case VOID -> type = BaseType.VOID;
+                default -> type = BaseType.UNKNOWN;
+            }
         }
-        parse0orMorePointers();
+        return parse0orMorePointers(type);
     }
     private boolean acceptType(){
         return accept(STRUCT,INT,CHAR,VOID);
     }
 
-    private void parse0orMorePointers(){
+    private Type parse0orMorePointers(Type type){
         if (!accept(ASTERISK))
-            return;
+            return type;
         nextToken();
-        parse0orMorePointers();
+        return parse0orMorePointers(new PointerType(type));
     }
 }

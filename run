@@ -1,6 +1,6 @@
 #!/bin/bash
 clear
-java -cp bin Main1 -lexer src/test/textFiles/fibonacci.c
+java -cp bin Main2 -lexer src/test/textFiles/fibonacci.c
 exit_code=$?
 echo $exit_code
 
