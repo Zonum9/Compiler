@@ -140,6 +140,15 @@ class Part1Tests {
     @Test
     void missedTest(){
         assertParseFail("void fun (int x,);");
+        assertParsePass("void fun(){" +
+                "(void)x+y;" +
+                "}");
+        assertParsePass("void fun(){" +
+                "(void)x+y+x;" +
+                "}");
+        assertParsePass("void fun(){" +
+                "(void)x;" +
+                "}");
     }
 
     @Test

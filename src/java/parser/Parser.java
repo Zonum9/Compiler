@@ -124,10 +124,10 @@ public class Parser  extends CompilerPass {
         parseIncludes();
 
         List<Decl> decls = new ArrayList<>();
-        while (accept(Category.STRUCT, Category.INT, Category.CHAR, Category.VOID)) {
-            if (token.category == Category.STRUCT &&
-                    lookAhead(1).category == Category.IDENTIFIER &&
-                    lookAhead(2).category == Category.LBRA) {
+        while (accept(STRUCT, INT, CHAR, VOID)) {
+            if (token.category == STRUCT &&
+                    lookAhead(1).category == IDENTIFIER &&
+                    lookAhead(2).category == LBRA) {
                 decls.add(parseStructDecl());
             }
             //if this fails, then the program is automatically not valid, since
@@ -144,7 +144,7 @@ public class Parser  extends CompilerPass {
             }
         }
 
-        expect(Category.EOF);
+        expect(EOF);
         return new Program(decls);
     }
 
@@ -217,6 +217,67 @@ public class Parser  extends CompilerPass {
         parsePostExpression();
         return null; //todo
     }
+
+//    private Expr parseExpression(){//todo
+//        Expr expr= switch (token.category){
+//            case INT_LITERAL,CHAR_LITERAL,STRING_LITERAL -> {
+//                Expr ex= switch (token.category){
+//                    case CHAR_LITERAL -> new ChrLiteral(token.data.charAt(0));
+//                    case STRING_LITERAL -> new StrLiteral(token.data);
+//                    case INT_LITERAL -> new IntLiteral(Integer.parseInt(token.data));
+//                    default -> throw new IllegalStateException("Unexpected value: " + token.category);
+//                };
+//                nextToken();
+//                yield ex;
+//            }
+//            //unary operations
+//            case PLUS,MINUS,ASTERISK,AND -> {
+//                //todo
+//                System.out.println("does this ever run?");
+//                nextToken();
+//                yield parseExpression();
+//            }
+//            case SIZEOF -> {
+//                nextToken();
+//                expect(LPAR);
+//                Type type= parseType();
+//                expect(RPAR);
+//                yield new SizeOfExpr(type);
+//            }
+//            case LPAR -> {
+//                nextToken();//consume "("
+//                if(acceptType()) { //it's a type cast  "(" type ")" exp
+//                    parseType();
+//                    expect(RPAR);
+//                    parseExpression();
+////                    return null;//todo
+//                    yield null; //todo
+//                }
+//                // if it's not a type cast, then it's just a "(" exp ")"
+//                parseExpression();
+//                expect(RPAR);
+//                yield null;//todo
+//            }  //typecast
+//            case IDENTIFIER -> {
+//                //if there is a "(" after the identifier, then it must be a function call
+//                if(lookAhead(1).category== LPAR)
+//                    parseFunctionCall();
+//                else //lone identifier
+//                    nextToken();
+//                yield null;//todo
+//            }
+//            default -> {
+//                error();
+//                yield null;
+//            }//do not accept empty expressions
+//        };
+//        parsePostExpression();//todo
+//        return expr;
+//    }
+
+
+
+
     private void parsePostExpression(){
         switch (token.category){
             case LSBR -> { nextToken(); parseExpression(); expect(RSBR); parsePostExpression();} //array access
@@ -335,10 +396,10 @@ public class Parser  extends CompilerPass {
 
 
     private StructTypeDecl parseStructDecl(){
-        expect(Category.STRUCT);
-        Token id = expect(Category.IDENTIFIER);
+        expect(STRUCT);
+        Token id = expect(IDENTIFIER);
         StructType structType = new StructType(id.data);
-        expect(Category.LBRA);
+        expect(LBRA);
         Type delcType= parseType();
         VarDecl varDecl= parseVarDeclaration(delcType);
         ArrayList<VarDecl> varDecls = new ArrayList<>();

@@ -28,6 +28,10 @@ public class Part2Tests {
     void typeTests(){
         assertEqualsAST("Program(FunProto(VOID,fun,VarDecl(StructType(mystr),x)))","void fun(struct mystr x);");
         assertEqualsAST("Program(FunProto(CHAR,fun,VarDecl(StructType(mystr),x)))","char fun(struct mystr x);");
+        assertEqualsAST("Program(FunProto(PointerType(CHAR),fun))","char* fun();");
+        assertEqualsAST("Program(FunProto(VOID,fun,VarDecl(ArrayType(INT,3),x),VarDecl(CHAR,y)))","void fun(int x [3],char y);");
+        assertEqualsAST("Program(FunProto(PointerType(StructType(B)),fun))","struct B* fun();");
+
     }
 
     @Test

@@ -32,14 +32,17 @@ stmt       ::= block
 
 block      ::= "{" (vardecl)* (stmt)* "}"
 
-exp        ::= "(" exp ")"
-             | exp "=" exp                           # assignment
-             | (IDENT | INT_LITERAL)
-             | ("-" | "+") exp
-             | CHAR_LITERAL
-             | STRING_LITERAL
-             | exp (">" | "<" | ">=" | "<=" | "!=" | "==" | "+" | "-" | "/" | "*" | "%" | "||" | "&&") exp  # binary operators
-             | arrayaccess | fieldaccess | valueat | addressof | funcall | sizeof | typecast
+exp         ::=    pred2 ( (funcall | arrayaccess | fieldaccess) exp | eps )*                   //need to fix this, not left to right
+pred2       ::=    pred3 ( ("+" | "-" | typecast | addressof | valueat) pred2 | eps )*          //unary plus and minus
+pred3       ::=    pred4 ( ("/" | "*" | "%" ) pred3 | eps )*                                    //need to fix this, not left to right
+pred4       ::=    pred5 ( ("+" | "-" ) pred4 | eps )*                                          //need to fix this, not left to right
+pred5       ::=    pred6 ( (">" | "<" | ">=" | "<=" ) pred5 | eps )*                            //need to fix this, not left to right
+pred6       ::=    pred7 ( ("!=" | "==" ) pred6 | eps )*                                        //need to fix this, not left to right
+pred7       ::=    pred8 ( "&&" pred7 | eps )*                                                  //need to fix this, not left to right
+pred8       ::=    pred9 ( "||" pred8 | eps )*                                                  //need to fix this, not left to right
+pred9       ::=    predFinal ( "=" pred9 | eps )*                                               //right to left
+predFinal   ::=    "(" exp ")" | IDENT | INT_LITERAL | STRING_LITERAL | CHAR_LITERAL | sizeof
+
 
 funcall      ::= IDENT "(" [ exp ("," exp)* ] ")" # function call
 arrayaccess  ::= exp "[" exp "]"                  # array access

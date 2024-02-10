@@ -1,1 +1,1 @@
-Program(FunProto(CHAR,fun,VarDecl(StructType(mystr),x)))
+Program(FunProto(PointerType(StructType(B)),fun))

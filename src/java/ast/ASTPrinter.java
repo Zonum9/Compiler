@@ -96,23 +96,54 @@ public class ASTPrinter {
                 aReturn.expr.ifPresent(this::visit);
                 writer.print(")");
             }
-
-            // todo ...
-            case ArrayType arrayType -> {
-            }
-            case Break aBreak -> {
-            }
-            case Continue aContinue -> {
-            }
-            case ExprStmt exprStmt -> {
+            case While aWhile -> {
+                writer.print("While(");
+                visit(aWhile.expr);
+                writer.print(",");
+                visit(aWhile.stmt);
+                writer.print(")");
             }
             case If anIf -> {
+                writer.print("If(");
+                visit(anIf.expr);
+                writer.print(",");
+                visit(anIf.stmt);
+                if(anIf.els.isPresent()){
+                    writer.print(",");
+                    visit(anIf.els.get());
+                }
+                writer.print(")");
+            }
+            case ExprStmt exprStmt -> {
+                writer.print("ExprStmt(");
+                visit(exprStmt.expr);
+                writer.print(")");
+            }
+            case Continue ignored -> {
+                writer.print("Continue()");
+            }
+            case Break ignored -> {
+                writer.print("Break()");
+            }
+            case ArrayType arrayType -> {
+                writer.print("ArrayType(");
+                visit(arrayType.type);
+                writer.print(",");
+                writer.print(arrayType.numElement+")");
             }
             case PointerType pointerType -> {
+                writer.print("PointerType(");
+                visit(pointerType.type);
+                writer.print(")");
             }
+            default -> {}
 
-            case While aWhile -> {
-            }
+            // todo ...
+
+
+
+
+
         }
 
     }
