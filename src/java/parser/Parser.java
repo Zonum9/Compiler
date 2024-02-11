@@ -182,12 +182,10 @@ public class Parser  extends CompilerPass {
         Stmt stmt= parseStatement();
         return new While(expr,stmt);
     }
-    private Expr parseExpression(){//todo
-        if (token.category == IDENTIFIER && lookAhead(1).category== LPAR){ //funcall
-            return parseFunctionCall();
-        }
-        Expr lhs = parsePred2();
-        while (accept(LSBR,DOT)){ //arrayaccess | fieldaccess
+    private Expr parseExpression(){//TODO don't know how to include operations following this
+        Expr lhs= parsePred2();
+
+        while (accept(LSBR,DOT,LPAR)){ //arrayaccess | fieldaccess | funcall
             lhs= switch (token.category){
                 case LSBR -> {
                     nextToken();
@@ -199,6 +197,14 @@ public class Parser  extends CompilerPass {
                     nextToken();
                     String fieldName= expect(IDENTIFIER).data;
                     yield new FieldAccessExpr(lhs,fieldName);
+                }
+                case LPAR ->{
+                    if (lhs instanceof VarExpr){
+                        String name = ((VarExpr) lhs).name;
+                        yield  parseFunctionCall(name);
+                    }
+                    error();
+                    yield null;
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + token.category);
             };
@@ -212,11 +218,11 @@ public class Parser  extends CompilerPass {
             expr= switch (token.category){
                 case PLUS -> {
                     nextToken();
-                    yield new BinOp(new IntLiteral(0), Op.ADD, parsePred2());
+                    yield new BinOp(new IntLiteral(0), Op.ADD, parseExpression());
                 }
                 case MINUS -> {
                     nextToken();
-                    yield  new BinOp(new IntLiteral(0), Op.SUB, parsePred2());
+                    yield  new BinOp(new IntLiteral(0), Op.SUB, parseExpression());
                 }
                 case LPAR -> {
                     nextToken();
@@ -225,15 +231,15 @@ public class Parser  extends CompilerPass {
                     }
                     Type type= parseType();
                     expect(RPAR);
-                    yield new TypecastExpr (type,parsePred2()); //todo should it really be pred2? might be better for it to be exp (allow for -fun() )
+                    yield new TypecastExpr (type,parseExpression());
                 }
                 case AND->{
                     nextToken();
-                    yield new AddressOfExpr(parsePred2());
+                    yield new AddressOfExpr(parseExpression());
                 }
                 case ASTERISK -> {
                     nextToken();
-                    yield new ValueAtExpr(parsePred2());
+                    yield new ValueAtExpr(parseExpression());
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + token.category);
             };
@@ -244,21 +250,21 @@ public class Parser  extends CompilerPass {
         return expr;
     }
 
-    private Expr parsePred3() {//todo
+    private Expr parsePred3() {
         Expr lhs = parsePred4();
         while (accept(DIV,ASTERISK,REM)){ // "/" | "*" | "%"
             lhs= switch (token.category){
                 case DIV -> {
                     nextToken();
-                    yield new BinOp(lhs,Op.DIV,parsePred4());
+                    yield new BinOp(lhs,Op.DIV,parseExpression());
                 }
                 case ASTERISK -> {
                     nextToken();
-                    yield new BinOp(lhs,Op.MUL,parsePred4());
+                    yield new BinOp(lhs,Op.MUL,parseExpression());
                 }
                 case REM -> {
                     nextToken();
-                    yield new BinOp(lhs,Op.MOD,parsePred4());
+                    yield new BinOp(lhs,Op.MOD,parseExpression());
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + token.category);
             };
@@ -272,11 +278,11 @@ public class Parser  extends CompilerPass {
             lhs= switch (token.category){
                 case PLUS -> {
                     nextToken();
-                    yield new BinOp(lhs,Op.ADD,parsePred5());
+                    yield new BinOp(lhs,Op.ADD,parseExpression());
                 }
                 case MINUS -> {
                     nextToken();
-                    yield new BinOp(lhs,Op.SUB,parsePred5());
+                    yield new BinOp(lhs,Op.SUB,parseExpression());
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + token.category);
             };
@@ -290,19 +296,19 @@ public class Parser  extends CompilerPass {
             lhs= switch (token.category){
                 case GT -> {
                     nextToken();
-                    yield new BinOp(lhs,Op.GT,parsePred6());
+                    yield new BinOp(lhs,Op.GT,parseExpression());
                 }
                 case GE -> {
                     nextToken();
-                    yield new BinOp(lhs,Op.GE,parsePred6());
+                    yield new BinOp(lhs,Op.GE,parseExpression());
                 }
                 case LT -> {
                     nextToken();
-                    yield new BinOp(lhs,Op.LT,parsePred6());
+                    yield new BinOp(lhs,Op.LT,parseExpression());
                 }
                 case LE->{
                     nextToken();
-                    yield new BinOp(lhs,Op.LE,parsePred6());
+                    yield new BinOp(lhs,Op.LE,parseExpression());
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + token.category);
             };
@@ -316,11 +322,11 @@ public class Parser  extends CompilerPass {
             lhs= switch (token.category){
                 case NE -> {
                     nextToken();
-                    yield new BinOp(lhs,Op.NE,parsePred7());
+                    yield new BinOp(lhs,Op.NE,parseExpression());
                 }
                 case EQ ->{
                     nextToken();
-                    yield new BinOp(lhs,Op.EQ,parsePred7());
+                    yield new BinOp(lhs,Op.EQ,parseExpression());
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + token.category);
             };
@@ -332,7 +338,7 @@ public class Parser  extends CompilerPass {
         Expr lhs = parsePred8();
         while (accept(LOGAND)){
             nextToken();
-            lhs= new BinOp(lhs,Op.AND,parsePred8());
+            lhs= new BinOp(lhs,Op.AND,parseExpression());
         }
         return lhs;
     }
@@ -341,7 +347,7 @@ public class Parser  extends CompilerPass {
         Expr lhs = parsePred9();
         while (accept(LOGOR)){
             nextToken();
-            lhs= new BinOp(lhs,Op.OR,parsePred9());
+            lhs= new BinOp(lhs,Op.OR,parseExpression());
         }
         return lhs;
     }
@@ -350,7 +356,7 @@ public class Parser  extends CompilerPass {
         Expr expr = parsePredFinal();
         if (token.category == ASSIGN){
             nextToken();
-            return new Assign(expr,parsePred9());
+            return new Assign(expr,parseExpression());
         }
         return expr;
     }
@@ -366,7 +372,7 @@ public class Parser  extends CompilerPass {
             case IDENTIFIER -> { return new VarExpr(expect(IDENTIFIER).data);}
             case INT_LITERAL -> { return new IntLiteral(Integer.parseInt(expect(INT_LITERAL).data));}
             case STRING_LITERAL -> { return new StrLiteral(expect(STRING_LITERAL).data);}
-            case CHAR -> { return new ChrLiteral(expect(CHAR).data.charAt(0));}
+            case CHAR_LITERAL -> { return new ChrLiteral(expect(CHAR_LITERAL).data.charAt(0));}
             case SIZEOF -> {
                 nextToken();
                 expect(LPAR);
@@ -394,8 +400,8 @@ public class Parser  extends CompilerPass {
         }
     }
 
-    private FunCallExpr parseFunctionCall(){
-        String name= expect(IDENTIFIER).data;
+    private FunCallExpr parseFunctionCall(String name){
+//        String name= expect(IDENTIFIER).data;
         expect(LPAR);
         ArrayList<Expr> exprs = new ArrayList<>();
         parseArgs(exprs);

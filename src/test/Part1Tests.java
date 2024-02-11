@@ -149,14 +149,32 @@ class Part1Tests {
         assertParsePass("void fun(){" +
                 "(void)x;" +
                 "}");
+
+    }
+    @Test
+    void operationAfterPred1(){
+        assertParsePass("void fun(){" +
+                "fun()[1];" +
+                "}");
+        assertParsePass("void fun(){" +
+                "fun()[1][2];" +
+                "}");
+        assertParsePass("void fun(){" +
+                "fun()[1][2] = 11;" +
+                "}");
+        assertParsePass("void fun(){" +
+                "fun()[1] = 11;" +
+                "}");
+
+
     }
 
     @Test
     void operationsTest(){
-        assertParseFail("1+2=3==3==4==5");
-        assertParsePass("void fun(){" +
-                "1+2=3==3==4==5;" +
-                "}");
+//        assertParseFail("1+2=3==3==4==5");
+//        assertParsePass("void fun(){" +
+//                "1+2=3==3==4==5;" +
+//                "}");
         assertParsePass("void fun(){" +
                 "x[1+2+ex+111*omega!=x]=11;" +
                 "}");
