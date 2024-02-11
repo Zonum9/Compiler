@@ -56,10 +56,20 @@ public class Part2Tests {
                         ")" +
                     ")" +
                 ")",
-
                 s);
-
     }
+
+//    @Test
+//    void ticTacTree(){
+//        Utils.writeASTDotFromFile(path+"textFiles/tictactoe.c");
+//        assertCorrectASTFromFile("tictacAST","tictactoe.c");
+//    }
+
+//    @Test
+//    void linkedListTree(){
+//        Utils.writeASTDotFromFile(path+"textFiles/linkedList.c");
+////        assertCorrectASTFromFile("tictacAST","linkedList.c");
+//    }
 
     @Test
     void fibAST() throws  Exception {

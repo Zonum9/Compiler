@@ -15,9 +15,7 @@ public class ASTdotPrinter {
     int nodeCnt=0;
     public String visit(ASTNode node) {
         return switch(node) {
-            case null -> {
-                throw new IllegalStateException("Unexpected null value");
-            }
+            case null -> throw new IllegalStateException("Unexpected null value");
             case Program program -> {
                 nodeCnt++;
                 ArrayList<String> children = new ArrayList<>();
@@ -58,7 +56,7 @@ public class ASTdotPrinter {
                 nodeCnt++;
                 ArrayList<String> children = new ArrayList<>();
                 String nid="Node"+nodeCnt;
-                writer.println(nid+"[label=\"FunDecl\"];");
+                writer.println(nid+"[label=\"FunDecl("+funDecl.name+")\"];");
                 for(ASTNode c : funDecl.children()){
                     children.add(visit(c));
                 }
@@ -132,33 +130,298 @@ public class ASTdotPrinter {
                 yield nid;
             }
 
-            case AddressOfExpr addressOfExpr -> null;
-            case ArrayAccessExpr arrayAccessExpr -> null;
-            case Assign assign -> null;
-            case ChrLiteral chrLiteral -> null;
-            case FunProto proto-> "";
-            case FieldAccessExpr fieldAccessExpr -> null;
-            case FunCallExpr funCallExpr -> null;
+            case AddressOfExpr x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\"AddressOfExpr\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
+            case ArrayAccessExpr x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\"ArrayAccessExpr\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
+            case Assign x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\"Assign\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
+            case ChrLiteral x -> {
+                nodeCnt++;
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.value+"\"];");
+                yield nid;
+            }
+            case FunProto x-> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\"FunProto("+x.name+"\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
+            case FieldAccessExpr x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\"FieldAccessExpr\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
+            case FunCallExpr x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\"FunCallExpr("+x.name+")\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
 
-            case SizeOfExpr sizeOfExpr -> null;
+            case SizeOfExpr x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.getClass().getSimpleName()+"\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
 
-            case StrLiteral strLiteral -> null;
+            case StrLiteral x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.getClass().getSimpleName()+"("+x.value+")\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
 
-            case TypecastExpr typecastExpr -> null;
-            case ValueAtExpr valueAtExpr -> null;
+            case TypecastExpr x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.getClass().getSimpleName()+"\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
+            case ValueAtExpr x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.getClass().getSimpleName()+"\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
 
 
-            case StructTypeDecl structTypeDecl -> null;
-            case VarDecl varDecl -> null;
-            case Break aBreak -> null;
-            case Continue aContinue -> null;
-            case ExprStmt exprStmt -> null;
-            case If anIf -> null;
+            case StructTypeDecl x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.getClass().getSimpleName()+"\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
+            case VarDecl x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.getClass().getSimpleName()+"("+x.name+")\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
+            case Break x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.getClass().getSimpleName()+"\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
+            case Continue x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.getClass().getSimpleName()+"\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
+            case ExprStmt x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.getClass().getSimpleName()+"\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
+            case If x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.getClass().getSimpleName()+"\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
 
-            case While aWhile -> null;
-            case ArrayType arrayType -> null;
-            case PointerType pointerType -> null;
-            case StructType structType -> null;
+            case While x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.getClass().getSimpleName()+"\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
+            case ArrayType x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.getClass().getSimpleName()+"("+x.numElement+")\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
+            case PointerType x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.getClass().getSimpleName()+"\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
+            case StructType x -> {
+                nodeCnt++;
+                ArrayList<String> children = new ArrayList<>();
+                String nid="Node"+nodeCnt;
+                writer.println(nid+"[label=\""+x.getClass().getSimpleName()+"("+x.strTypeName+")\"];");
+                for(ASTNode c : x.children()){
+                    children.add(visit(c));
+                }
+                // write out edges
+                for( String s :children){
+                    writer.println(nid + "->"+ s+";");
+                }
+                yield nid;
+            }
         };
 
     }

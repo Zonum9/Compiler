@@ -1,6 +1,6 @@
 digraph ast {
 Node1[label="Program"];
-Node2[label="FunDecl"];
+Node2[label="FunDecl(fun)"];
 Node3[label="VOID"];
 Node4[label="Block"];
 Node5[label="Return"];

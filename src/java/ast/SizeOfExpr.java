@@ -12,6 +12,6 @@ public final class SizeOfExpr extends Expr {
 
     @Override
     public List<ASTNode> children() {
-        return Collections.emptyList();
+        return Collections.singletonList(type);
     }
 }

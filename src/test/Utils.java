@@ -122,6 +122,9 @@ public class Utils {
     static void  writeASTDotFromString(String stringToParse){
         writeASTDot(Utils.createParserFromString(stringToParse).parse());
     }
+    static void  writeASTDotFromFile(String fileName){
+        writeASTDot(Utils.createParserFromFile(fileName).parse());
+    }
     public static void  writeASTDot(Program programAst)  {
 
         PrintWriter writer = null;

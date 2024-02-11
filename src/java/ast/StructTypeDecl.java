@@ -12,7 +12,10 @@ public final class StructTypeDecl extends Decl {
 
     // to be completed
     public List<ASTNode> children() {
-        return varDecls; // To change!
+        ArrayList<ASTNode> temp = new ArrayList<>();
+        temp.add(type);
+        temp.addAll(varDecls);
+        return temp;
     }
 
 }

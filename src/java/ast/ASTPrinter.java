@@ -164,29 +164,61 @@ public class ASTPrinter {
                 writer.print(")");
             }
 
-            // todo ...
-
-
             case AddressOfExpr addressOfExpr -> {
+                writer.print("AddressOfExpr(");
+                visit(addressOfExpr.expr);
+                writer.print(")");
             }
             case ArrayAccessExpr arrayAccessExpr -> {
+                writer.print("ArrayAccessExpr(");
+                visit(arrayAccessExpr.arr);
+                writer.print(",");
+                visit(arrayAccessExpr.index);
+                writer.print(")");
             }
             case Assign assign -> {
+                writer.print("Assign(");
+                visit(assign.expr1);
+                writer.print(",");
+                visit(assign.expr2);
+                writer.print(")");
             }
-
 
             case FieldAccessExpr fieldAccessExpr -> {
-            }
-            case FunCallExpr funCallExpr -> {
+                writer.print("FieldAccessExpr(");
+                visit(fieldAccessExpr.expr);
+                writer.print(",");
+                writer.print(fieldAccessExpr.fieldName);
+                writer.print(")");
             }
 
+            case FunCallExpr funCallExpr -> {
+                writer.print("FunCallExpr(");
+                writer.print(funCallExpr.name);
+                for (Expr vd : funCallExpr.exprs) {
+                    writer.print(",");
+                    visit(vd);
+                }
+                writer.print(")");
+            }
+            case TypecastExpr typecastExpr -> {
+                writer.print("TypecastExpr(");
+                visit(typecastExpr.type);
+                writer.print(",");
+                visit(typecastExpr.expr);
+                writer.print(")");
+            }
 
             case SizeOfExpr sizeOfExpr -> {
+                writer.print("SizeOfExpr(");
+                visit(sizeOfExpr.type);
+                writer.print(")");
             }
 
-            case TypecastExpr typecastExpr -> {
-            }
             case ValueAtExpr valueAtExpr -> {
+                writer.print("ValueAtExpr(");
+                visit(valueAtExpr.expr);
+                writer.print(")");
             }
         }
 
