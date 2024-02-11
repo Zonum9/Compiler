@@ -136,14 +136,58 @@ public class ASTPrinter {
                 visit(pointerType.type);
                 writer.print(")");
             }
-            default -> {}
+            case BinOp binOp -> {
+                writer.print("BinOp(");
+                visit(binOp.expr1);
+                writer.print(",");
+                visit(binOp.op);
+                writer.print(",");
+                visit(binOp.expr2);
+                writer.print(")");
+            }
+            case Op op -> {
+                writer.print(op);
+            }
+            case IntLiteral intLiteral -> {
+                writer.print("IntLiteral(");
+                writer.print(intLiteral.value);
+                writer.print(")");
+            }
+            case StrLiteral strLiteral -> {
+                writer.print("StrLiteral(");
+                writer.print(strLiteral.value);
+                writer.print(")");
+            }
+            case ChrLiteral chrLiteral -> {
+                writer.print("ChrLiteral(");
+                writer.print(chrLiteral.value);
+                writer.print(")");
+            }
 
             // todo ...
 
 
+            case AddressOfExpr addressOfExpr -> {
+            }
+            case ArrayAccessExpr arrayAccessExpr -> {
+            }
+            case Assign assign -> {
+            }
 
 
+            case FieldAccessExpr fieldAccessExpr -> {
+            }
+            case FunCallExpr funCallExpr -> {
+            }
 
+
+            case SizeOfExpr sizeOfExpr -> {
+            }
+
+            case TypecastExpr typecastExpr -> {
+            }
+            case ValueAtExpr valueAtExpr -> {
+            }
         }
 
     }

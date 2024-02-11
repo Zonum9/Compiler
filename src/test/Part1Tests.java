@@ -165,16 +165,36 @@ class Part1Tests {
         assertParsePass("void fun(){" +
                 "fun()[1] = 11;" +
                 "}");
+    }
+    @Test
+    void operationAfterUnary(){
+        assertParsePass("void fun(){" +
+                "return -1+1/2-1*11;" +
+                "}");
+        assertParsePass("void fun(){" +
+                "return -1-11;" +
+                "}");
+    }
 
-
+    @Test
+    void moreOperations(){
+        assertParsePass("void fun(){" +
+                "1+2+3+4+5+6;" +
+                "}");
+        assertParsePass("void fun(){" +
+                "1+2+3/4*5/ *6;" +
+                "}");
+        assertParsePass("void fun(){" +
+                "x[1]+1;" +
+                "}");
     }
 
     @Test
     void operationsTest(){
-//        assertParseFail("1+2=3==3==4==5");
-//        assertParsePass("void fun(){" +
-//                "1+2=3==3==4==5;" +
-//                "}");
+        assertParseFail("1+2=3==3==4==5");
+        assertParsePass("void fun(){" +
+                "1+2=3==3==4==5;" +
+                "}");
         assertParsePass("void fun(){" +
                 "x[1+2+ex+111*omega!=x]=11;" +
                 "}");
@@ -185,14 +205,19 @@ class Part1Tests {
                 "(struct mystruct*)hello;" +
                 "(*hello).hello;" +
                 "}");
-        assertParsePass("void fun(){" +
-                "x[1+2+ex+111*omega!=x]=11;" +
-                "&x&&x;" +
-                "****x;" +
-                "(struct mystruct*)hello;" +
-                "(*hello).hello;" +
+
+    }
+    @Test
+    void multipleComplexOps(){
+        assertParsePass("void fun(){\n" +
+                "x[1+2+ex+111*omega!=x]=11;\n" +
+                "&x&&x;\n" +
+                "****x;\n" +
+                "(struct mystruct*)hello;\n" +
+                "(*hello).hello;\n" +
                 "}");
     }
+
     @Test
     void emptyIfAndWhile(){
         assertParseFail("void fun(){" +

@@ -39,11 +39,21 @@ public class Part2Tests {
         assertEqualsAST("Program(FunDecl(VOID, foo, Block(Return())))","void foo() { return; }");
     }
 
+    @Test
+    void precedencteTest(){
+        String s="void fun(){" +
+                "return 1+2/3+5 && x*11%2+3;" +
+                "}";
+        Utils.writeASTDotFromString(s);
+        assertEqualsAST("",s);
+
+    }
 
     @Test
     void fibAST() throws  Exception {
         assertCorrectASTFromFile("fibonacciAST","fibonacci.c");
     }
+
 
     void assertCorrectASTFromString(String referenceFileName, String s){
         try {

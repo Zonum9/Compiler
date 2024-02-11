@@ -1,4 +1,5 @@
 import ast.ASTPrinter;
+import ast.ASTdotPrinter;
 import ast.Program;
 import lexer.Scanner;
 import lexer.Token;
@@ -112,6 +113,26 @@ public class Utils {
             out.createNewFile();
             writer = new PrintWriter(out);
             new ASTPrinter(writer).visit(programAst);
+            writer.close();
+        } catch (Exception ignored) {
+            assert writer != null;
+            writer.close();
+        }
+    }
+    static void  writeASTDotFromString(String stringToParse){
+        writeASTDot(Utils.createParserFromString(stringToParse).parse());
+    }
+    public static void  writeASTDot(Program programAst)  {
+
+        PrintWriter writer = null;
+        try {
+            File out = new File("src/test/printerOut/dotOut.txt");
+            if (out.exists()) {
+                out.delete();
+            }
+            out.createNewFile();
+            writer = new PrintWriter(out);
+            new ASTdotPrinter(writer).visit(programAst);
             writer.close();
         } catch (Exception ignored) {
             assert writer != null;

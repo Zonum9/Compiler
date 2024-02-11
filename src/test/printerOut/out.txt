@@ -1,1 +1,1 @@
-Program(FunProto(PointerType(StructType(B)),fun))
+Program(FunDecl(VOID,fun,Block(Return(BinOp(IntLiteral(1),ADD,BinOp(IntLiteral(2),DIV,BinOp(IntLiteral(3),ADD,BinOp(IntLiteral(5),AND,BinOp(VarExpr(x),MUL,BinOp(IntLiteral(11),MOD,BinOp(IntLiteral(2),ADD,IntLiteral(3))))))))))))
