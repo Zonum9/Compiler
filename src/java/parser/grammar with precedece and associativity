@@ -1,16 +1,17 @@
-exp         ::=    exp      (arrayaccess | fieldaccess | funcall) pred2 | pred2
-pred2       ::=    ("+" | "-" | typecast | addressof | valueat) pred2 | pred3      #unary plus and minus
-pred3       ::=    pred3    ("/" | "*" | "%" ) pred4 | pred4
-pred4       ::=    pred4    ("+" | "-" ) pred5 |  pred5
-pred5       ::=    pred5    (">" | "<" | ">=" | "<=" ) pred6 |  pred6
-pred6       ::=    pred6    ("!=" | "==" ) pred7 | pred7
-pred7       ::=    pred7    "&&" pred8 | pred8
-pred8       ::=    pred8    "||" pred9 | pred9
-pred9       ::=    predFinal "=" pred9 | predFinal                                               #right to left
-predFinal   ::=    "(" exp ")" | IDENT | INT_LITERAL | STRING_LITERAL | CHAR_LITERAL | sizeof
+predFinal   ::=    "(" exp ")" | IDENT [funcall] | INT_LITERAL | STRING_LITERAL | CHAR_LITERAL | sizeof
+pred1         ::=    pred1      (arrayaccess | fieldaccess) pred1 | predFinal
+pred2       ::=    ("+" | "-" | typecast | addressof | valueat) pred2 | pred1      #unary plus and minus
+pred3       ::=    pred3    ("/" | "*" | "%" ) pred2 | pred2
+pred4       ::=    pred4    ("+" | "-" ) pred3 |  pred3
+pred5       ::=    pred5    (">" | "<" | ">=" | "<=" ) pred4 |  pred4
+pred6       ::=    pred6    ("!=" | "==" ) pred5 | pred5
+pred7       ::=    pred7    "&&" pred6 | pred6
+pred8       ::=    pred8    "||" pred7 | pred7
+exp       ::=    pred8 "=" exp | pred8                                               #right to left
 
 
-funcall      ::= IDENT "(" [ exp ("," exp)* ] ")" # function call
+
+funcall      ::=  "(" [ exp ("," exp)* ] ")" # function call
 arrayaccess  ::=  "[" exp "]"                  # array access
 fieldaccess  ::=  "." IDENT                    # structure field member access
 valueat      ::= "*" exp                          # Value at operator (pointer indirection)
@@ -18,24 +19,6 @@ addressof    ::= "&" exp                          # Address-of operator
 sizeof       ::= "sizeof" "(" type ")"            # size of type
 typecast     ::= "(" type ")" exp                 # type casting
 
----------------------------------------------------------------------------------------
 
-
-exp        ::= "(" exp ")" | IDENT [funcall] | INT_LITERAL | CHAR_LITERAL | STRING_LITERAL
-             | exp "=" exp                           # assignment
-
-             | ("-" | "+") exp
-
-
-             | exp (">" | "<" | ">=" | "<=" | "!=" | "==" | "+" | "-" | "/" | "*" | "%" | "||" | "&&") exp  # binary operators
-             | arrayaccess | fieldaccess | valueat | addressof | funcall | sizeof | typecast
-
-funcall      ::= "(" [ exp ("," exp)* ] ")" # function call
-arrayaccess  ::= exp "[" exp "]"                  # array access
-fieldaccess  ::= exp "." IDENT                    # structure field member access
-valueat      ::= "*" exp                          # Value at operator (pointer indirection)
-addressof    ::= "&" exp                          # Address-of operator
-sizeof       ::= "sizeof" "(" type ")"            # size of type
-typecast     ::= "(" type ")" exp                 # type casting
 
 

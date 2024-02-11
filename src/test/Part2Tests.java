@@ -45,7 +45,19 @@ public class Part2Tests {
                 "return 1+2/3+5 && x*11%2+3;" +
                 "}";
         Utils.writeASTDotFromString(s);
-        assertEqualsAST("",s);
+
+        assertEqualsAST("Program(" +
+                "FunDecl(VOID,fun," +
+                    "Block(" +
+                        "Return(" +
+                            "BinOp(BinOp(BinOp(IntLiteral(1),ADD,BinOp(IntLiteral(2),DIV,IntLiteral(3))),ADD," +
+                            "IntLiteral(5)),AND,BinOp(BinOp(BinOp(VarExpr(x),MUL,IntLiteral(11))," +
+                            "MOD,IntLiteral(2)),ADD,IntLiteral(3))))" +
+                        ")" +
+                    ")" +
+                ")",
+
+                s);
 
     }
 

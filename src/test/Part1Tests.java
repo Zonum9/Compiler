@@ -178,11 +178,12 @@ class Part1Tests {
 
     @Test
     void moreOperations(){
-        assertParsePass("void fun(){" +
-                "1+2+3+4+5+6;" +
+
+        assertParsePass("void fun(){\n" +
+                "1+2+3/4*5/ *6;" +
                 "}");
         assertParsePass("void fun(){" +
-                "1+2+3/4*5/ *6;" +
+                "1+2+3+4+5+6;" +
                 "}");
         assertParsePass("void fun(){" +
                 "x[1]+1;" +
@@ -191,7 +192,7 @@ class Part1Tests {
 
     @Test
     void operationsTest(){
-        assertParseFail("1+2=3==3==4==5");
+
         assertParsePass("void fun(){" +
                 "1+2=3==3==4==5;" +
                 "}");
@@ -205,6 +206,7 @@ class Part1Tests {
                 "(struct mystruct*)hello;" +
                 "(*hello).hello;" +
                 "}");
+        assertParseFail("1+2=3==3==4==5");
 
     }
     @Test
