@@ -165,12 +165,12 @@ public class Parser  extends CompilerPass {
 
     }
 
-    private Block parseBlock(){//todo
+    private Block parseBlock(){
         expect(LBRA);
         List<VarDecl>varDecls = new ArrayList<>();
         parse0orMoreVarDeclaration(varDecls);
         List<Stmt> stmts = new ArrayList<>();
-        parse0orMoreStatements(stmts);//todo
+        parse0orMoreStatements(stmts);
         expect(RBRA);
         return new Block(varDecls,stmts);
     }
@@ -183,97 +183,203 @@ public class Parser  extends CompilerPass {
         return new While(expr,stmt);
     }
     private Expr parseExpression(){//todo
+        if (token.category == IDENTIFIER && lookAhead(1).category== LPAR){ //funcall
+            return parseFunctionCall();
+        }
+        Expr lhs = parsePred2();
+        while (accept(LSBR,DOT)){ //arrayaccess | fieldaccess
+            lhs= switch (token.category){
+                case LSBR -> {
+                    nextToken();
+                    Expr inner= parseExpression();
+                    expect(RSBR);
+                    yield new ArrayAccessExpr(lhs,inner);
+                }
+                case DOT -> {
+                    nextToken();
+                    String fieldName= expect(IDENTIFIER).data;
+                    yield new FieldAccessExpr(lhs,fieldName);
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + token.category);
+            };
+        }
+        return lhs;
+    }
+
+    private Expr parsePred2() {
+        Expr expr;
+        if (accept(PLUS,MINUS,LPAR,AND,ASTERISK)){ //"+" | "-" | typecast | addressof | valueat
+            expr= switch (token.category){
+                case PLUS -> {
+                    nextToken();
+                    yield new BinOp(new IntLiteral(0), Op.ADD, parsePred2());
+                }
+                case MINUS -> {
+                    nextToken();
+                    yield  new BinOp(new IntLiteral(0), Op.SUB, parsePred2());
+                }
+                case LPAR -> {
+                    nextToken();
+                    if (!acceptType()){
+                        yield parsePred3();
+                    }
+                    Type type= parseType();
+                    expect(RPAR);
+                    yield new TypecastExpr (type,parsePred2()); //todo should it really be pred2? might be better for it to be exp (allow for -fun() )
+                }
+                case AND->{
+                    nextToken();
+                    yield new AddressOfExpr(parsePred2());
+                }
+                case ASTERISK -> {
+                    nextToken();
+                    yield new ValueAtExpr(parsePred2());
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + token.category);
+            };
+        }
+        else {
+            expr= parsePred3();
+        }
+        return expr;
+    }
+
+    private Expr parsePred3() {//todo
+        Expr lhs = parsePred4();
+        while (accept(DIV,ASTERISK,REM)){ // "/" | "*" | "%"
+            lhs= switch (token.category){
+                case DIV -> {
+                    nextToken();
+                    yield new BinOp(lhs,Op.DIV,parsePred4());
+                }
+                case ASTERISK -> {
+                    nextToken();
+                    yield new BinOp(lhs,Op.MUL,parsePred4());
+                }
+                case REM -> {
+                    nextToken();
+                    yield new BinOp(lhs,Op.MOD,parsePred4());
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + token.category);
+            };
+        }
+        return lhs;
+    }
+
+    private Expr parsePred4() {
+        Expr lhs = parsePred5();
+        while (accept(PLUS,MINUS)){
+            lhs= switch (token.category){
+                case PLUS -> {
+                    nextToken();
+                    yield new BinOp(lhs,Op.ADD,parsePred5());
+                }
+                case MINUS -> {
+                    nextToken();
+                    yield new BinOp(lhs,Op.SUB,parsePred5());
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + token.category);
+            };
+        }
+        return lhs;
+    }
+
+    private Expr parsePred5() {
+        Expr lhs = parsePred6();
+        while (accept(GT,GE,LT,LE)){
+            lhs= switch (token.category){
+                case GT -> {
+                    nextToken();
+                    yield new BinOp(lhs,Op.GT,parsePred6());
+                }
+                case GE -> {
+                    nextToken();
+                    yield new BinOp(lhs,Op.GE,parsePred6());
+                }
+                case LT -> {
+                    nextToken();
+                    yield new BinOp(lhs,Op.LT,parsePred6());
+                }
+                case LE->{
+                    nextToken();
+                    yield new BinOp(lhs,Op.LE,parsePred6());
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + token.category);
+            };
+        }
+        return lhs;
+    }
+
+    private Expr parsePred6() {
+        Expr lhs = parsePred7();
+        while (accept(NE,EQ)){
+            lhs= switch (token.category){
+                case NE -> {
+                    nextToken();
+                    yield new BinOp(lhs,Op.NE,parsePred7());
+                }
+                case EQ ->{
+                    nextToken();
+                    yield new BinOp(lhs,Op.EQ,parsePred7());
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + token.category);
+            };
+        }
+        return lhs;
+    }
+
+    private Expr parsePred7() {
+        Expr lhs = parsePred8();
+        while (accept(LOGAND)){
+            nextToken();
+            lhs= new BinOp(lhs,Op.AND,parsePred8());
+        }
+        return lhs;
+    }
+
+    private Expr parsePred8() {
+        Expr lhs = parsePred9();
+        while (accept(LOGOR)){
+            nextToken();
+            lhs= new BinOp(lhs,Op.OR,parsePred9());
+        }
+        return lhs;
+    }
+
+    private Expr parsePred9() {
+        Expr expr = parsePredFinal();
+        if (token.category == ASSIGN){
+            nextToken();
+            return new Assign(expr,parsePred9());
+        }
+        return expr;
+    }
+
+    private Expr parsePredFinal() {
         switch (token.category){
-            case INT_LITERAL,CHAR_LITERAL,STRING_LITERAL -> nextToken();
-            case PLUS,MINUS,ASTERISK,AND -> {nextToken(); parseExpression();}
+            case LPAR -> {
+                nextToken();
+                Expr expr = parseExpression();
+                expect(RPAR);
+                return expr;
+            }
+            case IDENTIFIER -> { return new VarExpr(expect(IDENTIFIER).data);}
+            case INT_LITERAL -> { return new IntLiteral(Integer.parseInt(expect(INT_LITERAL).data));}
+            case STRING_LITERAL -> { return new StrLiteral(expect(STRING_LITERAL).data);}
+            case CHAR -> { return new ChrLiteral(expect(CHAR).data.charAt(0));}
             case SIZEOF -> {
                 nextToken();
                 expect(LPAR);
-                parseType();
+                Type type= parseType();
                 expect(RPAR);
+                return new SizeOfExpr(type);
             }
-            case LPAR -> {
-                nextToken();//consume "("
-                if(acceptType()) { //it's a type cast  "(" type ")" exp
-                    parseType();
-                    expect(RPAR);
-                    parseExpression();
-                    return null;//todo
-                }
-                // if it's not a type cast, then it's just a "(" exp ")"
-                parseExpression();
-                expect(RPAR);
-
-            }  //typecast
-            case IDENTIFIER -> {
-                //if there is a "(" after the identifier, then it must be a function call
-                if(lookAhead(1).category== LPAR)
-                    parseFunctionCall();
-                else //lone identifier
-                    nextToken();
+            default -> {
+                error();
+                return null; //todo this might break something
             }
-            default -> error();//do not accept empty expressions
         }
-        parsePostExpression();
-        return null; //todo
     }
-
-//    private Expr parseExpression(){//todo
-//        Expr expr= switch (token.category){
-//            case INT_LITERAL,CHAR_LITERAL,STRING_LITERAL -> {
-//                Expr ex= switch (token.category){
-//                    case CHAR_LITERAL -> new ChrLiteral(token.data.charAt(0));
-//                    case STRING_LITERAL -> new StrLiteral(token.data);
-//                    case INT_LITERAL -> new IntLiteral(Integer.parseInt(token.data));
-//                    default -> throw new IllegalStateException("Unexpected value: " + token.category);
-//                };
-//                nextToken();
-//                yield ex;
-//            }
-//            //unary operations
-//            case PLUS,MINUS,ASTERISK,AND -> {
-//                //todo
-//                System.out.println("does this ever run?");
-//                nextToken();
-//                yield parseExpression();
-//            }
-//            case SIZEOF -> {
-//                nextToken();
-//                expect(LPAR);
-//                Type type= parseType();
-//                expect(RPAR);
-//                yield new SizeOfExpr(type);
-//            }
-//            case LPAR -> {
-//                nextToken();//consume "("
-//                if(acceptType()) { //it's a type cast  "(" type ")" exp
-//                    parseType();
-//                    expect(RPAR);
-//                    parseExpression();
-////                    return null;//todo
-//                    yield null; //todo
-//                }
-//                // if it's not a type cast, then it's just a "(" exp ")"
-//                parseExpression();
-//                expect(RPAR);
-//                yield null;//todo
-//            }  //typecast
-//            case IDENTIFIER -> {
-//                //if there is a "(" after the identifier, then it must be a function call
-//                if(lookAhead(1).category== LPAR)
-//                    parseFunctionCall();
-//                else //lone identifier
-//                    nextToken();
-//                yield null;//todo
-//            }
-//            default -> {
-//                error();
-//                yield null;
-//            }//do not accept empty expressions
-//        };
-//        parsePostExpression();//todo
-//        return expr;
-//    }
 
 
 
@@ -288,20 +394,22 @@ public class Parser  extends CompilerPass {
         }
     }
 
-    private void parseFunctionCall(){
-        expect(IDENTIFIER);
+    private FunCallExpr parseFunctionCall(){
+        String name= expect(IDENTIFIER).data;
         expect(LPAR);
-        parseArgs();
+        ArrayList<Expr> exprs = new ArrayList<>();
+        parseArgs(exprs);
         expect(RPAR);
+        return  new FunCallExpr(name,exprs);
     }
 
-    private void parseArgs(){
+    private void parseArgs(List<Expr> exprs){
         if (token.category == RPAR || token.category == EOF)
             return;
-        parseExpression();
+        exprs.add(parseExpression());
         if(token.category == COMMA) {
             nextToken();
-            parseArgs();
+            parseArgs(exprs);
         }
     }
     private void parseOperation(){
@@ -330,7 +438,7 @@ public class Parser  extends CompilerPass {
         }
         Expr expr= parseExpression();
         expect(SC);
-        return  new Return(Optional.of(expr));
+        return  new Return(Optional.ofNullable(expr));
     }
 
     private Stmt parseStatement(){
@@ -358,8 +466,11 @@ public class Parser  extends CompilerPass {
     }
 
     private boolean acceptStatement(){
-        return accept(LBRA,WHILE,IF,RETURN,CONTINUE,BREAK, //statement
-                LPAR,IDENTIFIER,INT_LITERAL,MINUS,PLUS, //exp
+        return accept(LBRA,WHILE,IF,RETURN,CONTINUE,BREAK) || //statement
+                acceptExpression();
+    }
+    private boolean acceptExpression(){
+        return accept( LPAR,IDENTIFIER,INT_LITERAL,MINUS,PLUS, //exp
                 CHAR_LITERAL,STRING_LITERAL, ASTERISK,AND,SIZEOF); //exp
     }
 

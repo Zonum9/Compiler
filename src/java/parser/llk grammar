@@ -49,15 +49,16 @@ block->  "{"     vardecl_r      stmt_r           "}"
 stmt_r -> (smt  stmt_r )   |  eps
 
 exp->  "("     exp       ")"  operation
-	| (IDENT       |       INT_LITERAL)  operation
+	| IDENT  [funcall]   operation
+	| INT_LITERAL  operation
 	| ("-"   |   "+")    exp   operation
 	| CHAR_LITERAL   operation
 	| STRING_LITERAL   operation
-	| (arrayaccess|fieldaccess|valueat|addressof|funcall|sizeof|typecast)    operation
+	| (arrayaccess|fieldaccess|valueat|addressof|sizeof|typecast)    operation
 
 operation ->  (("=" | ">" | "<" | ">=" | "<=" | "!=" | "==" | "+" | "-" | "/" | "*" | "%" | "||" | "&&" )  exp   operation)   | eps
 
-funcall-> IDENT   "("   args    ")"
+funcall-> "("   args    ")"
 args -> (exp multiargs_r | eps)
 multiargs_r ->   (multiargs multiargs_r ) | eps
 multiargs -> ","  exp
