@@ -1,4 +1,7 @@
+import ast.Program;
 import org.junit.jupiter.api.Test;
+import parser.Parser;
+import sem.NameAnalyzer;
 
 import java.io.IOException;
 
@@ -13,7 +16,7 @@ public class Part2Tests {
         assertCorrectASTFromString("simpleFunAST","void fun ();");
     }
     @Test
-    void emptyProgram() throws IOException {
+    void emptyProgram() {
         assertEqualsAST("Program()","");
     }
 
@@ -72,8 +75,64 @@ public class Part2Tests {
 //    }
 
     @Test
-    void fibAST() throws  Exception {
+    void fibAST()  {
         assertCorrectASTFromFile("fibonacciAST","fibonacci.c");
+    }
+
+    @Test
+    void NameAnalysisDeclsAndProtos(){
+        assertPassNameErrors("""
+                void fun();
+                void fun(){}
+                """);
+        assertFailNameErrors("""
+                void fun();
+                void fun();
+                """);
+        assertFailNameErrors("""
+                void fun(){}
+                void fun(){}
+                """);
+        assertPassNameErrors("""
+                void fun();
+                void fun(){}
+                """);
+        assertPassNameErrors("""
+                void fun(){}
+                void fun();
+                """);
+        assertFailNameErrors("""
+                void fun();
+                void fun(){}
+                void fun(){}
+                """);
+        assertFailNameErrors("""
+                void fun();
+                void fun(){}
+                void fun();
+                """);
+        assertFailNameErrors("""
+                void fun(){}
+                void fun();
+                void fun();
+                """);
+    }
+    @Test
+    void NameAnaFunctionAndProtoTyping(){
+        assertFailNameErrors("""
+                void fun(int x);
+                void fun(){}
+                """);
+        assertFailNameErrors("""
+                char fun();
+                void fun(){}
+                """);
+        assertPassNameErrors("""
+                void x1(){}
+                void x2(int x);
+                void x3(){}
+                void x3();
+                """);
     }
 
 
@@ -95,7 +154,7 @@ public class Part2Tests {
         }
     }
     void assertEqualsAST(String expected,String stringToAST)  {
-        String result = null;
+        String result;
         try {
             result = Utils.getASTstring(stringToAST);
         } catch (IOException e) {
@@ -104,4 +163,21 @@ public class Part2Tests {
         expected=expected.replaceAll("\\s+","");
         assertEquals(expected,result);
     }
+    void assertPassNameErrors(String s){
+        Parser pa =Utils.createParserFromString(s);
+        Program p =pa.parse();
+        assertEquals(0,pa.getNumErrors());
+        NameAnalyzer n = new NameAnalyzer();
+        n.visit(p);
+        assertEquals(0,n.getNumErrors());
+    }
+    void assertFailNameErrors(String s){
+        Parser pa =Utils.createParserFromString(s);
+        Program p =pa.parse();
+        assertEquals(0,pa.getNumErrors());
+        NameAnalyzer n = new NameAnalyzer();
+        n.visit(p);
+        assertNotEquals(0,n.getNumErrors());
+    }
+
 }

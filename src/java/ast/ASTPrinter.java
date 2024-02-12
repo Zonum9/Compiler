@@ -1,6 +1,9 @@
 package ast;
 
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class ASTPrinter {
 
@@ -59,6 +62,12 @@ public class ASTPrinter {
                 }
                 writer.print(")");
                 writer.flush();
+                p.decls.add(
+                        new FunDecl(BaseType.VOID,"print_s",
+                        List.of(new VarDecl(new PointerType(BaseType.CHAR),"s")),
+                        new Block(Collections.emptyList(),Collections.emptyList())
+                        )
+                );
             }
 
             case VarDecl vd -> {

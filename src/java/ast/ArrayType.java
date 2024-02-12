@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.List;
 
 public final class ArrayType implements Type{
-    Type type;
-    int numElement;
+    public final Type type;
+    public final int numElement;
 
     public ArrayType(Type type, int numElement) {
         this.type = type;

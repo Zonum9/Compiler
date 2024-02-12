@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 public final class PointerType implements Type{
-    Type type;
+    public final Type type;
     public PointerType(Type type) {
         this.type = type;
     }

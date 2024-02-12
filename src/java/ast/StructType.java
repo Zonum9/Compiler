@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 public final class StructType  implements Type{
-    String strTypeName;
+    public final String strTypeName;
     public StructType(String strTypeName) {
         this.strTypeName = strTypeName;
     }

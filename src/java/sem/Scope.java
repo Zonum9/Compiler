@@ -1,10 +1,11 @@
 package sem;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class Scope {
 	private Scope outer;
-	private Map<String, Symbol> symbolTable;
+	private Map<String, Symbol> symbolTable = new HashMap<>();//todo should i do this?
 	
 	public Scope(Scope outer) { 
 		this.outer = outer; 
@@ -13,13 +14,14 @@ public class Scope {
 	public Scope() { this(null); }
 	
 	public Symbol lookup(String name) {
-		// To be completed...
-		return null;
+		if (outer == null){
+			return lookupCurrent(name);
+		}
+		return outer.lookup(name);
 	}
 	
 	public Symbol lookupCurrent(String name) {
-		// To be completed...
-		return null;
+		return symbolTable.get(name);
 	}
 	
 	public void put(Symbol sym) {

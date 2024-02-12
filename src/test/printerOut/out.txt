@@ -1,1 +1,1 @@
-Program(FunProto(PointerType(StructType(B)),fun))
+Program(StructTypeDecl(StructType(node_t),VarDecl(INT,field1),VarDecl(CHAR,field2)))
