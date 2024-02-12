@@ -127,11 +127,18 @@ public class Part2Tests {
                 char fun();
                 void fun(){}
                 """);
+        assertFailNameErrors("""
+                void x1(){}
+                void x2(int x);
+                void x3(){}
+                void x3();
+                """);
         assertPassNameErrors("""
                 void x1(){}
                 void x2(int x);
                 void x3(){}
                 void x3();
+                void x2(int woof){}
                 """);
     }
 

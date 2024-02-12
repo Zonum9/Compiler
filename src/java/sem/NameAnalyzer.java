@@ -4,6 +4,7 @@ import ast.*;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class NameAnalyzer extends BaseSemanticAnalyzer {
 
@@ -19,6 +20,14 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 					visit(d);
 				}
 				scope=oldScope;
+				for (Decl d : p.decls) {
+                    if (d instanceof FunProto fp) {
+                        Symbol s = scope.lookupCurrent(fp.name);
+						if(s instanceof FunProtoSymbol fps && fps.decl==null){
+							error("function prototype ["+fps.name+"] does not have a declaration");
+						}
+                    }
+				}
 			}
 
 			case Block b -> {
@@ -28,6 +37,7 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 					visit(child);
 				}
 				scope=oldScope;
+
 			}
 
 			case FunDecl funDecl-> {
