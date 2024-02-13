@@ -129,12 +129,12 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 				if (s != null)
 					error("["+s.name + "] has already been declared in this scope");
 				else {
-					s = scope.lookup(vd.name);
-					if(!(s instanceof FunProtoSymbol) && !(s instanceof FunSymbol))
-						scope.put(new VarSymbol(vd));
-					else{
-						error("var decl attempting to shadow function ["+s.name + "]");
-					}
+//					s = scope.lookupGlobal(vd.name); //check that no function exists with this name
+//					if(!(s instanceof FunProtoSymbol) && !(s instanceof FunSymbol))
+					scope.put(new VarSymbol(vd));
+//					else{
+//						error("var decl attempting to shadow function ["+s.name + "]");
+//					}
 				}
 			}
 
@@ -155,7 +155,8 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 						else
 							hangingFunCallRefs.add(funCall);
 					}
-					case null,default -> error("function call on undefined function ["+funCall.name+"]");
+					case null -> error("function call on undefined function ["+funCall.name+"]");
+					default -> error("function ["+funCall.name+"] is either undefined or was shadowed by a variable");
 				}
 			}
 

@@ -14,6 +14,14 @@ public class Scope {
 	public Scope() { this(null); }
 	
 	public Symbol lookup(String name) {
+		Symbol currSym=lookupCurrent(name);
+		if (outer == null || currSym != null){
+			return currSym;
+		}
+		return outer.lookup(name);
+	}
+
+	public Symbol lookupGlobal(String name) {
 		if (outer == null){
 			return lookupCurrent(name);
 		}

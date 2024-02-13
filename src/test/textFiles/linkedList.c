@@ -2,15 +2,47 @@
 
 
 /* C program to merge two sorted linked lists */
-#include "assert.h"
 #include "stdio.h"
 #include "stdlib.h"
+
+/* MoveNode() function takes the node from the front of the
+source, and move it to the front of the dest.
+It is an error to call this with the source list empty.
+
+Before calling MoveNode():
+source == {1, 2, 3}
+dest == {1, 2, 3}
+
+After calling MoveNode():
+source == {2, 3}
+dest == {1, 1, 2, 3} */
+void MoveNode(struct Node** destRef,
+			struct Node** sourceRef)
+{
+	/* the front source node */
+	struct Node* newNode;
+	 newNode= *sourceRef;
+//	assert(newNode != NULL);
+
+	/* Advance the source pointer */
+	*sourceRef = newNode.next;
+
+	/* Link the old dest of the new node */
+	newNode.next = *destRef;
+
+	/* Move dest to point to the new node */
+	*destRef = newNode;
+}
+
 
 /* Link list node */
 struct Node {
 	int data;
 	struct Node* next;
 };
+
+struct Node* NULL;
+
 
 /* pull of the front node of the source and put it in dest
 */
@@ -54,34 +86,7 @@ struct Node* SortedMerge(struct Node* a, struct Node* b)
 }
 
 /* UTILITY FUNCTIONS */
-/* MoveNode() function takes the node from the front of the
-source, and move it to the front of the dest.
-It is an error to call this with the source list empty.
 
-Before calling MoveNode():
-source == {1, 2, 3}
-dest == {1, 2, 3}
-
-After calling MoveNode():
-source == {2, 3}
-dest == {1, 1, 2, 3} */
-void MoveNode(struct Node** destRef,
-			struct Node** sourceRef)
-{
-	/* the front source node */
-	struct Node* newNode;
-	 newNode= *sourceRef;
-	assert(newNode != NULL);
-
-	/* Advance the source pointer */
-	*sourceRef = newNode.next;
-
-	/* Link the old dest of the new node */
-	newNode.next = *destRef;
-
-	/* Move dest to point to the new node */
-	*destRef = newNode;
-}
 
 /* Function to insert a node at the beginning of the
 linked list */
@@ -90,7 +95,7 @@ void push(struct Node** head_ref, int new_data)
 	/* allocate node */
 	struct Node* new_node;
 
-	new_node= (struct Node*)malloc(sizeof(struct Node));
+	new_node= (struct Node*)mcmalloc(sizeof(struct Node));
 
 	/* put in the data */
 	new_node.data = new_data;
@@ -106,7 +111,7 @@ void push(struct Node** head_ref, int new_data)
 void printList(struct Node* node)
 {
 	while (node != NULL) {
-		printf("%d ", node.data);
+		print_i(node.data);
 		node = node.next;
 	}
 }
@@ -114,15 +119,17 @@ void printList(struct Node* node)
 /* Driver program to test above functions*/
 int main()
 {
+
 	/* Start with the empty list */
 	struct Node* res;
 	struct Node* a;
 	struct Node* b;
-	 res= NULL;
+	NULL=0;
+    res= NULL;
 
-	 a= NULL;
+    a= NULL;
 
-	 b= NULL;
+    b= NULL;
 
 	/* Let us create two sorted linked lists to test
 	the functions
@@ -138,7 +145,7 @@ int main()
 	/* Remove duplicates from linked list */
 	res = SortedMerge(a, b);
 
-	printf("Merged Linked List is: \n");
+	print_s("Merged Linked List is: \n");
 	printList(res);
 
 	return 0;

@@ -3,7 +3,6 @@ import org.junit.jupiter.api.Test;
 import parser.Parser;
 import sem.NameAnalyzer;
 import sem.SemanticAnalyzer;
-import sem.TypeAnalyzer;
 
 import java.io.IOException;
 
@@ -226,18 +225,42 @@ public class Part2Tests {
                     return x+y;
                 }
                 """);
-        assertFailNameErrors("""
+        assertPassNameErrors("""
                 int foo(){}
                 void fun(){
                   int foo;
                 }
                 """);
+        assertFailNameErrors("""
+                int foo(){}
+                void fun(){
+                  int foo;
+                  return foo();
+                }
+                """);
+    }
+
+    @Test
+    void nameLocalVars(){
+//        assertPa
     }
     @Test
     void nameDefaultFuncs(){
-        failType("void print_s();");
-        passType("void print_s(char* s);");
-        failType("void print_s(char* s){}");
+        failTypeAnalyzis("void print_s();");
+        passTypeAnalyzis("void print_s(char* s);");
+        failTypeAnalyzis("void print_s(char* s){}");
+    }
+    @Test
+    void fibTypeAnalyzis(){
+        passTypeAnalyzisFile("fibonacci.c");
+    }
+    @Test
+    void tictacTypeAnalyzis(){
+        passTypeAnalyzisFile("tictactoe.c");
+    }
+    @Test
+    void linkedListTypeAnalyzis(){
+        passTypeAnalyzisFile("linkedList.c");
     }
 
 
@@ -278,7 +301,7 @@ public class Part2Tests {
         assertEquals(0,n.getNumErrors());
     }
 
-    void passType(String s){
+    void passTypeAnalyzis(String s){
         Parser pa =Utils.createParserFromString(s);
         Program p =pa.parse();
         assertEquals(0,pa.getNumErrors());
@@ -286,7 +309,17 @@ public class Part2Tests {
         n.analyze(p);
         assertEquals(0,n.getNumErrors());
     }
-    void failType(String s){
+
+    void passTypeAnalyzisFile(String filename){
+        Parser pa =Utils.createParserFromFile(path+"textFiles/"+filename);
+        Program p =pa.parse();
+        assertEquals(0,pa.getNumErrors());
+        SemanticAnalyzer n = new SemanticAnalyzer();
+        n.analyze(p);
+        assertEquals(0,n.getNumErrors());
+    }
+
+    void failTypeAnalyzis(String s){
         Parser pa =Utils.createParserFromString(s);
         Program p =pa.parse();
         assertEquals(0,pa.getNumErrors());
