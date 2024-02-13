@@ -141,6 +141,101 @@ public class Part2Tests {
                 void x2(int woof){}
                 """);
     }
+    @Test
+    void nameVarDecl(){
+        assertFailNameErrors("""
+                void fun(){
+                return x;
+                }
+                """);
+    }
+    @Test
+    void nameFunCall(){
+        assertFailNameErrors("""
+                void fun(){
+                    x();
+                }
+                """);
+        assertFailNameErrors("""
+                void x();
+                void fun(){
+                    x();
+                }
+                """);
+        assertPassNameErrors("""
+                void x();
+                void fun(){
+                    x();
+                }
+                void x(){}
+                """);
+        assertFailNameErrors("""                
+                void fun(){
+                    x();
+                }
+                void x();
+                void x(){}
+                """);
+    }
+    @Test
+    void nameStructDecl(){
+        assertPassNameErrors("""
+                struct foo {
+                    int x;
+                    int y;
+                };
+                """);
+        assertPassNameErrors("""
+                struct foo {
+                    int x;
+                    int y;
+                };
+                struct foo {
+                    int x;
+                    int y;
+                };
+                """);
+        assertFailNameErrors("""
+                struct foo {
+                    int x;
+                    int x;
+                };
+                """);
+    }
+
+    @Test
+    void nameShadowing(){
+        assertPassNameErrors("""
+                int x;
+                int y;
+                void fun(){
+                    x=0;
+                    y=0;
+                    return x+y;
+                }
+                """);
+        assertPassNameErrors("""
+                int x;
+                int y;
+                void fun(){
+                    int x;
+                    x=0;
+                    y=0;
+                    return x+y;
+                }
+                """);
+        assertFailNameErrors("""
+                int foo(){}
+                void fun(){
+                  int foo;
+                }
+                """);
+    }
+//    @Test
+//    void nameDefaultFuncs(){
+//        assertFailNameErrors("void print_s();");
+//    }
+
 
 
     void assertCorrectASTFromString(String referenceFileName, String s){

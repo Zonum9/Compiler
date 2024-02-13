@@ -2,31 +2,45 @@ package sem;
 
 import ast.*;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Stack;
 
 public class NameAnalyzer extends BaseSemanticAnalyzer {
 
 	Scope scope = new Scope(); //original outer scope has null value for its scope field
+	Stack<FunCallExpr> hangingFunCallRefs = new Stack<>();
 	public void visit(ASTNode node) {
 		switch(node) {
-			case null -> {
-				throw new IllegalStateException("Unexpected null value");
-			}
+			case null -> throw new IllegalStateException("Unexpected null value");
+
 			case Program p -> {
 				Scope oldScope= scope;
 				for (Decl d : p.decls) {
 					visit(d);
 				}
 				scope=oldScope;
-				for (Decl d : p.decls) {
-                    if (d instanceof FunProto fp) {
+				for (Decl decl : p.decls) {
+                    if (decl instanceof FunProto fp) {
                         Symbol s = scope.lookupCurrent(fp.name);
-						if(s instanceof FunProtoSymbol fps && fps.decl==null){
-							error("function prototype ["+fps.name+"] does not have a declaration");
+						if(s instanceof FunProtoSymbol fps){
+							if(fps.decl==null){
+								error("function prototype ["+fps.name+"] does not have a declaration");
+								continue;
+							}
+							if(hangingFunCallRefs.empty()){
+								continue;
+							}
+							if( Objects.equals(hangingFunCallRefs.peek().name, fps.name)){
+								FunCallExpr fce= hangingFunCallRefs.pop();
+								fce.origin=fps.decl;
+							}
 						}
                     }
+				}
+				for(FunCallExpr fcx: hangingFunCallRefs){
+					error("function call on undeclared function prototype ["+fcx.name+"]");
 				}
 			}
 
@@ -37,7 +51,6 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 					visit(child);
 				}
 				scope=oldScope;
-
 			}
 
 			case FunDecl funDecl-> {
@@ -78,7 +91,7 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 				scope=oldScope;
 			}
 
-			case FunProto funProto -> {//todo ensure that all protos have a corresponding decl
+			case FunProto funProto -> {
 				Symbol s = scope.lookupCurrent(funProto.name);
 				switch (s){
 					//if this prototype has already been defined, error
@@ -89,7 +102,7 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 						//but no fun proto has been put in scope
 						//then link this  fun proto with the fun decl
 						if(funSymbol.proto == null){
-							if(sameFunctionForm(funProto,funSymbol.fd))
+							if(sameFunctionForm(funProto,funSymbol.funDecl))
 								funSymbol.proto=funProto;
 							else
 								error("function ["+funSymbol.name+"] differs from it's prototype form");
@@ -111,69 +124,55 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 				scope=oldScope;
 			}
 
-
 			case VarDecl vd -> {
 				Symbol s = scope.lookupCurrent(vd.name);
 				if (s != null)
-					error(s.name + " has already been declared in this scope");
-				else
-					scope.put(new VarSymbol(vd));
+					error("["+s.name + "] has already been declared in this scope");
+				else {
+					s = scope.lookup(vd.name);
+					if(!(s instanceof FunProtoSymbol) && !(s instanceof FunSymbol))
+						scope.put(new VarSymbol(vd));
+					else{
+						error("var decl attempting to shadow function ["+s.name + "]");
+					}
+				}
 			}
 
-			case VarExpr v -> {
-				Symbol sym = scope.lookup(v.name);
+			case VarExpr varExpr -> {
+				Symbol sym = scope.lookup(varExpr.name);
 				switch (sym){
-					case VarSymbol vs -> v.origin=vs.vd;
-                    default -> error("undeclared variable");
+					case VarSymbol vs -> varExpr.origin=vs.varDecl;
+                    case null,default -> error("undeclared variable ["+varExpr.name+"]");
                 }
+			}
+			case FunCallExpr funCall -> {
+				Symbol sym = scope.lookup(funCall.name);
+				switch (sym){
+					case FunSymbol funSym -> funCall.origin=funSym.funDecl;
+					case FunProtoSymbol protoSym -> {
+						if (protoSym.decl!=null)
+							funCall.origin=protoSym.decl;
+						else
+							hangingFunCallRefs.add(funCall);
+					}
+					case null,default -> error("function call on undefined function ["+funCall.name+"]");
+				}
 			}
 
 			case StructTypeDecl std -> {
-				// to complete
+				Scope oldScope = scope;
+				scope= new Scope(oldScope);
+				for(VarDecl vd:std.varDecls){
+					visit(vd);
+				}
+				scope=oldScope;
 			}
 
-			case Type t -> {}
-
-			// to complete ...
-            case AddressOfExpr addressOfExpr -> {
-            }
-            case ArrayAccessExpr arrayAccessExpr -> {
-            }
-            case Assign assign -> {
-            }
-            case BinOp binOp -> {
-            }
-            case Break aBreak -> {
-            }
-            case ChrLiteral chrLiteral -> {
-            }
-            case Continue aContinue -> {
-            }
-            case ExprStmt exprStmt -> {
-            }
-            case FieldAccessExpr fieldAccessExpr -> {
-            }
-            case FunCallExpr funCallExpr -> {
-            }
-
-            case If anIf -> {
-            }
-            case IntLiteral intLiteral -> {
-            }
-            case Op op -> {
-            }
-            case Return aReturn -> {
-            }
-            case SizeOfExpr sizeOfExpr -> {
-            }
-            case StrLiteral strLiteral -> {
-            }
-            case TypecastExpr typecastExpr -> {
-            }
-            case ValueAtExpr valueAtExpr -> {
-            }
-            case While aWhile -> {
-            }
+			default -> {
+				for(ASTNode child: node.children()){
+					visit(child);
+				}
+			}
         };
 
 	}

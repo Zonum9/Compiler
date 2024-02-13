@@ -3,9 +3,9 @@ package sem;
 import ast.VarDecl;
 
 public class VarSymbol extends Symbol {
-    VarDecl vd;
-    public VarSymbol(VarDecl vd) {
-        super(vd.name);
-        this.vd=vd;
+    VarDecl varDecl;
+    public VarSymbol(VarDecl varDecl) {
+        super(varDecl.name);
+        this.varDecl = varDecl;
     }
 }

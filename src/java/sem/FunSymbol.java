@@ -4,10 +4,10 @@ import ast.FunDecl;
 import ast.FunProto;
 
 public class FunSymbol extends Symbol{
-    FunDecl fd;
+    FunDecl funDecl;
     public FunProto proto=null;
-    public FunSymbol(FunDecl fd) {
-        super(fd.name);
-        this.fd = fd;
+    public FunSymbol(FunDecl funDecl) {
+        super(funDecl.name);
+        this.funDecl = funDecl;
     }
 }
