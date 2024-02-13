@@ -385,7 +385,7 @@ public class Parser  extends CompilerPass {
             }
             default -> {
                 error();
-                return null; //todo this might break something
+                return null;
             }
         }
     }

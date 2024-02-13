@@ -4,16 +4,16 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class TypecastExpr extends Expr {
-    Type type;
+    Type castType;
     Expr expr;
 
-    public TypecastExpr(Type type, Expr expr) {
-        this.type = type;
+    public TypecastExpr(Type castType, Expr expr) {
+        this.castType = castType;
         this.expr = expr;
     }
 
     @Override
     public List<ASTNode> children() {
-        return Arrays.asList(type,expr);
+        return Arrays.asList(castType,expr);
     }
 }

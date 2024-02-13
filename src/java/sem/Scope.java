@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class Scope {
 	private Scope outer;
-	private Map<String, Symbol> symbolTable = new HashMap<>();//todo should i do this?
+	private Map<String, Symbol> symbolTable = new HashMap<>();
 	
 	public Scope(Scope outer) { 
 		this.outer = outer; 
@@ -21,12 +21,12 @@ public class Scope {
 		return outer.lookup(name);
 	}
 
-	public Symbol lookupGlobal(String name) {
-		if (outer == null){
-			return lookupCurrent(name);
-		}
-		return outer.lookup(name);
-	}
+//	public Symbol lookupGlobal(String name) {
+//		if (outer == null){
+//			return lookupCurrent(name);
+//		}
+//		return outer.lookup(name);
+//	}
 	
 	public Symbol lookupCurrent(String name) {
 		return symbolTable.get(name);

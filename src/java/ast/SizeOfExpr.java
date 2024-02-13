@@ -4,14 +4,14 @@ import java.util.Collections;
 import java.util.List;
 
 public final class SizeOfExpr extends Expr {
-    Type type;
+    Type sizeOfType;
 
-    public SizeOfExpr(Type type) {
-        this.type = type;
+    public SizeOfExpr(Type sizeOfType) {
+        this.sizeOfType = sizeOfType;
     }
 
     @Override
     public List<ASTNode> children() {
-        return Collections.singletonList(type);
+        return Collections.singletonList(sizeOfType);
     }
 }

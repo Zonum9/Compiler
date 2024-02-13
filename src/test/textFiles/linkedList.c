@@ -5,6 +5,12 @@
 #include "stdio.h"
 #include "stdlib.h"
 
+/* Link list node */
+struct Node {
+	int data;
+	struct Node* next;
+};
+
 /* MoveNode() function takes the node from the front of the
 source, and move it to the front of the dest.
 It is an error to call this with the source list empty.
@@ -35,11 +41,7 @@ void MoveNode(struct Node** destRef,
 }
 
 
-/* Link list node */
-struct Node {
-	int data;
-	struct Node* next;
-};
+
 
 struct Node* NULL;
 

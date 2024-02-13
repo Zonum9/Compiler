@@ -121,7 +121,7 @@ public class Tokeniser extends CompilerPass {
                 return  new Token(cat, line, column); 
             } 
             //single quote
-            case '\'':{//todo test me
+            case '\'':{
                 Optional<String> data=handleSingleQuote();
                 if(data.isEmpty()){
                     line = scanner.getLine();
@@ -132,7 +132,7 @@ public class Tokeniser extends CompilerPass {
                 return new Token(Token.Category.CHAR_LITERAL,data.get(), line, column);
             }        
             //double quote
-            case '\"':{//todo test me
+            case '\"':{
                 Optional<String> data=handleDoubleQuote();
                 if(data.isEmpty()){
                     line = scanner.getLine();

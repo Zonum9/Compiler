@@ -37,6 +37,14 @@ public class Part2Tests {
         assertEqualsAST("Program(FunProto(PointerType(StructType(B)),fun))","struct B* fun();");
 
     }
+    @Test
+    void arrayTests(){
+        assertEqualsAST("Program(VarDecl(ArrayType(ArrayType(ArrayType(VOID,1),2),3),x))",
+                """
+                        void x[1][2][3];
+                        """);
+    }
+
 
     @Test
     void simpleFunction(){
@@ -241,9 +249,78 @@ public class Part2Tests {
     }
 
     @Test
-    void nameLocalVars(){
-//        assertPa
+    void binOpsTypeCheck(){
+        failTypeAnalyzis("""
+                void fun(){
+                char x;
+                int y;
+                x + y;
+                return;
+                }
+                """);
+        passTypeAnalyzis("""
+                void fun(){
+                int x;
+                int y;
+                return x == y;
+                }
+                """);
+        failTypeAnalyzis("""
+                void fun(){
+                char x;
+                int y;
+                return x == y;
+                }
+                """);
+
     }
+    @Test
+    void funCallTypeCheck(){
+        passTypeAnalyzis("""
+                void fun(int x){}
+                
+                void main(){
+                int x;
+                int y;
+                fun(x);
+                }
+                """);
+        passTypeAnalyzis("""
+                void fun(int x){}
+                
+                void main(){
+                int x;
+                int y;
+                fun(x+y);
+                }
+                """);
+        passTypeAnalyzis("""
+                void fun(int x){}
+                
+                void main(){
+                int x;
+                int y;
+                fun(x+1/2);
+                }
+                """);
+        failTypeAnalyzis("""
+                void fun(int x){}
+                
+                void main(){
+                fun();
+                }
+                """);
+        failTypeAnalyzis("""
+                void fun(int x){}
+                
+                void main(){
+                int x;
+                int y;
+                fun(x,y);
+                }
+                """);
+    }
+
     @Test
     void nameDefaultFuncs(){
         failTypeAnalyzis("void print_s();");
@@ -261,6 +338,128 @@ public class Part2Tests {
     @Test
     void linkedListTypeAnalyzis(){
         passTypeAnalyzisFile("linkedList.c");
+    }
+
+    @Test
+    void structDeclsTypeAnalyzis(){
+        passTypeAnalyzis("""
+                struct c{
+                int x;
+                int y;
+                int z;
+                };
+                """);
+        failTypeAnalyzis("""
+                struct c{
+                int x;
+                int y;
+                int y;
+                };
+                """);
+        failTypeAnalyzis("""
+                struct c{
+                int x;
+                int y;
+                int z;
+                };
+                struct c{
+                int x;
+                };
+                """);
+        failTypeAnalyzis("""
+                struct c{
+                int x;
+                int y;
+                struct h z;
+                };
+                """);
+        failTypeAnalyzis("""
+                struct c{
+                int x;
+                int y;
+                struct h z;
+                };
+                
+                struct h{
+                int x;
+                int y;
+                };
+                """);
+        passTypeAnalyzis("""
+                struct h{
+                int x;
+                int y;
+                };
+                struct c{
+                int x;
+                int y;
+                struct h z;
+                };
+                """);
+    }
+    @Test
+    void voidDelcs(){
+        failTypeAnalyzis("""
+                void fun(){
+                void x;
+                void y;
+                }
+                """);
+        failTypeAnalyzis("""
+                void fun(){
+                void x[6];
+                }
+                """);
+        passTypeAnalyzis("""
+                void fun(){
+                int x[6];
+                void *y;
+                }
+                """);
+    }
+    @Test
+    void arrAccess(){
+        passTypeAnalyzis("""
+                int foo(){}
+                void fun(){
+                int x[6];
+                char *y;
+                return x[11];
+                return y[200];
+                x[foo()];
+                y[foo()+1];
+                "hello world"[11];
+                }
+                """);
+        failTypeAnalyzis("""
+                void foo(){}
+                void main(){
+                int x[6];
+                char *y;
+                int b;
+                b[1];
+                }
+                """);
+        failTypeAnalyzis("""
+                void foo(){}
+                void main(){
+                int x[6];
+                char *y;
+                int b;
+                x[foo()];        
+                }
+                """);
+        failTypeAnalyzis("""
+                void foo(){}
+                void main(){
+                int x[6];
+                char *y;
+                int b;
+                y["hello world"];
+                }
+                """);
+
+
     }
 
 

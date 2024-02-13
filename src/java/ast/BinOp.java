@@ -5,9 +5,9 @@ import java.util.Collections;
 import java.util.List;
 
 public final class BinOp extends Expr {
-    Expr expr1;
-    Op op;
-    Expr expr2;
+    public final Expr expr1;
+    public final Op op;
+    public final Expr expr2;
 
     public BinOp(Expr expr1, Op op, Expr expr2) {
         this.expr1 = expr1;

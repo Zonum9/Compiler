@@ -5,7 +5,7 @@ import java.util.List;
 
 public final class FunCallExpr extends Expr {
     public final String name;
-    List<Expr> exprs;
+    public final List<Expr> exprs;
     public FunDecl origin; //to be added by name analyzer
 
     public FunCallExpr(String name, List<Expr> exprs) {

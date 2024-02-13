@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Stack;
 
+import static sem.TypeAnalyzer.equalTypes;
+
 public class NameAnalyzer extends BaseSemanticAnalyzer {
 
 	Scope scope = new Scope(); //original outer scope has null value for its scope field
@@ -158,6 +160,9 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 					case null -> error("function call on undefined function ["+funCall.name+"]");
 					default -> error("function ["+funCall.name+"] is either undefined or was shadowed by a variable");
 				}
+				for (ASTNode child : funCall.exprs){
+					visit(child);
+				}
 			}
 
 			case StructTypeDecl std -> {
@@ -177,28 +182,7 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
         };
 
 	}
-	private boolean equalTypes(Type t1, Type t2){
-		if(!t1.getClass().equals(t2.getClass()))
-			return false;
-		switch (t1){
-            case ArrayType x1 -> {
-				ArrayType x2 = (ArrayType) t2;
-				return (x1.numElement==x2.numElement && equalTypes(x1.type,x2.type));
-            }
-            case BaseType x1 -> {//enums, so simple compare
-				BaseType x2 = (BaseType) t2;
-				return x1 == x2;
-            }
-            case PointerType x1 -> {
-				PointerType x2 = (PointerType) t2;
-				return equalTypes(x1.type,x2.type);
-            }
-            case StructType x1 -> {
-				StructType x2 = (StructType) t2;
-				return x1.strTypeName.equals(x2.strTypeName);
-            }
-        }
-	}
+
 
 	private boolean sameFunctionForm(FunProto proto, FunDecl decl) {
 		if (!equalTypes(proto.type,decl.type) || proto.params.size() != decl.params.size()){
