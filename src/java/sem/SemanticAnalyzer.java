@@ -1,51 +1,31 @@
 package sem;
 
 import ast.*;
+import lexer.Scanner;
+import lexer.Tokeniser;
+import parser.Parser;
 import util.CompilerPass;
 
+import java.io.BufferedReader;
+import java.io.StringReader;
 import java.util.Collections;
 import java.util.List;
 
 public class SemanticAnalyzer extends CompilerPass {
 	
 	public void analyze(ast.Program prog) {
-		//fixme this is awful, but ig it works
-		prog.decls.add(
-				new FunDecl(BaseType.VOID,"print_s",
-						List.of(new VarDecl(new PointerType(BaseType.CHAR),"s")),
-						new Block(Collections.emptyList(),Collections.emptyList())
-				)
-		);
-		prog.decls.add(
-				new FunDecl(BaseType.VOID,"print_i",
-						List.of(new VarDecl(BaseType.INT,"i")),
-						new Block(Collections.emptyList(),Collections.emptyList())
-				)
-		);
-		prog.decls.add(
-				new FunDecl(BaseType.VOID,"print_c",
-						List.of(new VarDecl(BaseType.CHAR,"c")),
-						new Block(Collections.emptyList(),Collections.emptyList())
-				)
-		);
-		prog.decls.add(
-				new FunDecl(BaseType.CHAR,"read_c",
-						Collections.emptyList(),
-						new Block(Collections.emptyList(),Collections.emptyList())
-				)
-		);
-		prog.decls.add(
-				new FunDecl(BaseType.INT,"read_i",
-						Collections.emptyList(),
-						new Block(Collections.emptyList(),Collections.emptyList())
-				)
-		);
-		prog.decls.add(
-				new FunDecl(new PointerType(BaseType.VOID),"mcmalloc",
-						List.of(new VarDecl(BaseType.INT,"size")),
-						new Block(Collections.emptyList(),Collections.emptyList())
-				)
-		);
+		StringReader sr= new StringReader("""
+				void print_s(char* s){}
+				void print_i(int i){}
+				void print_c(char c){}
+				char read_c(){}
+				int read_i(){}
+				void* mcmalloc(int size){}
+				""");
+		Tokeniser t = new Tokeniser(new Scanner(new BufferedReader(sr)));
+		Program builtIns = new Parser(t).parse();
+		prog.decls.addAll(0,builtIns.decls);
+
 		NameAnalyzer na = new NameAnalyzer();
 		na.visit(prog);
 		this.numErrors += na.getNumErrors();

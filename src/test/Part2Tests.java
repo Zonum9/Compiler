@@ -2,6 +2,8 @@ import ast.Program;
 import org.junit.jupiter.api.Test;
 import parser.Parser;
 import sem.NameAnalyzer;
+import sem.SemanticAnalyzer;
+import sem.TypeAnalyzer;
 
 import java.io.IOException;
 
@@ -231,10 +233,12 @@ public class Part2Tests {
                 }
                 """);
     }
-//    @Test
-//    void nameDefaultFuncs(){
-//        assertFailNameErrors("void print_s();");
-//    }
+    @Test
+    void nameDefaultFuncs(){
+        failType("void print_s();");
+        passType("void print_s(char* s);");
+        failType("void print_s(char* s){}");
+    }
 
 
 
@@ -273,6 +277,24 @@ public class Part2Tests {
         n.visit(p);
         assertEquals(0,n.getNumErrors());
     }
+
+    void passType(String s){
+        Parser pa =Utils.createParserFromString(s);
+        Program p =pa.parse();
+        assertEquals(0,pa.getNumErrors());
+        SemanticAnalyzer n = new SemanticAnalyzer();
+        n.analyze(p);
+        assertEquals(0,n.getNumErrors());
+    }
+    void failType(String s){
+        Parser pa =Utils.createParserFromString(s);
+        Program p =pa.parse();
+        assertEquals(0,pa.getNumErrors());
+        SemanticAnalyzer n = new SemanticAnalyzer();
+        n.analyze(p);
+        assertNotEquals(0,n.getNumErrors());
+    }
+
     void assertFailNameErrors(String s){
         Parser pa =Utils.createParserFromString(s);
         Program p =pa.parse();

@@ -16,6 +16,9 @@ public class Scanner {
     public Scanner(File source) throws FileNotFoundException {
         input = new BufferedReader(new FileReader(source));
     }
+    public Scanner(BufferedReader input){
+        this.input=input;
+    }
 
 
     public int getColumn() {
