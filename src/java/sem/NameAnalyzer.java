@@ -2,17 +2,14 @@ package sem;
 
 import ast.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Stack;
+import java.util.*;
 
 import static sem.TypeAnalyzer.equalTypes;
 
 public class NameAnalyzer extends BaseSemanticAnalyzer {
 
 	Scope scope = new Scope(); //original outer scope has null value for its scope field
-	Stack<FunCallExpr> hangingFunCallRefs = new Stack<>();
+	HashMap<String,List<FunCallExpr>> hangingFunCallRefs = new HashMap<>();
 	public void visit(ASTNode node) {
 		switch(node) {
 			case null -> throw new IllegalStateException("Unexpected null value");
@@ -23,26 +20,26 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 					visit(d);
 				}
 				scope=oldScope;
-				for (Decl decl : p.decls) {
+				for (Decl decl : p.decls) {//check for hanging function calls and protos without declarations
                     if (decl instanceof FunProto fp) {
                         Symbol s = scope.lookupCurrent(fp.name);
-						if(s instanceof FunProtoSymbol fps){
+						if(s instanceof FunProtoSymbol fps){// if lookup returns a prototype, then it must have hanging fun calls
 							if(fps.decl==null){
 								error("function prototype ["+fps.name+"] does not have a declaration");
 								continue;
 							}
-							if(hangingFunCallRefs.empty()){
+							if(hangingFunCallRefs.isEmpty()){
 								continue;
 							}
-							if( Objects.equals(hangingFunCallRefs.peek().name, fps.name)){
-								FunCallExpr fce= hangingFunCallRefs.pop();
-								fce.origin=fps.decl;
-							}
+							hangingFunCallRefs.get(fps.name).forEach((x)->x.origin=fps.decl);
+							hangingFunCallRefs.remove(fps.name);
 						}
                     }
 				}
-				for(FunCallExpr fcx: hangingFunCallRefs){
-					error("function call on undeclared function prototype ["+fcx.name+"]");
+				for(List<FunCallExpr> list: hangingFunCallRefs.values()){
+					for (FunCallExpr fcx :list) {
+						error("function call on undeclared function prototype [" + fcx.name + "]");
+					}
 				}
 			}
 
@@ -152,10 +149,18 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 				switch (sym){
 					case FunSymbol funSym -> funCall.origin=funSym.funDecl;
 					case FunProtoSymbol protoSym -> {
-						if (protoSym.decl!=null)
-							funCall.origin=protoSym.decl;
-						else
-							hangingFunCallRefs.add(funCall);
+						if (protoSym.decl!=null) {
+							funCall.origin = protoSym.decl;
+						}
+						else {
+							if (hangingFunCallRefs.containsKey(funCall.name)){
+								hangingFunCallRefs.get(funCall.name).add(funCall);
+							}else {
+								ArrayList<FunCallExpr> temp=new ArrayList<>();
+								temp.add(funCall);
+								hangingFunCallRefs.put(funCall.name, temp);
+							}
+						}
 					}
 					case null -> error("function call on undefined function ["+funCall.name+"]");
 					default -> error("function ["+funCall.name+"] is either undefined or was shadowed by a variable");
@@ -173,6 +178,8 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 				}
 				scope=oldScope;
 			}
+
+
 
 			default -> {
 				for(ASTNode child: node.children()){

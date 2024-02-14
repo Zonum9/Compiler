@@ -1,1 +1,1 @@
-Program()
+Program(FunProto(PointerType(StructType(B)),fun))

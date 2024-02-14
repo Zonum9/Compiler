@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Optional;
 
 public final class If extends Stmt {
-    Expr expr;
-    Stmt stmt;
-    Optional<Stmt> els;
+    public final Expr expr;
+    public final Stmt stmt;
+    public final Optional<Stmt> els;
 
     public If(Expr expr, Stmt stmt, Optional<Stmt> els) {
         this.expr = expr;

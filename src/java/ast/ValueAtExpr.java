@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 public final class ValueAtExpr extends Expr {
-    Expr expr;
+    public final Expr expr;
 
     public ValueAtExpr(Expr expr) {
         this.expr = expr;

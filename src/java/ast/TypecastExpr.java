@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class TypecastExpr extends Expr {
-    Type castType;
-    Expr expr;
+    public final Type castType;
+    public final Expr expr;
 
     public TypecastExpr(Type castType, Expr expr) {
         this.castType = castType;

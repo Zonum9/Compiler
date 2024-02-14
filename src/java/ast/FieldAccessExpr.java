@@ -4,8 +4,8 @@ import java.util.Collections;
 import java.util.List;
 
 public final class FieldAccessExpr extends Expr {
-    Expr expr;
-    String fieldName;
+    public final Expr expr;
+    public final String fieldName;
 
     public FieldAccessExpr(Expr expr, String fieldName) {
         this.expr = expr;

@@ -7,6 +7,7 @@ public final class StructTypeDecl extends Decl {
     public final List<VarDecl> varDecls;
     public StructTypeDecl(StructType structType,List<VarDecl> varDecls) {
         type= structType;
+        name= structType.strTypeName;
         this.varDecls= List.copyOf(varDecls);
     }
 

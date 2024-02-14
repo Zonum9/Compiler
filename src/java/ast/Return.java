@@ -6,6 +6,7 @@ import java.util.Optional;
 
 public final class Return extends Stmt {
     public final Optional<Expr> expr;
+    public Type functionReturnType;//to be filled by type analyzer;
     public Return(Optional<Expr> expr) {
         this.expr = expr;
     }

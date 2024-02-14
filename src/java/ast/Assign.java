@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class Assign extends Expr {
-    Expr expr1;
-    Expr expr2;
+    public final Expr expr1;
+    public final Expr expr2;
 
     public Assign(Expr expr1, Expr expr2) {
         this.expr1 = expr1;

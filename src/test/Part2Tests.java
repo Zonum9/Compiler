@@ -259,7 +259,7 @@ public class Part2Tests {
                 }
                 """);
         passTypeAnalyzis("""
-                void fun(){
+                int fun(){
                 int x;
                 int y;
                 return x == y;
@@ -421,11 +421,11 @@ public class Part2Tests {
     void arrAccess(){
         passTypeAnalyzis("""
                 int foo(){}
-                void fun(){
+                int fun(){
                 int x[6];
                 char *y;
                 return x[11];
-                return y[200];
+                return (int)y[200];
                 x[foo()];
                 y[foo()+1];
                 "hello world"[11];
@@ -458,9 +458,160 @@ public class Part2Tests {
                 y["hello world"];
                 }
                 """);
+    }
+    @Test
+    void fieldAccess(){
+        passTypeAnalyzis("""
+                struct foo{
+                    int x;
+                    int y;
+                    char c[6];
+                };
+                
+                void foo(){
+                    struct foo x;
+                    x.x;
+                    x.y;
+                    x.c;
+                }
+                """);
+        failTypeAnalyzis("""
+                struct foo{
+                    int x;
+                    int y;
+                    char c[6];
+                };
+                
+                void foo(){
+                    struct foo x;
+                    int y;
+                    y.x; //should fail
+                    x.x;
+                    x.y;
+                    x.c;
+                    x.nope; //should fail
+                }
+                """);
+    }
 
+    @Test
+    void addressOf(){
+        passTypeAnalyzis("""
+                struct foo{
+                    int x;
+                };
+                void main(){
+                    int x;
+                    struct foo strct;
+                    &strct.x;                    
+                }
+                """);
+        failTypeAnalyzis("""
+                void main(){
+                    &1;                    
+                }
+                """);
+    }
+
+    @Test
+    void typeCast(){
+        passTypeAnalyzis("""
+                void fun(){
+                int x;
+                char c;
+                int *p1;
+                char *p2;
+                int *p3;
+                
+                x = (int)c;
+                p1=&x;
+                p2=&c;
+                p3=p1;
+                p3=(int*)p2;
+                p3 = (int*)p1;               
+                }
+                """);
+        failTypeAnalyzis("""
+                void fun(){
+                int x;
+                char c;
+                int *p1;
+                char *p2;
+                int *p3;
+                
+                x = (char)c;
+                p1=&x;
+                p2=&c;
+                p3=p1;
+                p3=(int*)x;
+                p3 = (int*)c;
+                }
+                """);
+    }
+    @Test
+    void assign(){
+        passTypeAnalyzis("""
+                struct s{
+                    int x;
+                };
+                void main (){
+                    struct s str;
+                    str.x=1;
+                }
+                """);
+        passTypeAnalyzis("""
+                struct s{
+                    int x;
+                };
+                void main (){
+                    struct s str;
+                    struct s* p;
+                    p=&str;
+                    (*p).x=1;
+                }
+                """);
+        failTypeAnalyzis("""
+                int x;
+                int y;
+                char c;
+                
+                void main(){
+                    x='c';
+                    y='c';
+                    c=1;
+                }
+                """);
 
     }
+    @Test
+    void testReturn(){
+        passTypeAnalyzis("""
+                    int main(){
+                        return 1;
+                    }
+                """);
+        passTypeAnalyzis("""
+                    void main(){
+                        
+                    }
+                """);
+        passTypeAnalyzis("""
+                    void main(){
+                        return;
+                    }
+                """);
+        failTypeAnalyzis("""
+                    void main(){
+                        return 1;
+                    }
+                """);
+        failTypeAnalyzis("""
+                    int main(){  
+                        return 'c';                      
+                    }
+                """);
+    }
+
 
 
 
