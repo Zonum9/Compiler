@@ -24,7 +24,8 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
                     if (decl instanceof FunProto fp) {
                         Symbol s = scope.lookupCurrent(fp.name);
 						if(s instanceof FunProtoSymbol fps){// if lookup returns a prototype, then it must have hanging fun calls
-							if(fps.decl==null){
+
+							if(fps.decl==null){//if decl == null, then even after checking the whole program no decl was found
 								error("function prototype ["+fps.name+"] does not have a declaration");
 								continue;
 							}

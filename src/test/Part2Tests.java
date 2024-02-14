@@ -275,6 +275,60 @@ public class Part2Tests {
 
     }
     @Test
+    void voidsTest(){
+        failTypeAnalyzis("""
+                struct s{
+                    void x;
+                    void y[2];                        
+                };
+                """);
+        passTypeAnalyzis("""
+                struct s{
+                    void* x;                      
+                };
+                """);
+        passTypeAnalyzis("""
+                struct s{
+                    void* x;                      
+                };
+                void main(){
+                    struct s s;
+                    return;
+                    s.x=s.x;
+                }
+                """);
+    }
+
+    @Test
+    void recursiveStruct(){
+        passTypeAnalyzis("""
+                struct s{
+                    struct s *x;                    
+                };                
+                """);
+        failTypeAnalyzis("""
+                struct s{
+                    struct s x[6];    
+                    struct s y[6][6];                 
+                };                
+                """);
+        failTypeAnalyzis("""
+                struct s{
+                    struct s x;                    
+                };                
+                """);
+        passTypeAnalyzis("""
+                struct A {
+                  int x;
+                };
+                                
+                struct B {
+                  struct A x;
+                };
+                """);
+    }
+
+    @Test
     void funCallTypeCheck(){
         passTypeAnalyzis("""
                 void fun(int x){}

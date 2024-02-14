@@ -3,6 +3,7 @@ package sem;
 import ast.*;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 import static ast.BaseType.*;
 
@@ -37,9 +38,6 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				for(ASTNode c: p.decls){
 					visit(c);
 				}
-
-
-
 				yield BaseType.NONE;
 			}
 
@@ -73,6 +71,9 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				}
 				declaredStructTypes.put(name,std);
 				for (VarDecl vd: std.varDecls){
+					if(isRecursiveStructType(vd.type,name)){
+						error(String.format("Recursive struct definition of struct [%s]",name));
+					}
 					visit(vd);
 				}
 				yield BaseType.NONE;
@@ -357,7 +358,14 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 
 
         };
+	}
 
+	private boolean isRecursiveStructType(Type type,String name) {
+		return switch (type){
+			case StructType st-> Objects.equals(st.strTypeName, name);
+			case ArrayType arr-> isRecursiveStructType(arr.type,name);
+			default->false;
+		};
 	}
 
 	private void informReturnsOfFuncType(FunDecl fd) {
