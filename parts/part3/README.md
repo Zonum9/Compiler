@@ -25,7 +25,7 @@ We also encourage you to have a look at the documentation provided by MARS which
 For a more detailed explanation about the MIPS architecture, please have a look at the [MIPS Assembly WikiBooks](http://en.wikibooks.org/wiki/MIPS_Assembly).
 Another MIPS summary of all the instructions supported can be found here: [MIPS Green Card](https://booksite.elsevier.com/9780124077263/downloads/COD_5e_Greencard.pdf)
 
-You can also use this [online simulator](https://ecse324.ece.mcgill.ca/simulator/?sys=mipsr5) for debugging your programs as the comments remain visible when stepping through instructions.
+You can also use this [online simulator](https://ecse324.ece.mcgill.ca/simulator/?sys=mipsr5-spim) for debugging your programs as the comments remain visible when stepping through instructions.
 
 **Important**:
 The marking system will run the Mars simulator from the command line which may change slightly the behaviour of your program (especially when it comes to handling input).
