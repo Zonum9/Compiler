@@ -665,6 +665,15 @@ public class Part2Tests {
                     }
                 """);
     }
+    @Test
+    void nonInitStruct(){
+        failTypeAnalyzis("""
+                void main(){
+                struct b b;
+                b.x;
+                }
+                """);
+    }
 
 
 

@@ -61,6 +61,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 					error("Struct type [" + st.strTypeName + "] has not been declared");
 					yield BaseType.UNKNOWN;
 				}
+				st.origin=declaredStructTypes.get(st.strTypeName);
 				yield st;
 			}
 			case StructTypeDecl std -> {
@@ -209,7 +210,13 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 			case FieldAccessExpr fieldAccessExpr -> {
 				Type lhs = visit(fieldAccessExpr.expr);
 				if (lhs instanceof StructType st){
+					if(!declaredStructTypes.containsKey(st.strTypeName)){
+						error(String.format("Struct type [%s] does not exist",st.strTypeName));
+						fieldAccessExpr.type=UNKNOWN;
+						yield UNKNOWN;
+					}
 					StructTypeDecl decl = declaredStructTypes.get(st.strTypeName);
+					st.origin=decl;
 					String desiredField = fieldAccessExpr.fieldName;
 					for (VarDecl field: decl.varDecls){
 						if (desiredField.equals(field.name)){

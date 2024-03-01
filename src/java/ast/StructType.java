@@ -6,6 +6,7 @@ import java.util.List;
 
 public final class StructType  implements Type{
     public final String strTypeName;
+    public StructTypeDecl origin;
     public StructType(String strTypeName) {
         this.strTypeName = strTypeName;
     }

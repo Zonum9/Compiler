@@ -18,6 +18,7 @@ public class StmtCodeGen extends CodeGen {
                     visit(innerStmt);
                 });
             }
+            default -> {}
             // To complete other cases
         }
     }
