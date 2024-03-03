@@ -7,7 +7,7 @@ import gen.asm.AssemblyProgram;
 /**
  * This visitor should produce a program.
  */
-public class ProgramCodeGen extends CodeGen {//todo
+public class ProgramCodeGen extends CodeGen {
 
 
     private final AssemblyProgram.Section dataSection ;

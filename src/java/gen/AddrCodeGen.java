@@ -6,7 +6,9 @@ import gen.asm.Label;
 import gen.asm.Register;
 
 import java.util.Objects;
+import java.util.Optional;
 
+import static ast.BaseType.CHAR;
 import static gen.asm.OpCode.*;
 import static gen.asm.Register.Arch.fp;
 
@@ -23,7 +25,7 @@ public class AddrCodeGen extends CodeGen {
         AssemblyProgram.Section currSect = asmProg.getCurrentSection();
         return switch (e){
             case ArrayAccessExpr arrayAccessExpr -> {
-                Register higherAddress = visit(arrayAccessExpr.arr);
+                Register baseAddress = visit(arrayAccessExpr.arr);
                 int typeSize= MemAllocCodeGen.sizeofType(arrayAccessExpr.type);
 
                 Register desiredIndex = new ExprCodeGen(asmProg).visit(arrayAccessExpr.index);
@@ -35,11 +37,23 @@ public class AddrCodeGen extends CodeGen {
                 currSect.emit(MFLO,desiredIndex);
 
                 //get the desired final address
-                currSect.emit(ADD,higherAddress,higherAddress,desiredIndex);
-                yield higherAddress;
+                currSect.emit(ADD,baseAddress,baseAddress,desiredIndex);
+                yield baseAddress;
             }
-            case FieldAccessExpr fieldAccessExpr -> visit(fieldAccessExpr.expr);//fixme this must be wrong
-            case ValueAtExpr valueAtExpr -> visit(valueAtExpr.expr);//fixme this must be wrong
+            case FieldAccessExpr fieldAccessExpr -> {//todo test this
+                Register baseAddress =visit(fieldAccessExpr.expr);
+                StructTypeDecl origin = ((StructType)fieldAccessExpr.expr.type).origin;
+                VarDecl fieldDecl= origin.varDecls.stream()
+                        .filter( vd->vd.name.equals(fieldAccessExpr.fieldName))
+                        .findFirst().get();
+                currSect.emit(ADDI,baseAddress,baseAddress,fieldDecl.fpOffset);
+                yield baseAddress;
+            }
+
+            //the address of *(expr) is the value of expr
+            case ValueAtExpr valueAtExpr -> new ExprCodeGen(asmProg).visit(valueAtExpr.expr);//todo test this
+
+
             case VarExpr varExpr -> {
                 VarDecl vd = varExpr.origin;
                 Register reg= Register.Virtual.create();
@@ -52,22 +66,28 @@ public class AddrCodeGen extends CodeGen {
             }
 
             case Assign x->{
-                Register lhs = visit(x.expr1);
-                if(x.type instanceof StructType){
-                    Register rhs = visit(x.expr2);
-                    VarDecl decl= getVarExpression(x.expr1).origin;
-                    for (int i = 0; i < decl.space; i+=4) {//copy struct
-                        currSect.emit(SW,rhs,lhs,decl.fpOffset+i*4);
+                Register addrReg = visit(x.expr1);
+                if(x.expr1.type instanceof StructType st){
+                    for(VarDecl vd:st.origin.varDecls){
+                        FieldAccessExpr left = new FieldAccessExpr(x.expr1,vd.name);
+                        left.type=vd.type;
+
+                        FieldAccessExpr right = new FieldAccessExpr(x.expr2,vd.name);
+                        right.type=vd.type;
+
+                        Assign newAssign= new Assign(left,right);
+                        newAssign.type=vd.type;
+                        visit(newAssign);
                     }
                 }
                 else {
                     Register rhs = new ExprCodeGen(asmProg).visit(x.expr2);
-
-                    //can be : array, int, char, ptr (todo should chars be loaded as words?)
-                    currSect.emit(SW,rhs,lhs,0);
+                    //can be : array, int, char, ptr
+                    Store storeType = x.type == CHAR? SB:SW;
+                    currSect.emit(storeType,rhs,addrReg,0);
                 }
 
-                yield lhs;
+                yield addrReg;
             }
 
             default -> throw new Error("Invalid address access");

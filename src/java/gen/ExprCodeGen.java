@@ -6,6 +6,7 @@ import gen.asm.Label;
 import gen.asm.OpCode;
 import gen.asm.Register;
 
+import static ast.BaseType.CHAR;
 import static gen.asm.OpCode.*;
 import static gen.asm.Register.Arch.*;
 
@@ -22,7 +23,8 @@ public class ExprCodeGen extends CodeGen {
     public Register visit(Expr e) {
         AssemblyProgram.Section currSection= asmProg.getCurrentSection();
         // TODO: to complete
-        return switch (e){
+        currSection.emit("----Start of "+e.getClass().getSimpleName()+"----");
+        Register retReg= switch (e){
             case IntLiteral it->{
                 Register resReg= Register.Virtual.create();
                 currSection.emit(OpCode.LI,resReg,it.value);
@@ -36,7 +38,6 @@ public class ExprCodeGen extends CodeGen {
 
             case VarExpr vx->{
                 Register resReg= Register.Virtual.create();
-
                 if(vx.origin.isGlobal) {
                     currSection.emit(OpCode.LA, resReg, Label.get(vx.name));
                     currSection.emit(OpCode.LW, resReg, resReg, 0);
@@ -52,17 +53,25 @@ public class ExprCodeGen extends CodeGen {
                 }
                 Register addrReg= new AddrCodeGen(asmProg).visit(assign.expr1);
                 Register valReg= visit(assign.expr2);
-                currSection.emit(SW,valReg,addrReg,0);
+                Store storeType = assign.expr1.type == CHAR? SB:SW;
+                currSection.emit(storeType,valReg,addrReg,0);
                 yield valReg;
             }
 
             case ArrayAccessExpr arrayAccessExpr -> {
                 Register arrAddress = new AddrCodeGen(asmProg).visit(arrayAccessExpr);
                 Register r = Register.Virtual.create();
-                currSection.emit(LW,r,arrAddress,0);
+                Load loadType = arrayAccessExpr.type == CHAR? LB:LW;
+                currSection.emit(loadType,r,arrAddress,0);
                 yield r;
             }
-            case FieldAccessExpr fieldAccessExpr -> null;
+            case FieldAccessExpr fax -> {
+                Register fieldAddress = new AddrCodeGen(asmProg).visit(fax);
+                Register r = Register.Virtual.create();
+                Load loadType = fax.type == CHAR? LB:LW;
+                currSection.emit(loadType,r,fieldAddress,0);
+                yield r;
+            }
 
 
             case FunCallExpr x->{//todo
@@ -184,14 +193,25 @@ public class ExprCodeGen extends CodeGen {
                 }
                 yield resultReg;
             }
+            case ValueAtExpr valueAtExpr -> {
+                Register address = visit(valueAtExpr.expr);
+                Load loadType = valueAtExpr.type == CHAR? LB:LW;
+                currSection.emit(loadType,address,address,0);
+                yield address;
+            }
+            case AddressOfExpr addressOfExpr -> new AddrCodeGen(asmProg).visit(addressOfExpr.expr);
 
-            case AddressOfExpr addressOfExpr -> null;
+            case TypecastExpr typecastExpr -> {
+                yield null; //todo
+            }
 
             case SizeOfExpr sizeOfExpr -> null;
             case StrLiteral strLiteral -> null;
-            case TypecastExpr typecastExpr -> null;
-            case ValueAtExpr valueAtExpr -> null;
+
+
         };
+        currSection.emit("----End of "+e.getClass().getSimpleName()+"----");
+        return retReg;
     }
 
     private Register handleBuiltInFunc(FunCallExpr builtIn) {
@@ -201,7 +221,7 @@ public class ExprCodeGen extends CodeGen {
                 printCall(currSection,builtIn,1);
                 yield null;
             }
-            case "print_s" ->{
+            case "print_s" ->{//todo check this works
                 printCall(currSection,builtIn,4);
                 yield null;
             }

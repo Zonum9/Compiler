@@ -35,7 +35,7 @@ void visit(ASTNode n) {//todo verify this is correct
                     currSect.emit(new Directive("globl "+vd.name));
                     currSect.emit(Label.get(vd.name));
                     currSect.emit(new Directive("align "+2));
-                    currSect.emit(new Directive("space "+ sizeofType(vd.type)));
+                    currSect.emit(new Directive("space "+ wordAlign(sizeofType(vd.type))));
                     return;
                 }
                 //local variables

@@ -129,6 +129,14 @@ public class Part3Tests {
                 }
                 """,
                 "5");
+        assertCorrectOutput("""
+                void main(){
+                    char x;
+                    x='5';
+                    print_c(x);
+                }
+                """,
+                "5");
     }
 
     @Test
@@ -144,8 +152,126 @@ public class Part3Tests {
                 }
                 """,
                 "55");
+        assertCorrectOutput("""
+                char x;
+                void main(){
+                    char y;
+                    x='5';
+                    y=x;
+                    print_c(x);
+                    print_c(y);
+                }
+                """,
+                "55");
+        assertCorrectOutput("""
+                char x;
+                int z;
+                void main(){
+                    char y;
+                    int w;
+                    x='5';
+                    y=x;
+                    w=11;
+                    z=w+1;
+                    print_c(x);
+                    print_c(y);
+                    print_i(w);
+                    print_i(z);
+                }
+                """,
+                "551112");
     }
 
+    @Test
+    void structAssignment(){
+        assertCorrectOutput("""
+                struct A{
+                    int x;
+                    int y;
+                    char c;
+                    struct A* ptr;
+                    int z;
+                    int w;
+                    void * n;
+                };
+                
+                void main(){
+                    struct A strct;
+                    
+                    strct.x=1;
+                    strct.y=2;
+                    strct.c='3';
+                    strct.z=4;
+                    strct.w=5;
+                    
+                    print_i(strct.x);
+                    print_i(strct.y);
+                    print_c(strct.c);
+                    print_i(strct.z);
+                    print_i(strct.w);
+                }
+                
+                """,
+                "12345");
+    }
+
+    @Test
+    void structCopy(){
+        assertCorrectOutput("""
+                struct A{
+                    int x;
+                    int y;
+                    char c;
+                    int z;
+                    int w;
+                };
+                
+                void main(){
+                    struct A strct;
+                    struct A cpy;
+                    
+                    strct.x=1;
+                    strct.y=2;
+                    strct.c='3';
+                    strct.z=4;
+                    strct.w=5;
+                    cpy=strct;
+                    
+                    print_i(strct.x);
+                    print_i(strct.y);
+                    print_c(strct.c);
+                    print_i(strct.z);
+                    print_i(strct.w);
+                    
+                    print_i(cpy.x);
+                    print_i(cpy.y);
+                    print_c(cpy.c);
+                    print_i(cpy.z);
+                    print_i(cpy.w);
+                    
+                    cpy.x=6;
+                    cpy.y=7;
+                    cpy.c='8';
+                    cpy.z=9;
+                    cpy.w=10;
+                    
+                    print_i(strct.x);
+                    print_i(strct.y);
+                    print_c(strct.c);
+                    print_i(strct.z);
+                    print_i(strct.w);
+                    
+                    print_i(cpy.x);
+                    print_i(cpy.y);
+                    print_c(cpy.c);
+                    print_i(cpy.z);
+                    print_i(cpy.w);
+                    
+                }
+                
+                """,
+                "123451234512345678910");
+    }
 
     @Test
     void structShenanigans(){
@@ -203,9 +329,80 @@ public class Part3Tests {
                 """,
                 "0123");
     }
+    @Test
+    void threeDimArrays(){
+        assertCorrectOutput("""
+                int  x[2][2][2];
+                void main(){
+                    x[0][0][0]=0;
+                    x[0][0][1]=1;
+                    x[0][1][0]=2;
+                    x[0][1][1]=3;
+                    x[1][0][0]=4;
+                    x[1][0][1]=5;
+                    x[1][1][0]=6;
+                    x[1][1][1]=7;
+                    
+                    print_i(x[0][0][0]);
+                    print_i(x[0][0][1]);
+                    print_i(x[0][1][0]);
+                    print_i(x[0][1][1]);
+                    print_i(x[1][0][0]);
+                    print_i(x[1][0][1]);
+                    print_i(x[1][1][0]);
+                    print_i(x[1][1][1]);
+                }
+                """,
+                "01234567");
+    }
 
     @Test
-    void mysteryTest(){
+    void charTwoDimArrays(){
+        assertCorrectOutput("""
+                char  x[2][2];
+                void main(){
+                    x[0][0]='0';
+                    x[0][1]='1';
+                    x[1][0]='2';
+                    x[1][1]='3';
+                    
+                    print_c(x[0][0]);
+                    print_c(x[0][1]);
+                    print_c(x[1][0]);
+                    print_c(x[1][1]);
+                }
+                """,
+                "0123");
+    }
+    @Test
+    void charThreeDimArrays(){
+        assertCorrectOutput("""
+                char  x[2][2][2];
+                void main(){
+                    x[0][0][0]='0';
+                    x[0][0][1]='1';
+                    x[0][1][0]='2';
+                    x[0][1][1]='3';
+                    x[1][0][0]='4';
+                    x[1][0][1]='5';
+                    x[1][1][0]='6';
+                    x[1][1][1]='7';
+                    
+                    print_c(x[0][0][0]);
+                    print_c(x[0][0][1]);
+                    print_c(x[0][1][0]);
+                    print_c(x[0][1][1]);
+                    print_c(x[1][0][0]);
+                    print_c(x[1][0][1]);
+                    print_c(x[1][1][0]);
+                    print_c(x[1][1][1]);
+                }
+                """,
+                "01234567");
+    }
+
+    @Test
+    void mysteryTest(){//idk what this will do
         assertCorrectOutput("""
                 int  x[2][2];
                 void main(){

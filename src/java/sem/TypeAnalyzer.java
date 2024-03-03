@@ -22,7 +22,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				yield BaseType.NONE;
 			}
 
-			case FunDecl fd -> {//todo maybe check that it has a return?
+			case FunDecl fd -> {
 				for (ASTNode child: fd.children()){
 					visit(child);
 				}
