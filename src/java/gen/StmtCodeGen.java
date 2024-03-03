@@ -1,7 +1,6 @@
 package gen;
 
-import ast.Block;
-import ast.Stmt;
+import ast.*;
 import gen.asm.AssemblyProgram;
 
 public class StmtCodeGen extends CodeGen {
@@ -18,8 +17,23 @@ public class StmtCodeGen extends CodeGen {
                     visit(innerStmt);
                 });
             }
-            default -> {}
+            case ExprStmt exprStmt -> {
+                ExprCodeGen exprCodeGen =  new ExprCodeGen(asmProg);
+                exprCodeGen.visit(exprStmt.expr);
+            }
+
             // To complete other cases
+            case Break aBreak -> {
+            }
+            case Continue aContinue -> {
+            }
+
+            case If anIf -> {
+            }
+            case Return aReturn -> {
+            }
+            case While aWhile -> {
+            }
         }
     }
 }

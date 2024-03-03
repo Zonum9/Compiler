@@ -7,7 +7,7 @@ import gen.asm.AssemblyProgram;
 /**
  * This visitor should produce a program.
  */
-public class ProgramCodeGen extends CodeGen {
+public class ProgramCodeGen extends CodeGen {//todo
 
 
     private final AssemblyProgram.Section dataSection ;
@@ -17,10 +17,12 @@ public class ProgramCodeGen extends CodeGen {
         this.dataSection = asmProg.newSection(AssemblyProgram.Section.Type.DATA);
     }
 
-    void generate(Program p) {
+    public void generate(Program p) {
         // allocate all variables
         MemAllocCodeGen allocator = new MemAllocCodeGen(asmProg);
         allocator.visit(p);
+
+        //todo allocate space for strings in another pass
 
         // generate the code for each function
         p.decls.forEach((d) -> {

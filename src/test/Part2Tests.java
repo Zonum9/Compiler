@@ -674,6 +674,21 @@ public class Part2Tests {
                 }
                 """);
     }
+    @Test
+    void arrAccessFromFunc(){
+        passTypeAnalyzis("""
+                int * foo(){
+                    int *x;
+                    int y;
+                    x=&y;
+                    return x;
+                }
+                void main(){
+                    int x;
+                    x= foo()[0];                    
+                }
+                """);
+    }
 
 
 

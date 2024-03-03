@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 public final class ChrLiteral extends Expr {
-    char value;
+    public char value;
 
     public ChrLiteral(char value) {
         this.value = value;

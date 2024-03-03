@@ -1,10 +1,14 @@
 import ast.ASTPrinter;
 import ast.ASTdotPrinter;
 import ast.Program;
+import gen.ProgramCodeGen;
+import gen.asm.AssemblyProgram;
 import lexer.Scanner;
 import lexer.Token;
 import lexer.Tokeniser;
 import parser.Parser;
+import regalloc.NaiveRegAlloc;
+import sem.SemanticAnalyzer;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -146,5 +150,29 @@ public class Utils {
         writeASTFromString(program);
         String text = new String(Files.readAllBytes(Paths.get("src/test/printerOut/out.txt")));
         return text.replaceAll("\\s+","");
+    }
+
+
+    public static String programStringToASMString(String program) {
+        return asmOBJtoString(programStringToASMObj(program));
+    }
+
+    public static String asmOBJtoString(AssemblyProgram p){
+        StringWriter output = new StringWriter();
+        PrintWriter writer=new PrintWriter(output);
+        p.print(writer);
+        writer.close();
+        return output.toString();
+    }
+
+    public static AssemblyProgram programStringToASMObj(String program){
+        Program p = Utils.createParserFromString(program).parse();
+        SemanticAnalyzer n = new SemanticAnalyzer();
+        n.analyze(p);
+        assertEquals(n.getNumErrors(),0);
+        AssemblyProgram virtualRegs= new AssemblyProgram();
+        ProgramCodeGen progGen = new ProgramCodeGen(virtualRegs);
+        progGen.generate(p);
+        return NaiveRegAlloc.INSTANCE.apply(virtualRegs);
     }
 }

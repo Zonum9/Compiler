@@ -55,6 +55,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				yield v.type;
 			}
 
+
 			case StructType st->{
 				if (!declaredStructTypes.containsKey(st.strTypeName))
 				{
@@ -64,6 +65,8 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				st.origin=declaredStructTypes.get(st.strTypeName);
 				yield st;
 			}
+
+
 			case StructTypeDecl std -> {
 				String name= std.name;
 				if (declaredStructTypes.containsKey(name)) {
@@ -79,7 +82,10 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				}
 				yield BaseType.NONE;
 			}
+
+
 			case BaseType type -> type;
+
 
 			case ArrayType arrayType -> {
 				 Type t= visit(arrayType.type);
@@ -92,6 +98,8 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				}
 				 yield arrayType;
 			}
+
+
 			case PointerType pointerType -> {
 				Type t= visit(pointerType.type);
 				if (t == BaseType.UNKNOWN ){
@@ -105,6 +113,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				yield INT;
 			}
 
+
 			case StrLiteral strLiteral -> {
 				int len= strLiteral.value.length()+1;
 				strLiteral.type = new ArrayType(BaseType.CHAR,len);
@@ -115,6 +124,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				chrLiteral.type=BaseType.CHAR;
 				yield BaseType.CHAR;
 			}
+
 
 			case BinOp binOp -> {
 				Type lhs= visit(binOp.expr1);
@@ -159,6 +169,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 					}
 				}
 			}
+
 
 			case FunCallExpr funCallExpr -> {
 				FunDecl decl = funCallExpr.origin;
@@ -310,6 +321,8 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				assign.type=lhs;
 				yield lhs;
 			}
+
+
 			case While aWhile -> {
 				Type condition= visit(aWhile.expr);
 				if (condition != INT){

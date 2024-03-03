@@ -1,0 +1,3 @@
+#!/bin/bash
+clear
+java -jar parts/part3/Mars4_5.jar sm nc me src/test/asmFiles/test.asm
