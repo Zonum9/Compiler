@@ -22,7 +22,6 @@ public class ExprCodeGen extends CodeGen {
 
     public Register visit(Expr e) {
         AssemblyProgram.Section currSection= asmProg.getCurrentSection();
-        // TODO: to complete
         currSection.emit("----Start of "+e.getClass().getSimpleName()+"----");
         Register retReg= switch (e){
             case IntLiteral it->{
@@ -216,7 +215,7 @@ public class ExprCodeGen extends CodeGen {
                 yield stringAddress;
             }
 
-            case SizeOfExpr sizeOfExpr -> {//todo verify this is correct
+            case SizeOfExpr sizeOfExpr -> {
                 Register reg = Register.Virtual.create();
                 currSection.emit(LI,reg,MemAllocCodeGen.sizeofType(sizeOfExpr.sizeOfType));
                 yield reg;
@@ -241,7 +240,6 @@ public class ExprCodeGen extends CodeGen {
                 syscallWithArgs(currSection,builtIn,11);
                 yield null;
             }
-            //todo check these work:
 
             case "print_s" ->{
                 syscallWithArgs(currSection,builtIn,4);

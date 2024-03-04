@@ -201,7 +201,7 @@ public class Tokeniser extends CompilerPass {
         if(!scanner.hasNext() || scanner.peek() =='\n')
             return Optional.empty();
         scanner.next(); //consume right side double quote
-        return Optional.of(data.toString());
+        return Optional.of(replaceEscapedCharacters(data.toString()));
     }
 
     private String replaceEscapedCharacters(String s){

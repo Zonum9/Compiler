@@ -42,7 +42,7 @@ public class AddrCodeGen extends CodeGen {
                 yield baseAddress;
             }
 
-            case FieldAccessExpr fieldAccessExpr -> {//todo test this
+            case FieldAccessExpr fieldAccessExpr -> {
                 Register baseAddress =visit(fieldAccessExpr.expr);
                 StructTypeDecl origin = ((StructType)fieldAccessExpr.expr.type).origin;
                 VarDecl fieldDecl= origin.varDecls.stream()
@@ -53,7 +53,7 @@ public class AddrCodeGen extends CodeGen {
             }
 
             //the address of *(expr) is the value of expr
-            case ValueAtExpr valueAtExpr -> new ExprCodeGen(asmProg).visit(valueAtExpr.expr);//todo test this
+            case ValueAtExpr valueAtExpr -> new ExprCodeGen(asmProg).visit(valueAtExpr.expr);
 
 
             case VarExpr varExpr -> {

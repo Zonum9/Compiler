@@ -34,7 +34,6 @@ public final class NaiveRegAlloc implements AssemblyPass {
     }
 
     private static void emitInstructionWithoutVirtualRegister(Instruction insn, Map<Register.Virtual, Label> vrMap, AssemblyProgram.Section section) {
-        //todo add this back?
         section.emit("Original instruction: "+insn);
 
         final Map<Register, Register> vrToAr = new HashMap<>();

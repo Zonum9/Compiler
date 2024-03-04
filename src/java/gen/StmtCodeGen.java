@@ -15,14 +15,13 @@ public class StmtCodeGen extends CodeGen {
         switch (s) {
             case Block b -> {
                 // no need to do anything with varDecl (memory allocator takes care of them)
-                b.stmts.forEach((innerStmt) -> {
-                    visit(innerStmt);
-                });
+                b.stmts.forEach(this::visit);
             }
             case ExprStmt exprStmt -> {
                 ExprCodeGen exprCodeGen =  new ExprCodeGen(asmProg);
                 exprCodeGen.visit(exprStmt.expr);
             }
+            //todo
 
             // To complete other cases
             case Break aBreak -> {

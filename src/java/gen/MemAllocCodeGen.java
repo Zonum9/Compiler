@@ -18,7 +18,7 @@ public class MemAllocCodeGen extends CodeGen {
     boolean global = true;
     int fpOffset = 0;
 
-void visit(ASTNode n) {//todo verify this is correct
+void visit(ASTNode n) {
         AssemblyProgram.Section currSect= asmProg.getCurrentSection();
         switch (n){
             case Program x->{

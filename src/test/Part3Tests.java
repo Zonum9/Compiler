@@ -429,7 +429,7 @@ public class Part3Tests {
                 "123");
     }
     @Test
-    void read(){//fixme does not work, but it does on mars?
+    void read(){
         assertCorrectOutput("""
                 void main(){
                     char x;
@@ -554,7 +554,6 @@ public class Part3Tests {
         assertCorrectOutput("""
             void main(){
                 print_c('\\n');
-
         }
         """,
         "\n");
