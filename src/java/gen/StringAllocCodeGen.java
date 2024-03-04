@@ -20,12 +20,30 @@ public class StringAllocCodeGen extends CodeGen {
                 Label strLbl = Label.create();
                 currentSection.emit(strLbl);
                 s.label=strLbl;
-                currentSection.emit(new Directive("asciiz \""+s.value+"\""));
+                String modified = revertEscapeCharReplacement(s.value);
+                currentSection.emit(new Directive("asciiz \""+modified+"\""));
                 currentSection.emit(new Directive("align 2"));
             }
             default -> n.children().forEach(this::visit);
 
         }
+    }
 
+    private String revertEscapeCharReplacement(String s){
+        String[][] replacements = {
+                {"\\\\","\\"},
+                {"\\a",String.valueOf('\u0007')},
+                {"\\b","\b"},
+                {"\\n","\n"},
+                {"\\r","\r"},
+                {"\\t","\t"},
+                {"\\'", "'"},
+                {"\\\"","\""},
+                {"\\0","\0"}
+        };
+        for (String[] pairToReplace : replacements) {
+            s=s.replace(pairToReplace[1],pairToReplace[0]);
+        }
+        return s;
     }
 }

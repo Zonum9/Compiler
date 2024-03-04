@@ -204,7 +204,7 @@ public class Tokeniser extends CompilerPass {
         return Optional.of(replaceEscapedCharacters(data.toString()));
     }
 
-    private String replaceEscapedCharacters(String s){
+    public static String replaceEscapedCharacters(String s){
         String[][] replacements = {
             {"\\a",String.valueOf('\u0007')},
             {"\\b","\b"},

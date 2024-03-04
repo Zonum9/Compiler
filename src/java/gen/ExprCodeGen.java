@@ -59,14 +59,13 @@ public class ExprCodeGen extends CodeGen {
 
             case ArrayAccessExpr arrayAccessExpr -> {
                 Register arrAddress = new AddrCodeGen(asmProg).visit(arrayAccessExpr);
-                Register r = Register.Virtual.create();
 
                 //if array access returns an array,
                 //and that array is not being accessed then return reference to the array
-                if(arrayAccessExpr.arr.type instanceof ArrayType &&
-                        !(arrayAccessExpr.arr instanceof ArrayAccessExpr)){
+                if(arrayAccessExpr.type instanceof ArrayType ){
                     yield arrAddress;
                 }
+                Register r = Register.Virtual.create();
                 Load loadType = arrayAccessExpr.type == CHAR? LB:LW;
                 currSection.emit(loadType,r,arrAddress,0);
                 yield r;

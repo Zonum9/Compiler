@@ -33,8 +33,8 @@ void visit(ASTNode n) {
                 if(global){
                     vd.isGlobal=true;
                     currSect.emit(new Directive("globl "+vd.name));
-                    currSect.emit(Label.get(vd.name));
                     currSect.emit(new Directive("align "+2));
+                    currSect.emit(Label.get(vd.name));
                     currSect.emit(new Directive("space "+ wordAlign(sizeofType(vd.type))));
                     return;
                 }

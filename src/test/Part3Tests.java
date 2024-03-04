@@ -1,6 +1,6 @@
 import gen.asm.AssemblyProgram;
+import lexer.Tokeniser;
 import org.junit.jupiter.api.Test;
-import regalloc.NaiveRegAlloc;
 
 import java.io.*;
 
@@ -213,6 +213,27 @@ public class Part3Tests {
                 """,
                 "12345");
     }
+    @Test
+    void globalArrayAccess(){
+        assertCorrectOutput("""
+                int x[4];
+                void main(){
+                    x[0]=0;
+                    x[1]=1;
+                    x[2]=2;
+                    x[3]=3;
+                    
+                    print_i(0);
+                    print_i(1);
+                    print_i(2);
+                    print_i(3);
+                    
+                }
+                """,
+                "0123");
+    }
+    //todo test func calls with arrays
+
 
     @Test
     void structCopy(){
@@ -452,6 +473,123 @@ public class Part3Tests {
 
     }
 
+
+    @Test void structWithArray(){
+        assertCorrectOutput("""
+                struct foo{
+                    int x[5];
+                };
+                struct foo x;
+                struct foo y;
+                void main(){
+                    
+                    
+                    x.x[0]=0;
+                    x.x[1]=1;
+                    x.x[2]=2;
+                    x.x[3]=3;
+                    x.x[4]=4;
+                                        
+                    y=x;
+                    
+                    print_i(x.x[0]);
+                    print_i(x.x[1]);
+                    print_i(x.x[2]);
+                    print_i(x.x[3]);
+                    print_i(x.x[4]);
+                    
+                    print_i(y.x[0]);
+                    print_i(y.x[1]);
+                    print_i(y.x[2]);
+                    print_i(y.x[3]);
+                    print_i(y.x[4]);
+                    
+                }
+                """,
+                "0123401234");
+        assertCorrectOutput("""
+                struct foo{
+                    int x[5];
+                };
+                struct foo x;
+                struct foo y;
+                void main(){
+                    
+                    
+                    x.x[0]=0;
+                    x.x[1]=1;
+                    x.x[2]=2;
+                    x.x[3]=3;
+                    x.x[4]=4;
+                                        
+                    y=x;
+                    
+                    print_i(x.x[0]);
+                    print_i(x.x[1]);
+                    print_i(x.x[2]);
+                    print_i(x.x[3]);
+                    print_i(x.x[4]);
+                    
+                    print_i(y.x[0]);
+                    print_i(y.x[1]);
+                    print_i(y.x[2]);
+                    print_i(y.x[3]);
+                    print_i(y.x[4]);
+                    
+                    y.x[0]=5;
+                    y.x[1]=6;
+                    y.x[2]=7;
+                    y.x[3]=8;
+                    y.x[4]=9;
+                    
+                    print_i(x.x[0]);
+                    print_i(x.x[1]);
+                    print_i(x.x[2]);
+                    print_i(x.x[3]);
+                    print_i(x.x[4]);
+                    
+                    print_i(y.x[0]);
+                    print_i(y.x[1]);
+                    print_i(y.x[2]);
+                    print_i(y.x[3]);
+                    print_i(y.x[4]);
+                }
+                """,
+                "01234012340123456789");
+        assertCorrectOutput("""
+                struct foo{
+                    int x[5];
+                };
+                                
+                void main(){
+                    struct foo x;
+                    struct foo y;
+                    
+                    x.x[0]=0;
+                    x.x[1]=1;
+                    x.x[2]=2;
+                    x.x[3]=3;
+                    x.x[4]=4;
+                                        
+                    y=x;
+                    
+                    print_i(x.x[0]);
+                    print_i(x.x[1]);
+                    print_i(x.x[2]);
+                    print_i(x.x[3]);
+                    print_i(x.x[4]);
+                    
+                    print_i(y.x[0]);
+                    print_i(y.x[1]);
+                    print_i(y.x[2]);
+                    print_i(y.x[3]);
+                    print_i(y.x[4]);
+                    
+                }
+                """,
+                "0123401234");
+    }
+
     @Test
     void structArray(){
         assertCorrectOutput("""
@@ -537,6 +675,51 @@ public class Part3Tests {
                 """,
                 "16\n20");
     }
+
+    @Test
+    void escapeCharacters(){
+        String[] escapedChar = { "\\b", "\\n", "\\r", "\\t", "\\\\", "\\'", "\\\"", "\\0","\u0007"};
+        for(String c : escapedChar){
+            String program ="void main(){print_s((char*)\""+c+"\");}";
+            System.out.println(program);
+            assertCorrectOutput(
+                    program
+                    , Tokeniser.replaceEscapedCharacters(c));
+        }
+
+        for(String c : escapedChar){
+            String program ="void main(){print_c('"+c+"');}";
+            System.out.println(program);
+            assertCorrectOutput(
+                    program
+                    , Tokeniser.replaceEscapedCharacters(c));
+        }
+    }
+
+    @Test
+    void stringLitAccesses(){
+        assertCorrectOutput("""
+                void main(){
+                    char x1;
+                    char x2;
+                    char x3;
+                    char x4;
+                    char x5;
+                    
+                    x1 = "Hello"[0];
+                    x2 = "Hello"[1];
+                    x3 = "Hello"[2];
+                    x4 = "Hello"[3];
+                    x5 = "Hello"[4];
+                    print_c(x1);
+                    print_c(x2);
+                    print_c(x3);
+                    print_c(x4);
+                    print_c(x5);
+                }
+                ""","Hello");
+    }
+
     @Test
     void printing2(){
         assertCorrectOutput(
@@ -566,11 +749,11 @@ public class Part3Tests {
                 ""","hello \n world");
     }
 
+
     //todo test shadowing
 
     void assertCorrectOutput(String program,String expectedOutput, int expectedExitCode, String input){
         AssemblyProgram p = Utils.programStringToASMObj(program);
-        p = NaiveRegAlloc.INSTANCE.apply(p);
         try {
             File f= File.createTempFile("temp",".asm");
             p.print(new PrintWriter(f));

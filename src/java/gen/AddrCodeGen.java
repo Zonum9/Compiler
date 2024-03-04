@@ -25,6 +25,7 @@ public class AddrCodeGen extends CodeGen {
         AssemblyProgram.Section currSect = asmProg.getCurrentSection();
         currSect.emit("----Start of "+e.getClass().getSimpleName()+"----");
         Register r= switch (e){
+
             case ArrayAccessExpr arrayAccessExpr -> {
                 Register baseAddress = visit(arrayAccessExpr.arr);
                 int typeSize= MemAllocCodeGen.sizeofType(arrayAccessExpr.type);
@@ -81,16 +82,32 @@ public class AddrCodeGen extends CodeGen {
                         newAssign.type=vd.type;
                         visit(newAssign);
                     }
+
+                }
+                else if(x.expr1.type instanceof ArrayType at){//array
+                    for (int i = 0; i < at.numElement; i++) {
+                        ArrayAccessExpr left = new ArrayAccessExpr(x.expr1,new IntLiteral(i));
+                        left.type=at.type;
+
+                        ArrayAccessExpr right = new ArrayAccessExpr(x.expr2,new IntLiteral(i));
+                        right.type=at.type;
+
+                        Assign newAssign= new Assign(left,right);
+                        newAssign.type=at.type;
+                        visit(newAssign);
+                    }
                 }
                 else {
                     Register rhs = new ExprCodeGen(asmProg).visit(x.expr2);
-                    //can be : array, int, char, ptr
+                    //can be :  int, char, ptr
                     Store storeType = x.type == CHAR? SB:SW;
                     currSect.emit(storeType,rhs,addrReg,0);
                 }
 
                 yield addrReg;
             }
+
+            case StrLiteral st->new ExprCodeGen(asmProg).visit(st);
 
             case TypecastExpr x->visit(x.expr);
 
