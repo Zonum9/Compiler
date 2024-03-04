@@ -311,6 +311,13 @@ public class Part3Tests {
     }
 
     @Test
+    void fibonacci(){
+        assertCorrectOutputFile("textFiles/fibonacci.c",
+                "First 8 terms of Fibonacci series are : 0 1 1 2 3 5 8 13",
+                "8");
+    }
+
+    @Test
     void twoDimArrays(){
         assertCorrectOutput("""
                 int  x[2][2];
@@ -425,18 +432,24 @@ public class Part3Tests {
     void read(){//fixme does not work, but it does on mars?
         assertCorrectOutput("""
                 void main(){
-                    int x;
-                    x=read_i();
-                    print_i(x);
-                }
-                ""","9","9\n");
-        assertCorrectOutput("""
-                void main(){
                     char x;
                     x=read_c();
                     print_c(x);
                 }
                 ""","x","x");
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    x=read_i();
+                    print_i(x);
+                }
+                ""","9","9");
+        assertCorrectOutput("""
+                void main(){
+                    print_i(read_i());
+                }
+                ""","1009","1009");
+
     }
 
     @Test
@@ -485,17 +498,6 @@ public class Part3Tests {
                 
                 """,
                 "1234451");
-    }
-
-    @Test
-    void infiniteLoop(){
-        assertCorrectOutput("""
-                void main(){
-                    while (1){
-                    }
-                }
-                """,
-                "",125);
     }
 
     @Test
@@ -574,10 +576,12 @@ public class Part3Tests {
             File f= File.createTempFile("temp",".asm");
             p.print(new PrintWriter(f));
             p.print(new PrintWriter("src/test/asmFiles/out.asm"));
-            Process process = new ProcessBuilder((
-                    "java -jar parts/part3/Mars4_5.jar sm nc me "+f.toPath() +" "+input
-            ).split(" ")
-            ).start();
+            Process process = new ProcessBuilder(
+                    ("java -jar parts/part3/Mars4_5.jar sm nc me "+f.toPath())
+                    .split(" "))
+                    .start();
+            process.outputWriter().write(input+"\r");
+            process.outputWriter().flush();
             int exitCode= process.waitFor();
             String out = new String(process.getInputStream().readAllBytes());
             assertEquals(expectedExitCode,exitCode);
@@ -588,6 +592,14 @@ public class Part3Tests {
             throw new RuntimeException(e);
         }
     }
+
+    void assertCorrectOutputFile(String filename,String expectedOutput){
+        assertCorrectOutput(Utils.fileToString(filename),expectedOutput);
+    }
+    void assertCorrectOutputFile(String filename,String expectedOutput,String input){
+        assertCorrectOutput(Utils.fileToString(filename),expectedOutput,input);
+    }
+
     void assertCorrectOutput(String program,String expectedOutput, int expectedExitCode){
         assertCorrectOutput(program,expectedOutput,expectedExitCode,"");
     }

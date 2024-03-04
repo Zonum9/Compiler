@@ -18,6 +18,7 @@ import static lexer.Token.Category.EOF;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class Utils {
+    public static final String path= "src/test/";
     public static void assertFileEquals(String  referenceFile, String fileToTest,boolean ignoreWhiteSpace) throws Exception {
         if (!ignoreWhiteSpace)
             assertFileEquals(referenceFile,fileToTest);
@@ -175,4 +176,13 @@ public class Utils {
         progGen.generate(p);
         return NaiveRegAlloc.INSTANCE.apply(virtualRegs);
     }
+
+    public static String fileToString(String filename){
+        try {
+            return Files.readString(Paths.get(path+filename));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

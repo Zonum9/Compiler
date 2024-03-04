@@ -200,8 +200,8 @@ public class Tokeniser extends CompilerPass {
         //if you reached eof/new line, it means you didn't close your string correctly, invalid
         if(!scanner.hasNext() || scanner.peek() =='\n')
             return Optional.empty();
-        scanner.next(); //consume right side double quote        
-        return Optional.of(replaceEscapedCharacters(data.toString()));  
+        scanner.next(); //consume right side double quote
+        return Optional.of(data.toString());
     }
 
     private String replaceEscapedCharacters(String s){
