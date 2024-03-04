@@ -61,6 +61,13 @@ public class ExprCodeGen extends CodeGen {
             case ArrayAccessExpr arrayAccessExpr -> {
                 Register arrAddress = new AddrCodeGen(asmProg).visit(arrayAccessExpr);
                 Register r = Register.Virtual.create();
+
+                //if array access returns an array,
+                //and that array is not being accessed then return reference to the array
+                if(arrayAccessExpr.arr.type instanceof ArrayType &&
+                        !(arrayAccessExpr.arr instanceof ArrayAccessExpr)){
+                    yield arrAddress;
+                }
                 Load loadType = arrayAccessExpr.type == CHAR? LB:LW;
                 currSection.emit(loadType,r,arrAddress,0);
                 yield r;
@@ -201,12 +208,20 @@ public class ExprCodeGen extends CodeGen {
             }
             case AddressOfExpr addressOfExpr -> new AddrCodeGen(asmProg).visit(addressOfExpr.expr);
 
-            case TypecastExpr typecastExpr -> {
-                yield null; //todo
+            case TypecastExpr typecastExpr -> visit(typecastExpr.expr);
+
+            case StrLiteral s -> {
+                Register stringAddress = Register.Virtual.create();
+                currSection.emit(LA,stringAddress,s.label);
+                yield stringAddress;
             }
 
-            case SizeOfExpr sizeOfExpr -> null;
-            case StrLiteral strLiteral -> null;
+            case SizeOfExpr sizeOfExpr -> {//todo verify this is correct
+                Register reg = Register.Virtual.create();
+                currSection.emit(LI,reg,MemAllocCodeGen.sizeofType(sizeOfExpr.sizeOfType));
+                yield reg;
+            }
+
 
 
         };
@@ -218,37 +233,52 @@ public class ExprCodeGen extends CodeGen {
         AssemblyProgram.Section currSection= asmProg.getCurrentSection();
         return switch (builtIn.name){
             case "print_i"->{
-                printCall(currSection,builtIn,1);
-                yield null;
-            }
-            case "print_s" ->{//todo check this works
-                printCall(currSection,builtIn,4);
-                yield null;
-            }
-            case "print_c" ->{
-                printCall(currSection,builtIn,11);
+                syscallWithArgs(currSection,builtIn,1);
                 yield null;
             }
 
-            //todo
-            case "read_c" ->{
+            case "print_c" ->{
+                syscallWithArgs(currSection,builtIn,11);
                 yield null;
+            }
+            //todo check these work:
+
+            case "print_s" ->{
+                syscallWithArgs(currSection,builtIn,4);
+                yield null;
+            }
+
+            case "read_c" ->{
+                syscall(currSection,12);
+                yield v0;
             }
             case "read_i" ->{
-                yield null;
+                syscall(currSection,5);
+                yield v0;
             }
-            case "mcmalloc" ->{
-                yield null;
+
+            case "mcmalloc" -> {
+                syscallWithArgs(currSection, builtIn, 9);
+                yield v0;
             }
+
             default -> throw new IllegalStateException("Unexpected value: " + builtIn.name);
         };
     }
 
-    private void printCall(AssemblyProgram.Section currSection, FunCallExpr funcall,int code){
+    private void syscallWithArgs(AssemblyProgram.Section currSection, FunCallExpr funcall, int code){
         //type checker should have ensured that this only has one param
         Register inner= visit(funcall.exprs.getFirst());
+
+        //load args
         currSection.emit(OpCode.ADDI,a0,inner,0);
+
+        //perform syscall
+        syscall(currSection,code);
+    }
+    private void syscall(AssemblyProgram.Section currSection,int code){
         currSection.emit(OpCode.LI,v0,code);
         currSection.emit(OpCode.SYSCALL);
     }
+
 }

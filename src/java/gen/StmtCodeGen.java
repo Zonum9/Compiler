@@ -10,6 +10,8 @@ public class StmtCodeGen extends CodeGen {
     }
 
     void visit(Stmt s) {
+        AssemblyProgram.Section currentSection = asmProg.getCurrentSection();
+        currentSection.emit("----Start of "+s.getClass().getSimpleName()+"----");
         switch (s) {
             case Block b -> {
                 // no need to do anything with varDecl (memory allocator takes care of them)
@@ -35,5 +37,6 @@ public class StmtCodeGen extends CodeGen {
             case While aWhile -> {
             }
         }
+        currentSection.emit("----End of "+s.getClass().getSimpleName()+"----");
     }
 }

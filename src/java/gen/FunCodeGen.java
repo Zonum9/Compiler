@@ -32,19 +32,20 @@ public class FunCodeGen extends CodeGen {
 
 
         // 1) emit the prolog
-        currSect.emit(OpCode.ADDI, sp, sp, -4);
+        currSect.emit(OpCode.ADDIU, sp, sp, -4);
         currSect.emit(OpCode.SW, fp, sp, 0); //push frame pointer on stack
 
         currSect.emit(OpCode.ADDI, fp, sp, 0);//move stack to frame pointer(initially fp)
 
-        currSect.emit(OpCode.ADDI, sp, sp, -4);
+        currSect.emit(OpCode.ADDIU, sp, sp, -4);
         currSect.emit(OpCode.SW, ra, sp, 0); //push return address on stack
 
         currSect.emit(OpCode.PUSH_REGISTERS);
 
         //allocate space on stack for local variables
         for (VarDecl vd:fd.block.vds){
-            currSect.emit(OpCode.ADDI,sp,sp, vd.space);
+            currSect.emit("------Var decl for "+vd.name);
+            currSect.emit(OpCode.ADDIU,sp,sp, vd.space);
         }
 
         // 2) emit the body of the function
@@ -60,7 +61,7 @@ public class FunCodeGen extends CodeGen {
         else{
             currSect.emit(OpCode.POP_REGISTERS);
 
-            currSect.emit(OpCode.ADDI,sp,fp,4);//restore stack pointer
+            currSect.emit(OpCode.ADDIU,sp,fp,4);//restore stack pointer
             currSect.emit(OpCode.LW,ra,fp,-4);//restore ra from stack
             currSect.emit(OpCode.LW,fp,fp,0);//restore the frame pointer
 

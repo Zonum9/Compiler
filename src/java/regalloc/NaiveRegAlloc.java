@@ -34,8 +34,8 @@ public final class NaiveRegAlloc implements AssemblyPass {
     }
 
     private static void emitInstructionWithoutVirtualRegister(Instruction insn, Map<Register.Virtual, Label> vrMap, AssemblyProgram.Section section) {
-
-//        section.emit("Original instruction: "+insn); todo add this back?
+        //todo add this back?
+        section.emit("Original instruction: "+insn);
 
         final Map<Register, Register> vrToAr = new HashMap<>();
         Register[] tempRegs = {Register.Arch.t0, Register.Arch.t1, Register.Arch.t2, Register.Arch.t3, Register.Arch.t4, Register.Arch.t5}; // 6 temporaries should be more than enough

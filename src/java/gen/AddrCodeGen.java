@@ -23,7 +23,8 @@ public class AddrCodeGen extends CodeGen {
 
     public Register visit(Expr e) {
         AssemblyProgram.Section currSect = asmProg.getCurrentSection();
-        return switch (e){
+        currSect.emit("----Start of "+e.getClass().getSimpleName()+"----");
+        Register r= switch (e){
             case ArrayAccessExpr arrayAccessExpr -> {
                 Register baseAddress = visit(arrayAccessExpr.arr);
                 int typeSize= MemAllocCodeGen.sizeofType(arrayAccessExpr.type);
@@ -40,6 +41,7 @@ public class AddrCodeGen extends CodeGen {
                 currSect.emit(ADD,baseAddress,baseAddress,desiredIndex);
                 yield baseAddress;
             }
+
             case FieldAccessExpr fieldAccessExpr -> {//todo test this
                 Register baseAddress =visit(fieldAccessExpr.expr);
                 StructTypeDecl origin = ((StructType)fieldAccessExpr.expr.type).origin;
@@ -90,28 +92,12 @@ public class AddrCodeGen extends CodeGen {
                 yield addrReg;
             }
 
+            case TypecastExpr x->visit(x.expr);
+
+
             default -> throw new Error("Invalid address access");
         };
+        currSect.emit("----End of of "+e.getClass().getSimpleName()+"----");
+        return r;
     }
-    private VarExpr getVarExpression(Expr expr) {
-        switch (expr){
-            case VarExpr x->{
-                return x;
-            }
-            case FieldAccessExpr x->{
-                return getVarExpression(x.expr);
-            }
-            case ArrayAccessExpr x ->{
-                return getVarExpression(x.arr);
-            }
-            case ValueAtExpr x ->{
-                return getVarExpression(x.expr);
-            }
-            default -> throw new IllegalStateException("how did this happen?");
-
-        }
-    }
-
-
-
 }

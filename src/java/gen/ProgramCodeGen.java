@@ -22,7 +22,8 @@ public class ProgramCodeGen extends CodeGen {
         MemAllocCodeGen allocator = new MemAllocCodeGen(asmProg);
         allocator.visit(p);
 
-        //todo allocate space for strings in another pass
+        StringAllocCodeGen stringAllocator = new StringAllocCodeGen(asmProg);
+        stringAllocator.visit(p);
 
         // generate the code for each function
         p.decls.forEach((d) -> {

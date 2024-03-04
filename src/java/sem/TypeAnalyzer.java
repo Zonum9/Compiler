@@ -262,7 +262,12 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				addressOfExpr.type = new PointerType(visit(addressOfExpr.expr));
 				yield addressOfExpr.type;
 			}
-			case SizeOfExpr ignored -> INT;
+			case SizeOfExpr szof -> {
+				szof.type= visit(szof.sizeOfType);
+				if(szof.type == UNKNOWN)
+					yield UNKNOWN;
+				yield INT;
+			}
 
 			case TypecastExpr typecastExpr -> {
 				Type rhs=visit(typecastExpr.expr);

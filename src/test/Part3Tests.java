@@ -1,4 +1,3 @@
-import gen.asm.AssemblyParser;
 import gen.asm.AssemblyProgram;
 import org.junit.jupiter.api.Test;
 import regalloc.NaiveRegAlloc;
@@ -402,19 +401,42 @@ public class Part3Tests {
     }
 
     @Test
-    void mysteryTest(){//idk what this will do
+    void weirdArray(){
         assertCorrectOutput("""
                 int  x[2][2];
                 void main(){
-                    x[0][0]=0;
-                    x[0][1]=1;
-                    x[1][0]=2;
-                    x[1][1]=3;
-                    
+                    x[0][0]=123;
+                                        
                     print_i(*(int*)x[0]);
                 }
                 """,
-                "?");
+                "123");
+        assertCorrectOutput("""
+                int  x[2][2][2];
+                void main(){
+                    x[0][0][1]=123;
+                                        
+                    print_i(((int*)x[0][0])[1]);
+                }
+                """,
+                "123");
+    }
+    @Test
+    void read(){//fixme does not work, but it does on mars?
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    x=read_i();
+                    print_i(x);
+                }
+                ""","9","9\n");
+        assertCorrectOutput("""
+                void main(){
+                    char x;
+                    x=read_c();
+                    print_c(x);
+                }
+                ""","x","x");
     }
 
     @Test
@@ -466,6 +488,54 @@ public class Part3Tests {
     }
 
     @Test
+    void infiniteLoop(){
+        assertCorrectOutput("""
+                void main(){
+                    while (1){
+                    }
+                }
+                """,
+                "",125);
+    }
+
+    @Test
+    void sizeof(){
+        assertCorrectOutput("""
+                void main(){
+                    print_i(sizeof(int));
+                    print_i(sizeof(char));
+                    print_i(sizeof(int*));
+                    print_i(sizeof(char*));
+                    print_i(sizeof(void));
+                    print_i(sizeof(void*));
+                    
+                }
+                """,
+                "414404");
+
+        assertCorrectOutput("""
+                struct s{
+                    int x;
+                    char c;
+                    void* ptr;
+                    struct s* next;
+                };
+                
+                struct b{
+                    struct s x;
+                    int y;
+                };
+                
+                void main(){
+                    print_i(sizeof(struct s));
+                    print_c('\\n');
+                    print_i(sizeof(struct b));
+                    
+                }
+                """,
+                "16\n20");
+    }
+    @Test
     void printing2(){
         assertCorrectOutput(
                 """
@@ -479,10 +549,25 @@ public class Part3Tests {
                     print_s((char*)"hello world");
                 }
                 ""","hello world");
+        assertCorrectOutput("""
+            void main(){
+                print_c('\\n');
+
+        }
+        """,
+        "\n");
+
+        assertCorrectOutput(
+        """
+                void main(){
+                    print_s((char*)"hello \\n world");
+                }
+                ""","hello \n world");
     }
 
+    //todo test shadowing
 
-    void assertCorrectOutput(String program,String expectedOutput){
+    void assertCorrectOutput(String program,String expectedOutput, int expectedExitCode, String input){
         AssemblyProgram p = Utils.programStringToASMObj(program);
         p = NaiveRegAlloc.INSTANCE.apply(p);
         try {
@@ -490,16 +575,29 @@ public class Part3Tests {
             p.print(new PrintWriter(f));
             p.print(new PrintWriter("src/test/asmFiles/out.asm"));
             Process process = new ProcessBuilder((
-                    "java -jar parts/part3/Mars4_5.jar sm nc me "+f.toPath()
+                    "java -jar parts/part3/Mars4_5.jar sm nc me "+f.toPath() +" "+input
             ).split(" ")
             ).start();
+            int exitCode= process.waitFor();
             String out = new String(process.getInputStream().readAllBytes());
+            assertEquals(expectedExitCode,exitCode);
             assertEquals(expectedOutput,out);
+
 
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
+    void assertCorrectOutput(String program,String expectedOutput, int expectedExitCode){
+        assertCorrectOutput(program,expectedOutput,expectedExitCode,"");
+    }
+    void assertCorrectOutput(String program,String expectedOutput){
+        assertCorrectOutput(program,expectedOutput,0,"");
+    }
+    void assertCorrectOutput(String program,String expectedOutput,String input){
+        assertCorrectOutput(program,expectedOutput,0,input);
+    }
+
 
 //    void assertCorrectASMFromString(String program,String expected){
 //        BufferedReader reader= new BufferedReader(new StringReader(expected));
