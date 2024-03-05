@@ -50,7 +50,8 @@ public class ExprCodeGen extends CodeGen {
                 if(assign.expr1.type instanceof StructType){
                     yield new AddrCodeGen(asmProg).visit(assign);
                 }
-                Register addrReg= new AddrCodeGen(asmProg).visit(assign.expr1);
+                Expr exprToVisit = assign.expr1;
+                Register addrReg= new AddrCodeGen(asmProg).visit(exprToVisit);
                 Register valReg= visit(assign.expr2);
                 Store storeType = assign.expr1.type == CHAR? SB:SW;
                 currSection.emit(storeType,valReg,addrReg,0);
@@ -62,7 +63,7 @@ public class ExprCodeGen extends CodeGen {
 
                 //if array access returns an array,
                 //and that array is not being accessed then return reference to the array
-                if(arrayAccessExpr.type instanceof ArrayType ){
+                if(arrayAccessExpr.type instanceof ArrayType || arrayAccessExpr.type instanceof  PointerType){
                     yield arrAddress;
                 }
                 Register r = Register.Virtual.create();
@@ -206,7 +207,13 @@ public class ExprCodeGen extends CodeGen {
             }
             case AddressOfExpr addressOfExpr -> new AddrCodeGen(asmProg).visit(addressOfExpr.expr);
 
-            case TypecastExpr typecastExpr -> visit(typecastExpr.expr);
+            case TypecastExpr typecastExpr -> {
+                //if casting a non pointer (aka array) to a pointer, then we are interested in the address of the array, not the value
+                if (typecastExpr.type instanceof PointerType && !(typecastExpr.expr.type instanceof PointerType)){
+                    yield new AddrCodeGen(asmProg).visit(typecastExpr.expr);
+                }
+                yield visit(typecastExpr.expr);
+            }
 
             case StrLiteral s -> {
                 Register stringAddress = Register.Virtual.create();

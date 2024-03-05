@@ -27,7 +27,12 @@ public class AddrCodeGen extends CodeGen {
         Register r= switch (e){
 
             case ArrayAccessExpr arrayAccessExpr -> {
-                Register baseAddress = visit(arrayAccessExpr.arr);
+                Register baseAddress;
+                if(arrayAccessExpr.arr.type instanceof PointerType && arrayAccessExpr.arr instanceof VarExpr vx){
+                    baseAddress= new ExprCodeGen(asmProg).visit(vx);
+                }else {
+                    baseAddress = visit(arrayAccessExpr.arr);
+                }
                 int typeSize= MemAllocCodeGen.sizeofType(arrayAccessExpr.type);
 
                 Register desiredIndex = new ExprCodeGen(asmProg).visit(arrayAccessExpr.index);

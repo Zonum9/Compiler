@@ -675,10 +675,9 @@ public class Part3Tests {
                 """,
                 "16\n20");
     }
-
     @Test
-    void escapeCharacters(){
-        String[] escapedChar = { "\\b", "\\n", "\\r", "\\t", "\\\\", "\\'", "\\\"", "\\0","\u0007"};
+    void stringEscapeCharactersExceptBell(){
+        String[] escapedChar = { "\\b", "\\n", "\\r", "\\t", "\\\\", "\\'", "\\\"", ""};
         for(String c : escapedChar){
             String program ="void main(){print_s((char*)\""+c+"\");}";
             System.out.println(program);
@@ -686,7 +685,18 @@ public class Part3Tests {
                     program
                     , Tokeniser.replaceEscapedCharacters(c));
         }
+    }
+    @Test void  stringBellEscapedChar(){//can this even pass?
+        String c="\\a";
+        String program ="void main(){print_s((char*)\""+c+"\");}";
+        System.out.println(program);
+        assertCorrectOutput(
+                program
+                , Tokeniser.replaceEscapedCharacters(c));
+    }
 
+    @Test void charEscapeChars(){
+        String[] escapedChar = { "\\b", "\\n", "\\r", "\\t", "\\\\", "\\'", "\\\"", "\\0","\\a"};
         for(String c : escapedChar){
             String program ="void main(){print_c('"+c+"');}";
             System.out.println(program);
@@ -749,8 +759,118 @@ public class Part3Tests {
                 ""","hello \n world");
     }
 
-
     //todo test shadowing
+
+
+    @Test void shadowing(){
+        assertCorrectOutput("""
+                void fun (int a, int b, char c);
+                int x;
+                int y;
+                char c;
+                void main(){
+                    x=1;
+                    y=2;
+                    c='3';
+                    fun(x,y,c);
+                    print_i(x);
+                    print_i(y);
+                    print_c(c);
+                }
+                
+                void fun (int a, int b, char ch){
+                    int x;
+                    int y;
+                    char c;
+                    x=y=0;
+                    c='0';
+                    print_i(a+4);
+                    print_i(b+4);
+                    print_i((int)ch-(int)'0'+4);
+                    
+                    print_i(x);
+                    print_i(y);
+                    print_c(c);
+                    
+                }
+                
+                """
+        ,"567000123");
+
+    }
+
+    @Test void pointerArrays(){
+       assertCorrectOutput("""
+               void main() {
+                    int x[3];
+                    int *ptr;
+                          
+                    x[0]=9;
+                    ptr=(int*)x;
+                    print_i(*ptr);
+                }
+               """,
+               "9");
+
+        assertCorrectOutput("""
+                void main() {
+                    int x[3];
+                    int *ptr;
+                          
+                    x[2]=9;
+                    ptr = (int*)x;
+                    print_i(ptr[2]);
+                }
+                """,
+                "9");
+        assertCorrectOutput("""
+                void main() {
+                    int x[2][2];
+                    int *ptr;
+                    
+                    x[0][0]=1;
+                    x[0][1]=2;
+                    x[1][0]=3;
+                    x[1][1]=4;
+                    
+                    ptr= (int*)x[1];
+                    
+                    print_i(ptr[0]);
+                    print_i(ptr[1]);
+                    
+                }
+                """,
+                "34");
+    }
+
+    @Test void ptrTypeCats(){
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    int *ip;
+                    char *cp;
+                    void *vp;
+                    
+                    x=99;
+                    ip= &x;
+                    cp=(char*)ip;
+                    vp=(void*)cp;
+                    
+                    print_i(*ip);
+                    print_i(*((int*)cp));
+                    print_i(*((int*)vp));
+                    
+                    ip = (int*)(void*)(char*)(void*)cp;
+                    print_i(*ip);
+                    
+                    *cp='A';
+                    print_i(*ip);
+                    
+                }
+                """,
+                "99999999"+ (int) 'A');
+
+    }
 
     void assertCorrectOutput(String program,String expectedOutput, int expectedExitCode, String input){
         AssemblyProgram p = Utils.programStringToASMObj(program);

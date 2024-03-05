@@ -45,7 +45,7 @@ public class FunCodeGen extends CodeGen {
         //allocate space on stack for local variables
         for (VarDecl vd:fd.block.vds){
             currSect.emit("------Var decl for "+vd.name);
-            currSect.emit(OpCode.ADDIU,sp,sp, vd.space);
+            currSect.emit(OpCode.ADDIU,sp,sp, -vd.space);
         }
 
         // 2) emit the body of the function
