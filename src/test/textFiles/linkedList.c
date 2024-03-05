@@ -12,7 +12,7 @@ struct Node {
 	struct Node* next;
 };
 
-struct Node* NULL;
+struct Node* null;
 
 
 /* pull of the front node of the source and put it in dest
@@ -34,15 +34,15 @@ struct Node* SortedMerge(struct Node* a, struct Node* b)
 
 	/* so tail.next is the place to add new nodes
 	to the result. */
-	dummy.next = NULL;
+	dummy.next = null;
 	while (1) {
-		if (a == NULL) {
+		if (a == null) {
 			/* if either list runs out, use the
 			other list */
 			(*tail).next=b;
 			break;
 		}
-		else if (b == NULL) {
+		else if (b == null) {
 			(*tail).next = a;
 			break;
 		}
@@ -76,7 +76,7 @@ void MoveNode(struct Node** destRef,
 	/* the front source node */
 	struct Node* newNode;
 	 newNode= *sourceRef;
-//	assert(newNode != NULL);
+//	assert(newNode != null);
 
 	/* Advance the source pointer */
 	*sourceRef = (*newNode).next;
@@ -110,7 +110,7 @@ void push(struct Node** head_ref, int new_data)
 /* Function to print nodes in a given linked list */
 void printList(struct Node* node)
 {
-	while (node != NULL) {
+	while (node != null) {
 		print_i((*node).data);
 		node = (*node).next;
 	}
@@ -125,12 +125,12 @@ int main()
 	struct Node* a;
 	struct Node* b;
 	struct Node dummy;
-    NULL = &dummy;
-    res= NULL;
+    null = &dummy;
+    res= null;
 
-    a= NULL;
+    a= null;
 
-    b= NULL;
+    b= null;
 
 	/* Let us create two sorted linked lists to test
 	the functions

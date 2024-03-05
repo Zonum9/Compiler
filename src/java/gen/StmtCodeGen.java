@@ -5,6 +5,8 @@ import gen.asm.AssemblyProgram;
 import gen.asm.Label;
 import gen.asm.Register;
 
+import java.util.Optional;
+
 import static gen.asm.OpCode.*;
 import static gen.asm.Register.Arch.zero;
 
@@ -46,7 +48,10 @@ public class StmtCodeGen extends CodeGen {
 
             case While aWhile -> {
                 Label loopStart = Label.create("LoopStart");
+                Label loopContinue = Label.create("LoopContinue");
                 Label loopEnd = Label.create("LoopEnd");
+
+                informBreakAndContinueOflabel(aWhile.stmt,loopEnd,loopContinue);
 
                 //pre test
                 Register condValue = new ExprCodeGen(asmProg).visit(aWhile.expr);
@@ -57,6 +62,7 @@ public class StmtCodeGen extends CodeGen {
                 visit(aWhile.stmt); //visit loop body todo make sure continue/break know the label of the loop
 
                 //post test
+                currentSection.emit(loopContinue);
                 condValue = new ExprCodeGen(asmProg).visit(aWhile.expr);
                 currentSection.emit(BNE,condValue,zero,loopStart); //if cond var != 0 then go to loopStart
 
@@ -67,15 +73,42 @@ public class StmtCodeGen extends CodeGen {
 
             // To complete other cases
             case Break aBreak -> {
+                aBreak.loopEndLabel.ifPresent(lbl->{
+                    currentSection.emit(J,lbl);
+                });
+
             }
             case Continue aContinue -> {
+                aContinue.loopContinueLabel.ifPresent(lbl->{
+                    currentSection.emit(J,lbl);
+                });
             }
 
 
             case Return aReturn -> {
+
+                //this could result in redundant code, but oh well
+                FunCodeGen.emitFunctionExit(currentSection);//todo
             }
 
         }
         currentSection.emit("----End of "+s.getClass().getSimpleName()+"----");
     }
+
+    void informBreakAndContinueOflabel(Stmt stmt, Label breakLabel,Label continueLabel){
+        switch (stmt){
+            case Break b->{
+                b.loopEndLabel = Optional.of(breakLabel);
+            }
+            case Continue c-> c.loopContinueLabel= Optional.of(continueLabel);
+            case While ignored->{}
+            case Stmt x->x.children().forEach(ch -> {
+                if(ch instanceof Stmt st){
+                    informBreakAndContinueOflabel(st,breakLabel,continueLabel);
+                }
+            }
+            );
+        }
+    }
+
 }

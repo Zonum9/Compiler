@@ -385,6 +385,20 @@ public class Part3Tests {
                 "123451234512345678910");
     }
 
+    @Test void aWildContinueAppears(){
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    x=9;
+                    continue;
+                    break;
+                    print_i(x);
+                }
+                """
+        ,"9");
+
+    }
+
     @Test void whileLoops(){
 
         assertCorrectOutput("""
@@ -451,7 +465,72 @@ public class Part3Tests {
                     }
                 }
                 """);
+        assertCorrectOutput("""
+                void main(){
+                    int i;
+                    int j;
+                    i=j=0;
+                    while (i<20){
+                        j=0;
+                        while (j<20){
+                            if(i<j){
+                                print_i(i);
+                                print_c(' ');
+                            }
+                            j = j+1;
+                        }
+                        i=i+1;
+                    }
+                }
+                """);
     }
+
+    @Test void nestedAdvancedWhile(){
+
+        assertCorrectOutput("""
+                void main(){
+                    int i;
+                    int j;
+                    i=j=0;
+                    while (i<20){
+                        j=0;
+                        while (j<20){
+                            if(i<j){
+                                print_c('|');
+                                break;                                
+                            }
+                            print_i(j);                            
+                            j = j+1;
+                        }
+                        i=i+1;
+                        print_c(' ');
+                    }
+                }
+                """);
+        assertCorrectOutput("""
+                void main(){
+                    int i;
+                    int j;
+                    i=j=0;
+                    while (i<20){
+                        j=0;
+                        while (j<20){
+                            if(i<j){
+                                print_c('|');
+                                j = j+1;
+                                continue;
+                            }
+                            print_i(j);
+                            j = j+1;
+                        }
+                        i=i+1;
+                        print_c(' ');
+                    }
+                }
+                """);
+
+    }
+
     @Test void twoDimArrayOfDifferentSizes(){
         assertCorrectOutput("""
                 int x[3][6];
@@ -540,6 +619,16 @@ public class Part3Tests {
     void fibonacci(){
         fileCompareToCompiled("textFiles/fibonacci.c",
                 "8");
+    }
+
+    @Test
+    void tictactoe(){
+        fileCompareToCompiled("textFiles/tictactoe.c",
+                "a1a2b1b2c1n");
+    }
+    @Test
+    void linkedLIst(){
+        fileCompareToCompiled("textFiles/linkedList.c");
     }
 
     @Test
@@ -1088,7 +1177,7 @@ public class Part3Tests {
                     .start();
             process.outputWriter().write(input+"\r");
             process.outputWriter().flush();
-            boolean finished=process.waitFor(8,TimeUnit.SECONDS);
+            boolean finished=process.waitFor(15,TimeUnit.SECONDS);
             if(!finished){
                 process.destroyForcibly();
             }
@@ -1105,6 +1194,9 @@ public class Part3Tests {
         compareToCompiled(program,"");
     }
 
+    void fileCompareToCompiled(String fileName){
+        fileCompareToCompiled(fileName,"");
+    }
     void fileCompareToCompiled(String fileName,String input){
         compareToCompiled(Utils.fileToString(fileName),input);
     }

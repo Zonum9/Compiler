@@ -25,6 +25,8 @@ public class ProgramCodeGen extends CodeGen {
         StringAllocCodeGen stringAllocator = new StringAllocCodeGen(asmProg);
         stringAllocator.visit(p);
 
+
+
         // generate the code for each function
         p.decls.forEach((d) -> {
             switch(d) {
