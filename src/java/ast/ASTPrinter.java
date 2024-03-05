@@ -113,7 +113,7 @@ public class ASTPrinter {
             }
             case If anIf -> {
                 writer.print("If(");
-                visit(anIf.expr);
+                visit(anIf.condition);
                 writer.print(",");
                 visit(anIf.stmt);
                 if(anIf.els.isPresent()){

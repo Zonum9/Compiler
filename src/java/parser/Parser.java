@@ -183,16 +183,6 @@ public class Parser  extends CompilerPass {
         return new While(expr,stmt);
     }
 
-//    private void parsePostExpression(){
-//        switch (token.category){
-//            case LSBR -> { nextToken(); parseExpression(); expect(RSBR); parsePostExpression();} //array access
-//            case DOT -> {nextToken(); expect(IDENTIFIER);parsePostExpression();} //field access
-//            case ASSIGN,LT,GT,LE,GE,NE,EQ,PLUS,MINUS,DIV,ASTERISK,REM,LOGOR,LOGAND -> {
-//                parseOperation(); parsePostExpression();
-//            }
-//        }
-//    }
-
     private Expr parseExpression(){ //pred 9
         Expr lhs = parsePred8();
         if (token.category == ASSIGN){
@@ -343,9 +333,9 @@ public class Parser  extends CompilerPass {
             lhs= switch (token.category){
                 case LSBR -> {
                     nextToken();
-                    Expr inner= parseExpression();
+                    Expr outer= parseExpression();
                     expect(RSBR);
-                    yield new ArrayAccessExpr(lhs,inner);
+                    yield new ArrayAccessExpr(lhs,outer);
                 }
                 case DOT -> {
                     nextToken();
@@ -551,7 +541,7 @@ public class Parser  extends CompilerPass {
         if (token.category == INT_LITERAL)
             i = Integer.parseInt(token.data);
         expect(RSBR);
-        return parse0orMoreArray(new ArrayType(type,i));
+        return new ArrayType(parse0orMoreArray(type),i);
     }
 
     private Type parseType(){

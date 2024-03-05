@@ -6,3 +6,4 @@ project/
 out
 lib/
 .vscode/
+/src/test/temp/

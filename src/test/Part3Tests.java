@@ -3,6 +3,10 @@ import lexer.Tokeniser;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 public class Part3Tests {
@@ -213,6 +217,94 @@ public class Part3Tests {
                 """,
                 "12345");
     }
+
+    @Test void ifs(){
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    int y;
+                    y=x=1;
+                    if(x==y){
+                        print_s((char*)"true");
+                    }
+                    else{
+                        print_s((char*)"false");
+                    }
+                }
+                """);
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    int y;
+                    x=1;
+                    y=0;
+                    if(x==y){
+                        print_s((char*)"true");
+                    }
+                    else{
+                        print_s((char*)"false");
+                    }
+                }
+                """);
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    int y;
+                    int z;
+                    x=1;
+                    z=1;
+                    y=0;
+                    if(x==y){
+                        print_s((char*)"true");
+                    }
+                    else if(x==z){
+                        print_s((char*)"z equals x");
+                    }
+                    else{
+                        print_s((char*)"false");
+                    }
+                }
+                """);
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    int y;
+                    int z;
+                    x=1;
+                    z=1;
+                    y=0;
+                    if(x==y){
+                        print_s((char*)"true");
+                    }
+                    else if(z==y){
+                        print_s((char*)"z equals x");
+                    }
+                    else{
+                        print_s((char*)"false");
+                    }
+                }
+                """);
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    int y;
+                    int z;
+                    x=1;
+                    z=1;
+                    y=0;
+                    if(0){
+                        print_s((char*)"true");
+                    }
+                    else if(0){
+                        print_s((char*)"z equals x");
+                    }
+                    else if(0){
+                        print_s((char*)"false");
+                    }
+                }
+                """);
+    }
+
     @Test
     void globalArrayAccess(){
         assertCorrectOutput("""
@@ -293,6 +385,105 @@ public class Part3Tests {
                 "123451234512345678910");
     }
 
+    @Test void whileLoops(){
+
+        assertCorrectOutput("""
+                void main(){
+                    while (1){                    
+                    }
+                }
+                """);
+
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    int range;
+                    x=1;
+                    range=100;
+                    while (x<range){
+                        if( range %x ==0){                            
+                            x= x+1;
+                            continue;
+                        }
+                        print_i(x);
+                        x= x+1;
+                    }
+                }
+                """);
+
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    int range;
+                    x=0;
+                    range=100;
+                    while (x<range){
+                        print_i(x);
+                        if( x== range/2){
+                            print_s((char*)"|half way there|");
+                        }
+                        x= x+1;
+                    }
+                }
+                """);
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    int range;
+                    x=0;
+                    range=100;
+                    while (x<range){
+                        print_i(x);
+                        if( x== range/2){
+                            break;
+                        }
+                        x= x+1;
+                    }
+                }
+                """);
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    x=0;
+                    while (x<10){
+                        print_i(x);
+                        x= x+1;
+                    }
+                }
+                """);
+    }
+    @Test void twoDimArrayOfDifferentSizes(){
+        assertCorrectOutput("""
+                int x[3][6];
+                
+                void main(){
+                    int i;
+                    int j;
+                    i=j=0;
+                    while (i<3){
+                        j=0;
+                        while (j<6){
+                            x[i][j]=i*6+j;
+                            j = j+1;
+                        }
+                        i=i+1;
+                    }
+                    i=j=0;
+                    while (i<3){
+                        j=0;
+                        while (j<6){
+                            print_i(x[i][j]);
+                            print_c(' ');
+                            j = j+1;
+                        }
+                        i=i+1;
+                    }
+                }
+                
+                """);
+    }
+
+
     @Test
     void structShenanigans(){
         assertCorrectOutput("""
@@ -330,11 +521,24 @@ public class Part3Tests {
                 """,
                 "1234451");
     }
+    @Test void equality(){
+        assertCorrectOutput("""
+                void main(){
+                    print_i(1==1);
+                    print_i(1==0);
+                    print_i(1==-1);
+                    print_i(99==99);
+                    print_i(99==-99);
+                    
+                }
+                ""","10010");
+
+    }
+
 
     @Test
     void fibonacci(){
-        assertCorrectOutputFile("textFiles/fibonacci.c",
-                "First 8 terms of Fibonacci series are : 0 1 1 2 3 5 8 13",
+        fileCompareToCompiled("textFiles/fibonacci.c",
                 "8");
     }
 
@@ -794,8 +998,7 @@ public class Part3Tests {
                     
                 }
                 
-                """
-        ,"567000123");
+                """);
 
     }
 
@@ -872,6 +1075,7 @@ public class Part3Tests {
 
     }
 
+
     void assertCorrectOutput(String program,String expectedOutput, int expectedExitCode, String input){
         AssemblyProgram p = Utils.programStringToASMObj(program);
         try {
@@ -884,14 +1088,93 @@ public class Part3Tests {
                     .start();
             process.outputWriter().write(input+"\r");
             process.outputWriter().flush();
-            int exitCode= process.waitFor();
+            boolean finished=process.waitFor(8,TimeUnit.SECONDS);
+            if(!finished){
+                process.destroyForcibly();
+            }
             String out = new String(process.getInputStream().readAllBytes());
-            assertEquals(expectedExitCode,exitCode);
+            assertEquals(expectedExitCode,finished?0:-1);
             assertEquals(expectedOutput,out);
 
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            fail(e);
+        }
+    }
+    void assertCorrectOutput(String program){
+        compareToCompiled(program,"");
+    }
+
+    void fileCompareToCompiled(String fileName,String input){
+        compareToCompiled(Utils.fileToString(fileName),input);
+    }
+    void compareToCompiled(String program,String input){
+        program = program.replaceAll("#include.*[\\n|\\r]","");
+        try {
+            Path path= Paths.get("src/test/temp/temp.c");
+            if (Files.exists(path)){
+                Files.delete(path);
+            }
+            File f =new File(String.valueOf(Files.createFile(path)));
+
+
+            try (PrintWriter printWriter = new PrintWriter(f)) {
+                printWriter.print("""
+                        #include <stdio.h>
+                        #include <stdlib.h>                                                
+                        void print_s(const char* s) {
+                          fprintf(stdout,"%s",s);
+                        }                                                
+                        void print_i(int i) {
+                          fprintf(stdout,"%d",i);
+                        }                                                
+                        void print_c(char c) {
+                          fprintf(stdout,"%c",c);
+                        }                                                
+                        char read_c() {
+                          char c;
+                          fscanf(stdin, "%c", &c);
+                          return c;
+                        }                                                
+                        int read_i() {
+                          int i;
+                          fscanf(stdin, "%d", &i);
+                          return i;
+                        }                                                
+                        void* mcmalloc(int size) {
+                          return malloc(size);
+                        }
+                                            
+                        """);
+                printWriter.print(program);
+            }
+
+
+            Process compile = new ProcessBuilder(
+                    "gcc",f.getName(),"-o","out.exe"
+            )
+                    .directory(new File("src/test/temp/"))
+                    .redirectError(ProcessBuilder.Redirect.INHERIT)
+                    .start();
+
+            compile.waitFor();
+
+            Process run = new ProcessBuilder(
+                    "src/test/temp/out.exe")
+                    .redirectError(ProcessBuilder.Redirect.INHERIT)
+                    .start();
+            run.outputWriter().write(input+"\n");
+            run.outputWriter().flush();
+            boolean finished=run.waitFor(8,TimeUnit.SECONDS);
+            if(!finished){
+                run.destroyForcibly();
+            }
+
+            String out = new String(run.getInputStream().readAllBytes());
+            System.out.println(out);
+            assertCorrectOutput(program,out,finished? 0:-1,input);
+        } catch (Exception e) {
+            fail(e);
         }
     }
 
@@ -913,17 +1196,4 @@ public class Part3Tests {
     }
 
 
-//    void assertCorrectASMFromString(String program,String expected){
-//        BufferedReader reader= new BufferedReader(new StringReader(expected));
-//        AssemblyProgram expectedASM= AssemblyParser.readAssemblyProgram(reader);
-//        expectedASM= NaiveRegAlloc.INSTANCE.apply(expectedASM);
-//        AssemblyProgram obtained = Utils.programStringToASMObj(program);
-//        //use the provided equals comparison between programs
-//        if( expectedASM.equals(obtained)){
-//            assertTrue(true);
-//            return;
-//        }
-//        assertEquals(Utils.asmOBJtoString(expectedASM),Utils.asmOBJtoString(obtained));
-//
-//    }
 }

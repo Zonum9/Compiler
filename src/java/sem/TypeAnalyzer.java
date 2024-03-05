@@ -338,7 +338,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 			}
 
 			case If anIf -> {
-				Type condition= visit(anIf.expr);
+				Type condition= visit(anIf.condition);
 				if (condition != INT){
 					error(String.format("If statement with non integer condition, received type [%s]",condition));
 					yield UNKNOWN;

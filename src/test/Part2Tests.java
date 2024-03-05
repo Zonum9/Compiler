@@ -28,6 +28,11 @@ public class Part2Tests {
                 "struct node_t { int field1; char field2; };");
 
     }
+
+    @Test void randomEdTest(){
+        assertEqualsAST("Program(VarDecl(ArrayType(ArrayType(CHAR, 6), 3),foo))","char foo[3][6];");
+
+    }
     @Test
     void typeTests(){
         assertEqualsAST("Program(FunProto(VOID,fun,VarDecl(StructType(mystr),x)))","void fun(struct mystr x);");
@@ -39,7 +44,7 @@ public class Part2Tests {
     }
     @Test
     void arrayTests(){
-        assertEqualsAST("Program(VarDecl(ArrayType(ArrayType(ArrayType(VOID,1),2),3),x))",
+        assertEqualsAST("Program(VarDecl(ArrayType(ArrayType(ArrayType(VOID,3),2),1),x))",
                 """
                         void x[1][2][3];
                         """);
