@@ -42,6 +42,14 @@ The `main` function will always act as the entry point to your program.
 You should ensure that upon starting, the simulator will execute the code of the `main` function.
 If you use the command line above, the `sm` option will ensure that execution starts at the instruction with global label `main`.
 
+You should ensure that the simulator exits properly when the main function finishes (otherwise random instructions might execute).
+You can use the following sequence of instruction upon returning from main:
+```
+li $v0, 10
+syscall		# Use syscall 10 to stop simulation
+```
+To simplify, we will assume that the main function is never called recursively.
+
 Next, we suggest that you implement the `print_i` function using the corresponding system calls (check the lecture notes and the link above to the MARS documentation that explain how to do this).
 To test it, you could implement support for integer literals and have a simple call to `print_i` in `main`.
 To understand how instructions can be generated using the starting code we give you, take a look at the `Test` class in the `gen/` package.
@@ -129,6 +137,11 @@ These two instructions are "expended" during register allocation since this is o
 We suggest that you follow the convention presented in the lecture when it comes to function calls.
 
 Beware that structs are passed by value, both when used as argument to the function and when returned from a function.
+
+### Updating the stack pointer
+
+When manipulating the stack pointer, you should use the `addiu` instruction to avoid encountering an exception with an integer overflow.
+This can happen if the `$sp` is initialized at 0 by the simulator.
 
 ## 7. Standard library functions
 
