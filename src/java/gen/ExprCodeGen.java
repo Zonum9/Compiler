@@ -7,6 +7,7 @@ import gen.asm.OpCode;
 import gen.asm.Register;
 
 import static ast.BaseType.CHAR;
+import static ast.BaseType.VOID;
 import static gen.asm.OpCode.*;
 import static gen.asm.Register.Arch.*;
 
@@ -84,7 +85,46 @@ public class ExprCodeGen extends CodeGen {
                 if(builtIns.contains(x.name)){
                     yield handleBuiltInFunc(x);
                 }
-                yield null;
+//                yield null;
+                FunDecl decl= x.origin;
+
+                //precall
+                for (int i = 0; i < x.exprs.size(); i++) {
+                    currSection.emit("------------ PARAM "+i);
+                    Expr param=x.exprs.get(i);
+                    Register paramReg;
+                    if(param.type instanceof ArrayType){//fixme
+                        paramReg= new AddrCodeGen(asmProg).visit(param);
+                    }
+                    else {
+                        paramReg=visit(param);//prepare argument
+                    }
+                    currSection.emit("------------ SPACE FOR PARAM "+i);
+                    currSection.emit(ADDIU,sp,sp,-decl.params.get(i).space);//allocate space on stack
+
+
+                    currSection.emit(SW,paramReg,sp,0);//push argument onto stack todo structs are pass by value
+
+
+                }
+                currSection.emit(ADDI,sp,sp,-decl.returnValueSize);//reserve space for return value
+
+                //call
+                currSection.emit(JAL,Label.get(x.name));
+
+                Register returnReg;
+                //post return
+                if(x.type == VOID) {
+                    returnReg=null;
+                }else {//todo load return register
+                    returnReg=null;
+                }
+
+                for (int i = 0; i < x.exprs.size(); i++) {
+                    currSection.emit(ADDIU,sp,sp,decl.params.get(i).space);//reset stack
+                }
+                currSection.emit(ADDI,sp,sp,decl.returnValueSize);//reset stack
+                yield returnReg;
             }
 
             case BinOp binOp -> {

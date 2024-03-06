@@ -59,7 +59,7 @@ public class StmtCodeGen extends CodeGen {
 
                 //loop body
                 currentSection.emit(loopStart);
-                visit(aWhile.stmt); //visit loop body todo make sure continue/break know the label of the loop
+                visit(aWhile.stmt); //visit loop body
 
                 //post test
                 currentSection.emit(loopContinue);

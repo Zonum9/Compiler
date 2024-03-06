@@ -27,11 +27,15 @@ public class AddrCodeGen extends CodeGen {
         Register r= switch (e){
 
             case ArrayAccessExpr arrayAccessExpr -> {
-                Register baseAddress;
-                if(arrayAccessExpr.arr.type instanceof PointerType && arrayAccessExpr.arr instanceof VarExpr vx){
-                    baseAddress= new ExprCodeGen(asmProg).visit(vx);
-                }else {
-                    baseAddress = visit(arrayAccessExpr.arr);
+                Register baseAddress= visit(arrayAccessExpr.arr);
+
+                //if accessing a pointer, BaseAddress will have the address of the pointer, and not the address the pointer
+                //is pointing to. Need to load it.
+                //However, if arr is a Pointer because of a Typecast on an array, then the address of arr is already the address
+                // it's pointing to
+                if((arrayAccessExpr.arr.type instanceof PointerType && !(isArrayToPointerCast(arrayAccessExpr.arr))
+                        || arrayAccessExpr.arr instanceof VarExpr vx && vx.origin.isPtrNow)){
+                    currSect.emit(LW,baseAddress,baseAddress,0);
                 }
                 int typeSize= MemAllocCodeGen.sizeofType(arrayAccessExpr.type);
 
@@ -121,5 +125,12 @@ public class AddrCodeGen extends CodeGen {
         };
         currSect.emit("----End of of "+e.getClass().getSimpleName()+"----");
         return r;
+    }
+
+    private boolean isArrayToPointerCast(Expr arr) {
+        if (arr instanceof TypecastExpr cast){
+            return isArrayToPointerCast(cast.expr);
+        }
+        return arr.type instanceof ArrayType;
     }
 }

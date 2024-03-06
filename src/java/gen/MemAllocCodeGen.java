@@ -50,10 +50,19 @@ void visit(ASTNode n) {
             case FunDecl x -> {
                 global=false;
                 x.returnValueFPOffset=4;
-                fpOffset= wordAlign(sizeofType(x.type)) +4;//space taken by return value
-                for(VarDecl decl:x.params.reversed()){//arguments are arranged bottom to top on the stack
+                x.returnValueSize=wordAlign(sizeofType(x.type));
+                fpOffset= x.returnValueSize +4;//space taken by return value
+                for (int i = 0; i < x.params.size(); i++) {//arguments are arranged bottom to top on the stack
+                    VarDecl decl = x.params.reversed().get(i);
                     //positive offset for function arguments
-                    int space=wordAlign(sizeofType(decl.type));
+                    int space;
+                    if(decl.type instanceof ArrayType){//arrays are passed by reference, thus treat them like pointers
+                        space = wordAlign(sizeofType(new PointerType(INT)));//the type of the pointer does not matter
+                        decl.isPtrNow=true;
+                    }
+                    else {
+                        space = wordAlign(sizeofType(decl.type));
+                    }
                     decl.fpOffset=fpOffset;
                     decl.space=space;
                     decl.isGlobal=false;

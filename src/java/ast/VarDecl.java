@@ -7,6 +7,7 @@ public final class VarDecl extends Decl {
     public boolean isGlobal;
     public int fpOffset;
     public int space;
+    public boolean isPtrNow=false;
 
     public VarDecl(Type type, String name) {
 	    this.type = type;
