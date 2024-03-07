@@ -109,8 +109,7 @@ public class AddrCodeGen extends CodeGen {
                 else {
                     Register rhs = new ExprCodeGen(asmProg).visit(x.expr2);
                     //can be :  int, char, ptr
-                    Store storeType = x.type == CHAR? SB:SW;
-                    currSect.emit(storeType,rhs,addrReg,0);
+                    currSect.emit(ProgramCodeGen.storeByteOrWord(x),rhs,addrReg,0);
                 }
 
                 yield addrReg;

@@ -25,6 +25,10 @@ public class FunCodeGen extends CodeGen {
         asmProg.newSection(AssemblyProgram.Section.Type.TEXT);
         AssemblyProgram.Section currSect= asmProg.getCurrentSection();
         currSect.emit(new Directive("globl "+fd.name));
+        if(fd.name.equals("main")){
+            currSect.emit(new Directive("globl _start"));
+            currSect.emit(Label.get("_start"));
+        }
         currSect.emit(Label.get(fd.name));
 
 
@@ -63,8 +67,8 @@ public class FunCodeGen extends CodeGen {
     public static void emitFunctionExit(AssemblyProgram.Section currSect){
         currSect.emit(OpCode.POP_REGISTERS);
 
-        currSect.emit(OpCode.ADDIU,sp,fp,4);//restore stack pointer
         currSect.emit(OpCode.LW,ra,fp,-4);//restore ra from stack
+        currSect.emit(OpCode.ADDIU,sp,fp,4);//restore stack pointer
         currSect.emit(OpCode.LW,fp,fp,0);//restore the frame pointer
 
         currSect.emit(OpCode.JR,ra);//jump to return address

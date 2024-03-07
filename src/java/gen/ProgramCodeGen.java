@@ -1,8 +1,14 @@
 package gen;
 
+import ast.Expr;
 import ast.FunDecl;
 import ast.Program;
+import ast.Return;
 import gen.asm.AssemblyProgram;
+import gen.asm.OpCode;
+
+import static ast.BaseType.CHAR;
+import static gen.asm.OpCode.*;
 
 /**
  * This visitor should produce a program.
@@ -16,6 +22,8 @@ public class ProgramCodeGen extends CodeGen {
         this.asmProg = asmProg;
         this.dataSection = asmProg.newSection(AssemblyProgram.Section.Type.DATA);
     }
+
+
 
     public void generate(Program p) {
         // allocate all variables
@@ -36,6 +44,20 @@ public class ProgramCodeGen extends CodeGen {
                 }
                 default -> {}// nothing to do
             }});
+    }
+
+    public static OpCode.Load loadByteOrWord(Expr x){
+        return x.type == CHAR? LBU:LW;
+//        return LW;
+    }
+
+    public static OpCode.Store storeByteOrWord(Expr x){
+        return x.type == CHAR? SB:SW;
+//        return SW;
+    }
+    public static Store storeByteOrWord(Return aReturn) {
+        return aReturn.functionReturnType == CHAR? SB:SW;
+//        return SW;
     }
 
 

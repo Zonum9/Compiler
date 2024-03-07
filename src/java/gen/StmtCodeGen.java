@@ -7,7 +7,9 @@ import gen.asm.Register;
 
 import java.util.Optional;
 
+import static ast.BaseType.CHAR;
 import static gen.asm.OpCode.*;
+import static gen.asm.Register.Arch.fp;
 import static gen.asm.Register.Arch.zero;
 
 public class StmtCodeGen extends CodeGen {
@@ -86,9 +88,14 @@ public class StmtCodeGen extends CodeGen {
 
 
             case Return aReturn -> {
+                if(aReturn.expr.isPresent()){
+                    Register valueToReturn = new ExprCodeGen(asmProg).visit(aReturn.expr.get());
+                    //todo handle structs
+                    currentSection.emit(ProgramCodeGen.storeByteOrWord(aReturn),valueToReturn,fp,4);
+                }
 
                 //this could result in redundant code, but oh well
-                FunCodeGen.emitFunctionExit(currentSection);//todo
+                FunCodeGen.emitFunctionExit(currentSection);
             }
 
         }
