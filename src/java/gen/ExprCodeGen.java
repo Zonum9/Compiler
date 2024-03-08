@@ -78,18 +78,18 @@ public class ExprCodeGen extends CodeGen {
             }
 
 
-            case FunCallExpr x->{
-                if(builtIns.contains(x.name)){
-                    yield handleBuiltInFunc(x);
+            case FunCallExpr funCallExpr->{
+                if(builtIns.contains(funCallExpr.name)){
+                    yield handleBuiltInFunc(funCallExpr);
                 }
-                FunDecl decl= x.origin;
+                FunDecl decl= funCallExpr.origin;
 
                 //precall
-                for (int i = 0; i < x.exprs.size(); i++) {
+                for (int i = 0; i < funCallExpr.exprs.size(); i++) {
                     currSection.emit("------------ PARAM "+i);
-                    Expr param=x.exprs.get(i);
+                    Expr param=funCallExpr.exprs.get(i);
                     Register paramReg;
-                    if(param.type instanceof ArrayType){
+                    if(param.type instanceof ArrayType || param.type instanceof StructType){
                         paramReg= new AddrCodeGen(asmProg).visit(param);
                     }
                     else {
@@ -97,28 +97,42 @@ public class ExprCodeGen extends CodeGen {
                     }
                     currSection.emit("------------ SPACE FOR PARAM "+i);
                     currSection.emit(ADDIU,sp,sp,-decl.params.get(i).space);//allocate space on stack
-                    currSection.emit(ProgramCodeGen.storeByteOrWord(param),paramReg,sp,0);//push argument onto stack todo structs are pass by value
 
+                    if(param.type instanceof StructType st){//fixme broken
+                        Register previousStack= Register.Virtual.create();
+                        currSection.emit(ADDIU,previousStack,sp,decl.params.get(i).space);
+                        MemAllocCodeGen.copyStruct(previousStack,st,paramReg,currSection);
+
+                    }else {
+                        currSection.emit(ProgramCodeGen.storeByteOrWord(param), paramReg, sp, 0);//push argument onto stack
+                    }
 
                 }
-                currSection.emit(ADDI,sp,sp,-decl.returnValueSize);//reserve space for return value
+                currSection.emit(ADDIU,sp,sp,-decl.returnValueSize);//reserve space for return value
 
                 //call the function
-                currSection.emit(JAL,Label.get(x.name));
+                currSection.emit(JAL,Label.get(funCallExpr.name));
 
                 Register returnReg;
                 //post return
-                if(x.type == VOID) {
+                if(funCallExpr.type == VOID) {
                     returnReg=null;
-                }else {
+                }
+                else if(funCallExpr.type instanceof StructType ){//get the address of the struct
                     returnReg=Register.Virtual.create();
-                    currSection.emit(ProgramCodeGen.loadByteOrWord(x),returnReg,sp,0);//todo structs are pass by value
+//                    currSection.emit("-------------------this is the return value");
+                    currSection.emit(ADDIU,returnReg,sp,funCallExpr.origin.returnValueSize-4);
+                }
+                else {
+                    returnReg=Register.Virtual.create();
+//                    currSection.emit("-------------------this is the return value");
+                    currSection.emit(ProgramCodeGen.loadByteOrWord(funCallExpr),returnReg,sp,0);
                 }
 
-                for (int i = 0; i < x.exprs.size(); i++) {
+                for (int i = 0; i < funCallExpr.exprs.size(); i++) {
                     currSection.emit(ADDIU,sp,sp,decl.params.get(i).space);//reset stack
                 }
-                currSection.emit(ADDI,sp,sp,decl.returnValueSize);//reset stack
+                currSection.emit(ADDIU,sp,sp,decl.returnValueSize);//reset stack
                 yield returnReg;
             }
 
@@ -262,9 +276,6 @@ public class ExprCodeGen extends CodeGen {
                 currSection.emit(LI,reg,MemAllocCodeGen.sizeofType(sizeOfExpr.sizeOfType));
                 yield reg;
             }
-
-
-
         };
         currSection.emit("----End of "+e.getClass().getSimpleName()+"----");
         return retReg;

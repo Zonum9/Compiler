@@ -58,7 +58,7 @@ public class AddrCodeGen extends CodeGen {
                 VarDecl fieldDecl= origin.varDecls.stream()
                         .filter( vd->vd.name.equals(fieldAccessExpr.fieldName))
                         .findFirst().get();
-                currSect.emit(ADDI,baseAddress,baseAddress,fieldDecl.fpOffset);
+                currSect.emit(ADDIU,baseAddress,baseAddress,fieldDecl.fpOffset);
                 yield baseAddress;
             }
 
@@ -72,7 +72,7 @@ public class AddrCodeGen extends CodeGen {
                 if(vd.isGlobal){
                     currSect.emit(LA,reg, Label.get(vd.name));
                 }else {
-                    currSect.emit(ADDI,reg,fp,vd.fpOffset);
+                    currSect.emit(ADDIU,reg,fp,vd.fpOffset);
                 }
                 yield reg;
             }
@@ -80,6 +80,7 @@ public class AddrCodeGen extends CodeGen {
             case Assign x->{
                 Register addrReg = visit(x.expr1);
                 if(x.expr1.type instanceof StructType st){
+//                    MemAllocCodeGen.copyStruct(addrReg,st,visit(x.expr2),currSect);
                     for(VarDecl vd:st.origin.varDecls){
                         FieldAccessExpr left = new FieldAccessExpr(x.expr1,vd.name);
                         left.type=vd.type;
@@ -119,6 +120,7 @@ public class AddrCodeGen extends CodeGen {
 
             case TypecastExpr x->visit(x.expr);
 
+            case FunCallExpr x->new ExprCodeGen(asmProg).visit(x);
 
             default -> throw new Error("Invalid address access");
         };

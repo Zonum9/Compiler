@@ -89,11 +89,18 @@ public class StmtCodeGen extends CodeGen {
 
             case Return aReturn -> {
                 if(aReturn.expr.isPresent()){
-                    Register valueToReturn = new ExprCodeGen(asmProg).visit(aReturn.expr.get());
-                    //todo handle structs
-                    currentSection.emit(ProgramCodeGen.storeByteOrWord(aReturn),valueToReturn,fp,4);
+                    Expr e =aReturn.expr.get();
+                    currentSection.emit("-------------------START of the return value");
+                    if(e.type instanceof StructType st) {
+                        Register retAddress = Register.Virtual.create();
+                        currentSection.emit(ADDIU,retAddress,fp,MemAllocCodeGen.sizeofType(aReturn.functionReturnType));
+                        MemAllocCodeGen.copyStruct(retAddress,st,new AddrCodeGen(asmProg).visit(e),currentSection);
+                    }else{
+                        Register valueToReturn = new ExprCodeGen(asmProg).visit(e);
+                        currentSection.emit(ProgramCodeGen.storeByteOrWord(aReturn),valueToReturn,fp,4);
+                    }
+                    currentSection.emit("-------------------END of the return value");
                 }
-
                 //this could result in redundant code, but oh well
                 FunCodeGen.emitFunctionExit(currentSection);
             }

@@ -334,7 +334,7 @@ public class Part3Tests {
                     x[0][1]='A';
                     x[0][2]='A';
                     x[0][3]='A';
-                    x[0][4]='A';                    
+                    x[0][4]='A';
                     
                     ptr = (char*)x[1];
                     ptr[0]='B';
@@ -377,9 +377,6 @@ public class Part3Tests {
                 }
                 """);
     }
-
-    //todo test return values
-
 
     @Test
     void structCopy(){
@@ -435,8 +432,59 @@ public class Part3Tests {
                     
                 }
                 
-                """,
-                "123451234512345678910");
+                """);
+        assertCorrectOutput("""
+                struct A{
+                    int x;
+                    int y;
+                    char c;
+                    int z;
+                    int w;
+                };
+                
+                struct A strct;
+                struct A cpy;
+                void main(){
+                    strct.x=1;
+                    strct.y=2;
+                    strct.c='3';
+                    strct.z=4;
+                    strct.w=5;
+                    cpy=strct;
+                    
+                    print_i(strct.x);
+                    print_i(strct.y);
+                    print_c(strct.c);
+                    print_i(strct.z);
+                    print_i(strct.w);
+                    
+                    print_i(cpy.x);
+                    print_i(cpy.y);
+                    print_c(cpy.c);
+                    print_i(cpy.z);
+                    print_i(cpy.w);
+                    
+                    cpy.x=6;
+                    cpy.y=7;
+                    cpy.c='8';
+                    cpy.z=9;
+                    cpy.w=10;
+                    
+                    print_i(strct.x);
+                    print_i(strct.y);
+                    print_c(strct.c);
+                    print_i(strct.z);
+                    print_i(strct.w);
+                    
+                    print_i(cpy.x);
+                    print_i(cpy.y);
+                    print_c(cpy.c);
+                    print_i(cpy.z);
+                    print_i(cpy.w);
+                    
+                }
+                
+                """);
     }
 
     @Test void aWildContinueAppears(){
@@ -672,7 +720,7 @@ public class Part3Tests {
     @Test
     void fibonacci(){
         fileCompareToCompiled("textFiles/fibonacci.c",
-                "8");
+                "20");
     }
 
 //    @Test
@@ -862,8 +910,7 @@ public class Part3Tests {
                     print_i(y.x[4]);
                     
                 }
-                """,
-                "0123401234");
+                """);
         assertCorrectOutput("""
                 struct foo{
                     int x[5];
@@ -991,8 +1038,49 @@ public class Part3Tests {
                     print_i((*(*(struct A*)arr[6].n).ptr).x);
                 }
                 
-                """,
-                "1234451");
+                """);
+        assertCorrectOutput("""
+                struct A{
+                    int x;
+                    int y;
+                    char c;
+                    struct A* ptr;
+                    int z;
+                    int w;
+                    void * n;
+                };
+                struct A arr[7];
+                void main(){
+                    struct A strct;                    
+                    
+                    strct.x=1;
+                    strct.y=2;
+                    strct.c='3';
+                    strct.ptr= &strct;
+                    strct.z=4;
+                    strct.w=5;
+                    
+                    strct.n= (void*)strct.ptr;
+                    
+                    arr[0]=strct;
+                    arr[1]=strct;
+                    arr[2]=strct;
+                    arr[3]=strct;
+                    arr[4]=strct;
+                    arr[5]=strct;
+                    arr[6]=strct;
+                    
+                    
+                    print_i(arr[0].x);
+                    print_i(arr[1].y);
+                    print_c(arr[2].c);
+                    print_i((*arr[3].ptr).z);
+                    print_i(arr[4].z);
+                    print_i(arr[5].w);
+                    print_i((*(*(struct A*)arr[6].n).ptr).x);
+                }
+                
+                """);
     }
 
     @Test
@@ -1492,6 +1580,26 @@ public class Part3Tests {
 
     }
 
+    @Test void simplerStructParams(){
+        assertCorrectOutput("""
+                struct s{
+                    int x;
+                };                
+                struct s fun(struct s x){
+                    print_i(x.x);
+                    x.x=11;
+                    return x;
+                }
+                
+                void main(){
+                    struct s x;
+                    x.x=99;
+                    print_i(fun(x).x);
+                }
+                """);
+
+    }
+
     @Test void structFuncCalls(){
         assertCorrectOutput("""
                 struct s{
@@ -1507,6 +1615,7 @@ public class Part3Tests {
                     struct s x;
                     s.x=0;
                     s.c='0';
+                    s.arr[5]=99;
                     
                     print_i(s.x);
                     print_c(' ');
@@ -1530,22 +1639,368 @@ public class Part3Tests {
                     print_c(' ');
                     print_i(x.arr[5]);
                     print_c(' ');
+                    
+                    print_i(fun(x).x);
+                    print_c(' ');
+                    print_c(fun(x).c);
+                    print_c(' ');
+                    print_i(fun(x).arr[5]);
+                    print_c(' ');
                 }
                 
                 struct s fun (struct s s){
-                    s.x=543;
-                    s.c='x';
-                    s.arr[5]=11;
-                    
                     print_i(s.x);
                     print_c(' ');
                     print_c(s.c);
                     print_c(' ');
                     print_i(s.arr[5]);
                     print_c(' ');
+                
+                    s.x=543;
+                    s.c='x';
+                    s.arr[5]=11;                   
+                    
                     return s;
                 }
                 
+                """);
+
+    }
+
+    @Test void nestedStruct(){
+        assertCorrectOutput("""
+                struct A{
+                    int x;
+                    int y;
+                };
+                struct B{
+                    int x;
+                    int y;
+                    struct A inner;
+                };
+                
+                void main(){
+                    struct B s;
+                    struct A s2;
+                    s.x=1;
+                    s.y=2;
+                    s.inner.x=3;
+                    s.inner.y=4;
+                    s2.x=5;
+                    s2.y=6;
+                    
+                    print_i(s.x);
+                    print_i(s.y);
+                    print_i(s.inner.x);
+                    print_i(s.inner.y);
+                    
+                    s.inner=s2;
+
+                    print_i(s.inner.x);
+                    print_i(s.inner.y);
+                    
+                }
+                
+                """);
+
+        assertCorrectOutput("""
+                struct A{
+                    int x;
+                    int y;
+                };
+                struct B{
+                    int x;
+                    int y;
+                    struct A inner;
+                };
+                struct B s;
+                struct A s2;
+                
+                void main(){                    
+                    s.x=1;
+                    s.y=2;
+                    s.inner.x=3;
+                    s.inner.y=4;
+                    s2.x=5;
+                    s2.y=6;
+                    
+                    print_i(s.x);
+                    print_i(s.y);
+                    print_i(s.inner.x);
+                    print_i(s.inner.y);
+                    
+                    s.inner=s2;
+
+                    print_i(s.inner.x);
+                    print_i(s.inner.y);
+                    
+                }
+                
+                """);
+        assertCorrectOutput("""
+                struct A{
+                    int x;
+                    int y;
+                };
+                struct B{
+                    int x;
+                    int y;
+                    struct A inner;
+                };
+                struct B s;                
+                
+                void main(){       
+                    struct A s2;             
+                    s.x=1;
+                    s.y=2;
+                    s.inner.x=3;
+                    s.inner.y=4;
+                    s2.x=5;
+                    s2.y=6;
+                    
+                    print_i(s.x);
+                    print_i(s.y);
+                    print_i(s.inner.x);
+                    print_i(s.inner.y);
+                    
+                    s.inner=s2;
+
+                    print_i(s.inner.x);
+                    print_i(s.inner.y);
+                    
+                }
+                
+                """);
+
+        assertCorrectOutput("""
+                struct A{
+                    int x;
+                    int y;
+                };
+                struct B{
+                    int x;
+                    int y;
+                    struct A inner;
+                };
+                
+                struct B fun(){
+                    struct B s;
+                    struct A s2;
+                    s.x=1;
+                    s.y=2;
+                    s.inner.x=3;
+                    s.inner.y=4;
+                    s2.x=5;
+                    s2.y=6;
+                    
+                    s.inner=s2;
+                    
+                    return s;
+                }
+                void main(){
+                    struct B s;
+                    s = fun();
+                    print_i(s.x);
+                    print_i(s.y);
+                    print_i(s.inner.x);
+                    print_i(s.inner.y);
+                    print_i(s.inner.x);
+                    print_i(s.inner.y);
+                    
+                    print_i(fun().x);
+                    print_i(fun().y);
+                    print_i(fun().inner.x);
+                    print_i(fun().inner.y);
+                    print_i(fun().inner.x);
+                    print_i(fun().inner.y);
+                    
+                }
+                """);
+
+    }
+
+    @Test void multiArgs(){
+        assertCorrectOutput("""
+                void fun(int x, int y, int z){
+                    x=x+1;
+                    y=y*y;
+                    z=z/z;
+                    print_i(x);
+                    print_i(y);
+                    print_i(z);
+                    
+                }
+                int gx;
+                int gy;
+                int gz;
+                void main(){
+                    int x;
+                    int y;
+                    int z;
+                    x=gx=4;
+                    y=gy=5;
+                    z=gz=6;
+                    
+                    fun(4,5,6);
+                    fun(x,y,z);
+                    fun(gx,gy,gz);
+                }
+                """);
+    }
+
+    @Test void moreStrcs(){
+        assertCorrectOutput("""
+                struct A{
+                    char c;
+                };
+                struct A fun(){
+                    struct A s;
+                    struct A*ptr;
+                    s.c='Z';
+                    ptr=&s;
+                    return s;
+                }
+                void main(){
+                    struct A s;
+                    s=fun();
+                    print_c(s.c);
+                }
+                """);
+        assertCorrectOutput("""
+                struct A{
+                    char c;
+                };
+                struct A* fun(){
+                    struct A*ptr;
+                    struct A s;
+                    s.c='Z';
+                    ptr=&s;
+                    return ptr;
+                }
+                void main(){
+                    struct A s;
+                    s=*fun();
+                    print_c(s.c);
+                }
+                """);
+        assertCorrectOutput("""
+                struct A{
+                    char c;
+                };
+                struct A* fun(){
+                    struct A*ptr;
+                    struct A s;
+                    s.c='Z';
+                    ptr=&s;
+                    return ptr;
+                }
+                void main(){
+                    struct A s;
+                    print_c((*fun()).c);
+                }
+                """);
+
+    }
+
+    @Test void returnStruct(){
+
+        assertCorrectOutput("""
+                struct A {
+                    int x;
+                    char c;
+                    int y;
+                    char c2;
+                    char c3;
+                };
+                struct A fun(){
+                    struct A val;
+                    val.x=1;
+                    val.y=2;
+                    val.c='A';
+                    val.c2='B';
+                    val.c3='C';
+                    return val;
+                }
+                void main(){
+                    struct A x;
+                    x=fun();
+                    print_i(x.x);
+                    print_i(x.y);
+                    print_c(x.c);
+                    print_c(x.c2);
+                    print_c(x.c3);
+                }
+                
+                """);
+
+        assertCorrectOutput("""
+                struct A {
+                    char x;
+                };
+                struct A fun(){
+                    struct A val;
+                    val.x='X';
+                    return val;
+                }
+                void main(){
+                    struct A x;
+                    x=fun();
+                    print_c(x.x);
+                }
+                """);
+        assertCorrectOutput("""
+                struct A {
+                    char x;
+                };
+                struct A fun(){
+                    struct A val;
+                    val.x='X';
+                    return val;
+                }
+                void main(){
+                    struct A x;
+                    x=fun();
+                    print_c(fun().x);
+                }
+                """);
+
+
+        assertCorrectOutput("""
+                struct A {
+                    int x;
+                    char c;
+                    int y;
+                    char c2;
+                    char c3;
+                };
+                struct A val;
+                struct A fun(){
+                    val.x=1;
+                    val.y=2;
+                    val.c='A';
+                    val.c2='B';
+                    val.c3='C';
+                    return val;
+                }
+                void main(){
+                    struct A x;
+                    x=fun();
+                    print_i(val.x);
+                    print_i(val.y);
+                    print_c(val.c);
+                    print_c(val.c2);
+                    print_c(val.c3);
+                    print_i(x.x);
+                    print_i(x.y);
+                    print_c(x.c);
+                    print_c(x.c2);
+                    print_c(x.c3);
+                    print_i(fun().x);
+                    print_i(fun().y);
+                    print_c(fun().c);
+                    print_c(fun().c2);
+                    print_c(fun().c3);
+                }
                 """);
 
     }

@@ -6,7 +6,6 @@ import java.util.List;
 public final class FunDecl extends Decl {
     public final List<VarDecl> params;
     public final Block block;
-    public int returnValueFPOffset;
     public int returnValueSize=0;
 
     public FunDecl(Type type, String name, List<VarDecl> params, Block block) {

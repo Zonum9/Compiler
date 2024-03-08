@@ -146,7 +146,7 @@ int main()
 	/* Remove duplicates from linked list */
 	res = SortedMerge(a, b);
 
-	print_s((char*)"Merged Linked List is: \n");
+	print_s((char*)"Merged Linked List is: ");
 	printList(res);
 
 	return 0;

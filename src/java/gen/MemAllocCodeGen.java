@@ -4,8 +4,11 @@ import ast.*;
 import gen.asm.AssemblyProgram;
 import gen.asm.Directive;
 import gen.asm.Label;
+import gen.asm.Register;
 
 import static ast.BaseType.*;
+import static gen.asm.OpCode.LW;
+import static gen.asm.OpCode.SW;
 
 /* This allocator should deal with all global and local variable declarations. */
 
@@ -22,8 +25,8 @@ void visit(ASTNode n) {
         AssemblyProgram.Section currSect= asmProg.getCurrentSection();
         switch (n){
             case Program x->{
-                fpOffset=-4;
                 for (ASTNode child:x.children()){
+                    fpOffset=-4;
                     visit(child);
                     global=true;
                 }
@@ -41,15 +44,18 @@ void visit(ASTNode n) {
                 //local variables
                 int space=wordAlign(sizeofType(vd.type));
                 vd.space=space;
-                fpOffset-=space;
                 vd.isGlobal=false;
-                vd.fpOffset=fpOffset;
+                if(vd.type instanceof StructType) {
+                    vd.fpOffset = fpOffset - 4;
+                }else {
+                    vd.fpOffset=fpOffset-space;
+                }
+                fpOffset-=space;
 
             }
 
             case FunDecl x -> {
                 global=false;
-                x.returnValueFPOffset=4;
                 x.returnValueSize=wordAlign(sizeofType(x.type));
                 fpOffset= x.returnValueSize +4;//space taken by return value
                 for (int i = 0; i < x.params.size(); i++) {//arguments are arranged bottom to top on the stack
@@ -72,9 +78,20 @@ void visit(ASTNode n) {
                 x.block.children().forEach(this::visit);
             }
 
+            case StructTypeDecl x->{
+                global=false;
+                fpOffset=4;
+                x.children().forEach(this::visit);
+            }
+
+            case Type t->{}
+            case FunProto t ->{}
+
             case ASTNode x -> {
                 global=false;
-                x.children().forEach(this::visit);
+                for (ASTNode a:x.children()){
+                    visit(a);
+                }
             }
 
 
@@ -84,6 +101,17 @@ void visit(ASTNode n) {
 
     public static int wordAlign(int size){
         return Math.ceilDiv(size,4)*4;
+    }
+
+    public static void copyStruct(Register targetBaseAddress, StructType type,Register originBaseAddress,
+                                      AssemblyProgram.Section currSect){
+        Register temp = Register.Virtual.create();
+        int size=wordAlign(sizeofType(type));
+        currSect.emit("-----------COPY STRUCT-------------");
+        for (int i = 0; i < size ; i+=4) {
+            currSect.emit(LW,temp,originBaseAddress,-i);
+            currSect.emit(SW,temp,targetBaseAddress,-i);
+        }
     }
 
     public static int sizeofType(Type t){
