@@ -80,32 +80,7 @@ public class AddrCodeGen extends CodeGen {
             case Assign x->{
                 Register addrReg = visit(x.expr1);
                 if(x.expr1.type instanceof StructType st){
-//                    MemAllocCodeGen.copyStruct(addrReg,st,visit(x.expr2),currSect);
-                    for(VarDecl vd:st.origin.varDecls){
-                        FieldAccessExpr left = new FieldAccessExpr(x.expr1,vd.name);
-                        left.type=vd.type;
-
-                        FieldAccessExpr right = new FieldAccessExpr(x.expr2,vd.name);
-                        right.type=vd.type;
-
-                        Assign newAssign= new Assign(left,right);
-                        newAssign.type=vd.type;
-                        visit(newAssign);
-                    }
-
-                }
-                else if(x.expr1.type instanceof ArrayType at){//array
-                    for (int i = 0; i < at.numElement; i++) {
-                        ArrayAccessExpr left = new ArrayAccessExpr(x.expr1,new IntLiteral(i));
-                        left.type=at.type;
-
-                        ArrayAccessExpr right = new ArrayAccessExpr(x.expr2,new IntLiteral(i));
-                        right.type=at.type;
-
-                        Assign newAssign= new Assign(left,right);
-                        newAssign.type=at.type;
-                        visit(newAssign);
-                    }
+                    MemAllocCodeGen.copyStruct(addrReg,st,visit(x.expr2),currSect);
                 }
                 else {
                     Register rhs = new ExprCodeGen(asmProg).visit(x.expr2);

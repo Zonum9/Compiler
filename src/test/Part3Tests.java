@@ -503,12 +503,12 @@ public class Part3Tests {
 
     @Test void whileLoops(){
 
-//        assertCorrectOutput("""
-//                void main(){
-//                    while (1){
-//                    }
-//                }
-//                """);
+        assertCorrectOutput("""
+                void main(){
+                    while (1){
+                    }
+                }
+                """);
 
         assertCorrectOutput("""
                 void main(){
@@ -875,7 +875,10 @@ public class Part3Tests {
                     print_i(read_i());
                 }
                 ""","1009","1009");
+    }
 
+    @Test void motherOfAllTests(){//todo
+        fileCompareToCompiled("textFiles/bigboy.c");
     }
 
 
@@ -1580,13 +1583,131 @@ public class Part3Tests {
 
     }
 
+    @Test void globalStruct(){
+        assertCorrectOutput("""
+                struct A{
+                    int x;
+                    int y;
+                    char c;
+                    int z;
+                    int w;
+                };
+                struct A globl;
+                void main(){
+                    struct A lcl;
+                    globl.x=4;
+                    globl.y=3;
+                    globl.c='X';
+                    globl.z=2;
+                    globl.w=1;
+                    
+                    lcl.x=4;
+                    lcl.y=3;
+                    lcl.c='X';
+                    lcl.z=2;
+                    lcl.w=1;
+                }
+                
+                """);
+    }
+
+    @Test void funcallMultipleArgs(){
+        assertCorrectOutput("""
+                void fun3(char x[1][3],char y, char z);
+                void fun2(int x,char y, int z);
+                void fun(char x,char y,char z){
+                    print_c(x);print_c(y);print_c(z);                    
+                }
+                
+                void main(){
+                    char x;char y;char z;
+                    char arr[1][3];
+                    fun('X','Y','Z');
+                    x='A';y='B'; z='C';                   
+                    fun(x,y,z);         
+                    fun2(1,'2',3);
+                    fun2((int)x,y,(int)z);  
+                    arr[0][0]='f';
+                    arr[0][1]='u';
+                    arr[0][2]='n';      
+                    fun3(arr,x,z);
+                }
+                void fun2(int x,char y, int z){
+                    print_i(x);print_c(y);print_i(z); 
+                }
+                void fun3(char x[1][3],char y, char z){
+                    print_c(x[0][0]);print_c(x[0][1]);print_c(x[0][2]);
+                    print_c(y);print_c(z);
+                }
+                """);
+
+    }
+    @Test void simpleStructReturn(){
+        assertCorrectOutput("""
+                struct s{
+                    int x;
+                    char y;
+                };
+                struct s fun(int u){
+                    struct s x;
+                    x.x=99;
+                    x.y='e';
+                    return x;
+                }
+                void main(){
+                    struct s x;
+                    print_i(fun(0).x);print_c(fun(0).y);
+                }
+                """);
+    }
+    @Test void roundTrip(){
+        assertCorrectOutput("""
+                struct s{
+                    int x;
+                    char y;
+                    int z;
+                };
+                struct s g;
+                struct s fun(char s,struct s x){
+                    print_i(x.x);
+                    print_c(x.y);
+                    print_i(x.z);
+                    return x;
+                }
+                void main(){
+                    struct s x;
+                    g.x=123;
+                    g.y='N';
+                    g.z=456;
+                    x=g;
+                    x=fun('S',x);
+                    print_i(x.x);
+                    print_c(x.y);
+                    print_i(x.z);
+                    print_i(fun('S',x).x);
+                    print_c(fun('S',x).y);
+                    print_i(fun('S',x).z);
+                    
+                }
+                """);
+    }
+
     @Test void simplerStructParams(){
         assertCorrectOutput("""
                 struct s{
                     int x;
-                };                
+                    char y;
+                };
                 struct s fun(struct s x){
                     print_i(x.x);
+                    print_c(x.y);
+                    x.x=11;
+                    x.y='e';
+                    return x;
+                }
+                struct s fun2(struct s x,int y){
+                    print_i(x.x);
+                    print_i(y);
                     x.x=11;
                     return x;
                 }
@@ -1594,7 +1715,10 @@ public class Part3Tests {
                 void main(){
                     struct s x;
                     x.x=99;
+                    x.y='o';
                     print_i(fun(x).x);
+                    print_c(fun(x).y);
+                    print_i(fun2(x,66).x);
                 }
                 """);
 
@@ -1614,16 +1738,9 @@ public class Part3Tests {
                     struct s s;
                     struct s x;
                     s.x=0;
-                    s.c='0';
+                    s.c='E';
                     s.arr[5]=99;
-                    
-                    print_i(s.x);
-                    print_c(' ');
-                    print_c(s.c);
-                    print_c(' ');
-                    print_i(s.arr[5]);
-                    print_c(' ');
-                    
+                                        
                     x=fun(s);
                                         
                     print_i(s.x);
@@ -1631,14 +1748,14 @@ public class Part3Tests {
                     print_c(s.c);
                     print_c(' ');
                     print_i(s.arr[5]);
-                    print_c(' ');
+                    print_c('|');
                     
                     print_i(x.x);
                     print_c(' ');
                     print_c(x.c);
                     print_c(' ');
                     print_i(x.arr[5]);
-                    print_c(' ');
+                    print_c('|');
                     
                     print_i(fun(x).x);
                     print_c(' ');
@@ -1649,16 +1766,17 @@ public class Part3Tests {
                 }
                 
                 struct s fun (struct s s){
+                    print_s((char*)"fun: ");
                     print_i(s.x);
                     print_c(' ');
                     print_c(s.c);
                     print_c(' ');
                     print_i(s.arr[5]);
-                    print_c(' ');
+                    print_c('|');
                 
                     s.x=543;
                     s.c='x';
-                    s.arr[5]=11;                   
+                    s.arr[5]=11;
                     
                     return s;
                 }

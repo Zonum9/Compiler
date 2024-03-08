@@ -90,19 +90,18 @@ public class ExprCodeGen extends CodeGen {
                     Expr param=funCallExpr.exprs.get(i);
                     Register paramReg;
                     if(param.type instanceof ArrayType || param.type instanceof StructType){
-                        paramReg= new AddrCodeGen(asmProg).visit(param);
+                        paramReg= new AddrCodeGen(asmProg).visit(param);//address of the struct/array
                     }
                     else {
-                        paramReg=visit(param);//prepare argument
+                        paramReg=visit(param);//value of the argument
                     }
                     currSection.emit("------------ SPACE FOR PARAM "+i);
                     currSection.emit(ADDIU,sp,sp,-decl.params.get(i).space);//allocate space on stack
 
-                    if(param.type instanceof StructType st){//fixme broken
+                    if(param.type instanceof StructType st){
                         Register previousStack= Register.Virtual.create();
                         currSection.emit(ADDIU,previousStack,sp,decl.params.get(i).space);
                         MemAllocCodeGen.copyStruct(previousStack,st,paramReg,currSection);
-
                     }else {
                         currSection.emit(ProgramCodeGen.storeByteOrWord(param), paramReg, sp, 0);//push argument onto stack
                     }

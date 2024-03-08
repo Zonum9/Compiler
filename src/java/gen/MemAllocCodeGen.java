@@ -69,7 +69,13 @@ void visit(ASTNode n) {
                     else {
                         space = wordAlign(sizeofType(decl.type));
                     }
-                    decl.fpOffset=fpOffset;
+                    //structs are written in memory top to bottom
+                    if(decl.type instanceof StructType) {
+                        decl.fpOffset = fpOffset+space;
+                    }
+                    else {
+                        decl.fpOffset = fpOffset;
+                    }
                     decl.space=space;
                     decl.isGlobal=false;
                     fpOffset+=space;
