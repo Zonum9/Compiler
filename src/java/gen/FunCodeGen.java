@@ -41,13 +41,12 @@ public class FunCodeGen extends CodeGen {
         currSect.emit(OpCode.ADDIU, sp, sp, -4);
         currSect.emit(OpCode.SW, ra, sp, 0); //push return address on stack
 
-        currSect.emit(OpCode.PUSH_REGISTERS);
-
         //allocate space on stack for local variables
         for (VarDecl vd:fd.block.vds){
             currSect.emit("------Var decl for "+vd.name);
             currSect.emit(OpCode.ADDIU,sp,sp, -vd.space);
         }
+        currSect.emit(OpCode.PUSH_REGISTERS);
 
         // 2) emit the body of the function
         StmtCodeGen scd = new StmtCodeGen(asmProg);
@@ -55,7 +54,6 @@ public class FunCodeGen extends CodeGen {
 
         // 3) emit the epilog
         if(fd.name.equals("main")){
-
             currSect.emit(OpCode.LI,Register.Arch.v0,10);
             currSect.emit(Instruction.Nullary.syscall);
         }

@@ -78,16 +78,16 @@ public class ExprCodeGen extends CodeGen {
             }
 
 
-            case FunCallExpr funCallExpr->{
-                if(builtIns.contains(funCallExpr.name)){
-                    yield handleBuiltInFunc(funCallExpr);
+            case FunCallExpr fun->{
+                if(builtIns.contains(fun.name)){
+                    yield handleBuiltInFunc(fun);
                 }
-                FunDecl decl= funCallExpr.origin;
+                FunDecl decl= fun.origin;
 
                 //precall
-                for (int i = 0; i < funCallExpr.exprs.size(); i++) {
+                for (int i = 0; i < fun.exprs.size(); i++) {
                     currSection.emit("------------ PARAM "+i);
-                    Expr param=funCallExpr.exprs.get(i);
+                    Expr param=fun.exprs.get(i);
                     Register paramReg;
                     if(param.type instanceof ArrayType || param.type instanceof StructType){
                         paramReg= new AddrCodeGen(asmProg).visit(param);//address of the struct/array
@@ -110,26 +110,24 @@ public class ExprCodeGen extends CodeGen {
                 currSection.emit(ADDIU,sp,sp,-decl.returnValueSize);//reserve space for return value
 
                 //call the function
-                currSection.emit(JAL,Label.get(funCallExpr.name));
+                currSection.emit(JAL,Label.get(fun.name));
 
                 Register returnReg;
                 //post return
-                if(funCallExpr.type == VOID) {
+                if(fun.type == VOID) {
                     returnReg=null;
                 }
-                else if(funCallExpr.type instanceof StructType ){//get the address of the struct
+                else if(fun.type instanceof StructType ){//get the address of the struct
                     returnReg=Register.Virtual.create();
-//                    currSection.emit("-------------------this is the return value");
-                    currSection.emit(ADDIU,returnReg,sp,funCallExpr.origin.returnValueSize-4);
+                    currSection.emit(ADDIU,returnReg,sp,fun.origin.returnValueSize-4);
                 }
                 else {
                     returnReg=Register.Virtual.create();
-//                    currSection.emit("-------------------this is the return value");
-                    currSection.emit(ProgramCodeGen.loadByteOrWord(funCallExpr),returnReg,sp,0);
+                    currSection.emit(ProgramCodeGen.loadByteOrWord(fun),returnReg,sp,0);
                 }
 
-                for (int i = 0; i < funCallExpr.exprs.size(); i++) {
-                    currSection.emit(ADDIU,sp,sp,decl.params.get(i).space);//reset stack
+                for (VarDecl param:decl.params) {
+                    currSection.emit(ADDIU,sp,sp,param.space);//reset stack
                 }
                 currSection.emit(ADDIU,sp,sp,decl.returnValueSize);//reset stack
                 yield returnReg;
