@@ -7,7 +7,7 @@ In order to achieve this goal, you will have to perform several tasks.
 First, you will have to follow the abstract grammar specification and design the Java classes that represent the AST as seen during the course.
 Then, you should write an AST printer in order to output the AST into a file.
 Thirdly, you will have to modify your parser so that it builds the AST as your are parsing the tokens.
-Finally you will be able to perform semantic analysis.
+Finally, you will be able to perform semantic analysis.
 
 Note that we highly recommend following an iterative approach where you add AST nodes one by one, extend the printer and modify your parser as you go.
 We also encourage you to write small test programs that test every AST node as you build them rather than trying to implement everything at once.
@@ -21,7 +21,7 @@ If you encounter any problem, have any questions or find a bug with the newly pr
   Then grow from there by supporting step by step a larger subset of the grammar.
  * Each analysis pass you write should have only a single purpose.
    It is much easier to write many small passes, each performing a simple task, than one big one trying to do everything at once (for instance write one pass just for checking assignment).
-   Do not worry about efficiency, even if your compiler requires the application of a 100 passes to reach its goal, this is absolutely fine and will make your task of writing the compiler easier.
+   Do not worry about efficiency, even if your compiler requires the application of 100 passes to reach its goal, this is absolutely fine and will make your task of writing the compiler easier.
  * Make use of the debugger from your IDE to chase bugs.
    If you have never use a debugger before, now is the time to learn: [IntelliJ debugger tutorial](https://www.jetbrains.com/help/idea/debugging-your-first-java-application.html)
 
@@ -242,7 +242,7 @@ Except for `Op` and `BaseType`, which should be Java enums, all AST nodes printe
 * `-x*3` should result in: `BinOp(BinOp(IntLiteral(0),SUB,VarExpr(x)),MUL,IntLiteral(3))`.
 * `-1` should result in `BinOp(IntLiteral(0),SUB,IntLiteral(1))`.
 * `2+3+4` should result in `BinOp(BinOp(IntLiteral(2), ADD, IntLiteral(3)), ADD, IntLiteral(4))`  (all binary operators are left associative in our language)
-* `2+3*4` should result in `BinOp(IntLiteral(2), ADD, BinOp(IntLiteral(3), MUL, IntLiteral(4))`  (multiplication has precedence over addition, see precedence table)
+* `2+3*4` should result in `BinOp(IntLiteral(2), ADD, BinOp(IntLiteral(3), MUL, IntLiteral(4)))`  (multiplication has precedence over addition, see precedence table)
 * `struct node_t { int field1; char field2; };` should result in `StructTypeDecl(StructType(node_t),VarDecl(INT,field1),VarDecl(CHAR,field2))`
 * `struct node_t n;` should result in `VarDecl(StructType(node_t), n)`
 
