@@ -877,9 +877,9 @@ public class Part3Tests {
                 ""","1009","1009");
     }
 
-//    @Test void motherOfAllTests(){// gave up
-//        fileCompareToCompiled("textFiles/bigboy.c");
-//    }
+    @Test void motherOfAllTests(){// gave up
+        fileCompareToCompiled("textFiles/bigboy.c");
+    }
 
 
     @Test void structWithArray(){
@@ -2170,9 +2170,11 @@ public class Part3Tests {
 
     }
 
+    public static Utils.RegMode mode= Utils.RegMode.NAIVE;
+    public static boolean print = false;
 
     void assertCorrectOutput(String program,String expectedOutput, int expectedExitCode, String input){
-        AssemblyProgram p = Utils.programStringToASMObj(program);
+        AssemblyProgram p = Utils.programStringToASMObj(program, mode,print);
         try {
             File f= File.createTempFile("temp",".asm");
             p.print(new PrintWriter(f));
@@ -2196,6 +2198,7 @@ public class Part3Tests {
             fail(e);
         }
     }
+
     void assertCorrectOutput(String program){
         compareToCompiled(program,"");
     }
@@ -2276,16 +2279,6 @@ public class Part3Tests {
         }
     }
 
-    void assertCorrectOutputFile(String filename,String expectedOutput){
-        assertCorrectOutput(Utils.fileToString(filename),expectedOutput);
-    }
-    void assertCorrectOutputFile(String filename,String expectedOutput,String input){
-        assertCorrectOutput(Utils.fileToString(filename),expectedOutput,input);
-    }
-
-    void assertCorrectOutput(String program,String expectedOutput, int expectedExitCode){
-        assertCorrectOutput(program,expectedOutput,expectedExitCode,"");
-    }
     void assertCorrectOutput(String program,String expectedOutput){
         assertCorrectOutput(program,expectedOutput,0,"");
     }

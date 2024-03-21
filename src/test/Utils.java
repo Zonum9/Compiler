@@ -7,6 +7,7 @@ import lexer.Scanner;
 import lexer.Token;
 import lexer.Tokeniser;
 import parser.Parser;
+import regalloc.GraphColouringRegAlloc;
 import regalloc.NaiveRegAlloc;
 import sem.SemanticAnalyzer;
 
@@ -154,8 +155,8 @@ public class Utils {
     }
 
 
-    public static String programStringToASMString(String program) {
-        return asmOBJtoString(programStringToASMObj(program));
+    public static String programStringToASMString(String program, RegMode mode,boolean print) {
+        return asmOBJtoString(programStringToASMObj(program,mode,print));
     }
 
     public static String asmOBJtoString(AssemblyProgram p){
@@ -166,7 +167,11 @@ public class Utils {
         return output.toString();
     }
 
-    public static AssemblyProgram programStringToASMObj(String program){
+    public enum RegMode {
+        NAIVE,
+        COLOR
+    }
+    public static AssemblyProgram programStringToASMObj(String program, RegMode mode,boolean print){
         Program p = Utils.createParserFromString(program).parse();
         SemanticAnalyzer n = new SemanticAnalyzer();
         n.analyze(p);
@@ -174,7 +179,18 @@ public class Utils {
         AssemblyProgram virtualRegs= new AssemblyProgram();
         ProgramCodeGen progGen = new ProgramCodeGen(virtualRegs);
         progGen.generate(p);
-        return NaiveRegAlloc.INSTANCE.apply(virtualRegs);
+        return switch (mode){
+            case NAIVE -> NaiveRegAlloc.INSTANCE.apply(virtualRegs);
+            case COLOR -> {
+                AssemblyProgram asm=GraphColouringRegAlloc.INSTANCE.apply(virtualRegs);
+                if (print){
+                    GraphColouringRegAlloc.INSTANCE.graphs.forEach(
+                            g->g.print(new PrintWriter(System.out,true))
+                    );
+                }
+                yield  asm;
+            }
+        };
     }
 
     public static String fileToString(String filename){
