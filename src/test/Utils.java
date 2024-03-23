@@ -184,9 +184,8 @@ public class Utils {
             case COLOR -> {
                 AssemblyProgram asm=GraphColouringRegAlloc.INSTANCE.apply(virtualRegs);
                 if (print){
-                    GraphColouringRegAlloc.INSTANCE.graphs.forEach(
-                            g->g.print(new PrintWriter(System.out,true))
-                    );
+                    GraphColouringRegAlloc.INSTANCE.printLiveness(new PrintWriter(System.out,true));
+                    GraphColouringRegAlloc.INSTANCE.printInterference(new PrintWriter(System.out,true));
                 }
                 yield  asm;
             }

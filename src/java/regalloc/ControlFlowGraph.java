@@ -6,14 +6,11 @@ import java.io.PrintWriter;
 import java.util.*;
 
 import static gen.asm.OpCode.J;
-import static gen.asm.OpCode.JAL;
 
 public class ControlFlowGraph {
 
     public static class Node{
-        Optional<Boolean> condition = Optional.empty();
         Set<Node> successors = new HashSet<>();
-        Set<Node> predecessors = new HashSet<>();
         AssemblyItem data;
 
         @Override
@@ -22,27 +19,15 @@ public class ControlFlowGraph {
         }
     }
 
-    private <T> Set<T> intersect(Set<T> s1,Set<T> s2){
-        Set<T> intersection = new HashSet<>(s1);
-        intersection.retainAll(s2);
-        return intersection;
-    }
-
-    private <T> Set<T> union(Set<T> s1,Set<T> s2){
-        Set<T> union = new HashSet<>(s1);
-        union.addAll(s2);
-        return union;
-    }
-
-    private <T> Set<T> difference(Set<T> s1,Set<T> s2){
-        Set<T> difference = new HashSet<>(s1);
-        difference.retainAll(s2);
-        return difference;
-    }
-
     public final Node root = new Node();
-//todo store graph leafs
+
+
     public ControlFlowGraph(AssemblyProgram.Section section) {
+        buildGraph(section);
+        performLiveAnalysis();
+    }
+
+    private void buildGraph(AssemblyProgram.Section section){
         List<AssemblyItem> items =new ArrayList<>(section.items.stream()
                 .filter(i->!(i instanceof Comment || i instanceof Directive)).toList());
         Node previous = root;
@@ -58,7 +43,6 @@ public class ControlFlowGraph {
             }
             curr.data=item;
             if(previous!=null){
-                curr.predecessors.add(previous);
                 previous.successors.add(curr);
             }
             if( item instanceof Instruction.ControlFlow controlFlow){
@@ -94,54 +78,128 @@ public class ControlFlowGraph {
 
         branchesToConnect.forEach((label, nodes) -> {
                     Node lblNode = labelNodeMap.get(label);
-                    lblNode.predecessors.addAll(nodes);
                     for(Node n:nodes){
                         n.successors.add(lblNode);
                     }
                 }
         );
-
     }
 
+    public final HashMap<Node,HashSet<Register>> liveIn = new HashMap<>();
+    public final HashMap<Node,HashSet<Register>> liveOut = new HashMap<>();
+
+    private void performLiveAnalysis(){
+            List<Node> nodesPostOrder = getNodesPostOrder();
+            for(Node n: nodesPostOrder){
+                liveIn.put(n,new HashSet<>());
+                liveOut.put(n,new HashSet<>());
+            }
+
+            HashMap<Node,HashSet<Register>> tempIn = new HashMap<>();
+            HashMap<Node,HashSet<Register>> tempOut = new HashMap<>();
+            do{
+                for(Node n:nodesPostOrder){
+                    tempIn.put(n,liveIn.get(n));
+                    tempOut.put(n,liveOut.get(n));
+
+                    //union of successor's live in is our live out
+                    HashSet <Register> newLiveOutN= new HashSet<>();
+                    for(Node s:n.successors){
+                        newLiveOutN.addAll(liveIn.get(s));
+                    }
+                    liveOut.put(n,newLiveOutN);
+
+                    //everything that we use and (everything that we emit - what we create) is our live in
+                    HashSet <Register> newLiveInN;
+                    if(n.data instanceof Instruction inst){
+                        newLiveInN= new HashSet<>(newLiveOutN);
+                        newLiveInN.remove(inst.def());
+                        newLiveInN.addAll(inst.uses()
+                                .stream()
+                                .filter(Register::isVirtual).toList()
+                        );
+                    }
+                    else{
+                        newLiveInN=new HashSet<>(newLiveOutN);
+                    }
+                    liveIn.put(n,newLiveInN);
+                }
+            }while (!(liveIn.equals(tempIn) && liveOut.equals(tempOut)));
+
+            //todo make sure this is correct
+            //for all nodes n, add join their defined sets with their live out sets (handles "dead" instructions)
+            for(Node n: nodesPostOrder){
+                if(n.data instanceof Instruction inst) {
+                    Register def=inst.def();
+                    if(def != null && def.isVirtual()) {
+                        liveOut.get(n).add(def);
+                        for (Node successor : n.successors) {
+                            liveIn.get(successor).add(def);
+                        }
+                    }
+                }
+            }
+    }
 
     private PrintWriter writer;
     private int nodeCnt;
-    private HashMap<Node,String> visited;
+    private HashMap<ControlFlowGraph.Node,String> visited;
+
     public void print(PrintWriter writer){
         visited=new HashMap<>();
         nodeCnt=0;
         this.writer=writer;
-        writer.println("digraph ast {");
         visit(root);
-        writer.println("}");
     }
+
     private String visit(Node n){
         if(visited.containsKey(n)){
             return visited.get(n);
         }
         nodeCnt++;
-        String nid= "Node"+nodeCnt;
+        String nid= ""+n.hashCode();
         visited.put(n,nid);
 
         switch (n.data){
             case Comment ignore -> {}
             case Directive ignore -> {}
             case AssemblyItem x -> {
-                writer.println(nid + "[label=\"" + x + "\"];");
+                writer.println(nid + "[label=\""+nodeCnt+": " + x + "\"];");
             }
         }
 
-        ArrayList<String> children = new ArrayList<>();
-        for (Node suc : n.successors){
-            children.add(visit(suc));
-        }
-        // write out edges
-        for( String s :children){
+        for (ControlFlowGraph.Node suc : n.successors){
+            String s = visit(suc);
             writer.println(nid + "->"+ s+";");
-            writer.println(s + "->"+ nid+" [color=\"red\"];");
+            for (Register r:liveOut.get(n)) {
+                writer.println(nid + "->" + s + "[label = \""+r+"\",color=\"red\"];");
+            }
+            for (Register r :liveIn.get(suc)){
+                writer.println(nid + "->" + s + "[label = \""+r+"\",color=\"blue\"];");
+            }
         }
         return nid;
     }
+
+    public List<Node> getNodesPostOrder() {
+        HashSet<Node>visited = new HashSet<>();
+        Stack<Node> stack = new Stack<>();
+        dfs(root,visited,stack);
+        return stack;
+    }
+
+    private void dfs(Node node, HashSet<Node> visited, Stack<Node> stack) {
+        visited.add(node);
+        for (Node s:node.successors){
+            if(!visited.contains(s)){
+                dfs(s,visited,stack);
+            }
+        }
+        stack.push(node);
+    }
+
+
+
 
 
 }
