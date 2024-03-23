@@ -184,8 +184,12 @@ public class Utils {
             case COLOR -> {
                 AssemblyProgram asm=GraphColouringRegAlloc.INSTANCE.apply(virtualRegs);
                 if (print){
-                    GraphColouringRegAlloc.INSTANCE.printLiveness(new PrintWriter(System.out,true));
-                    GraphColouringRegAlloc.INSTANCE.printInterference(new PrintWriter(System.out,true));
+                    try {
+                        GraphColouringRegAlloc.INSTANCE.printLiveness(new PrintWriter(new FileWriter("src/test/temp/flowDot.dot"), true));
+                        GraphColouringRegAlloc.INSTANCE.printInterference(new PrintWriter(new FileWriter("src/test/temp/interferenceDot.dot"), true));
+                    }catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
                 yield  asm;
             }

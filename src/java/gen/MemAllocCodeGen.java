@@ -57,7 +57,7 @@ void visit(ASTNode n) {
             case FunDecl x -> {
                 global=false;
                 x.returnValueSize=wordAlign(sizeofType(x.type));
-                fpOffset= x.returnValueSize +4;//space taken by return value
+                fpOffset= x.returnValueSize;//space taken by return value
                 for (int i = 0; i < x.params.size(); i++) {//arguments are arranged bottom to top on the stack
                     VarDecl decl = x.params.reversed().get(i);
                     //positive offset for function arguments
@@ -70,15 +70,10 @@ void visit(ASTNode n) {
                         space = wordAlign(sizeofType(decl.type));
                     }
                     //structs are written in memory top to bottom
-                    if(decl.type instanceof StructType) {
-                        decl.fpOffset = fpOffset+space;
-                    }
-                    else {
-                        decl.fpOffset = fpOffset;
-                    }
+                    fpOffset+=space;
+                    decl.fpOffset = fpOffset;
                     decl.space=space;
                     decl.isGlobal=false;
-                    fpOffset+=space;
                 }
                 fpOffset=-4;
                 x.block.children().forEach(this::visit);
