@@ -10,7 +10,9 @@ public class Part4Tests extends Part3Tests{
 
     @Test
     void test(){
-        simplerStructParams();
+//        factorial();
+        recursiveFunWithLocalVar();
+
     }
 
 
@@ -33,14 +35,29 @@ public class Part4Tests extends Part3Tests{
 
     @Test void deadInstruction(){
         assertCorrectOutput("""
+                struct s{
+                    int x;
+                };
+                void main(){
+                    struct s s;                    
+                    int x;
+                    int y;
+                    int z;
+                    s.x=99;
+                    x=888;
+                    y=999;
+                    print_i(z);
+                }                
+                """);
+        assertCorrectOutput("""
                 void main(){
                     int x;
                     int y;
+                    int z;
                     x=888;
                     y=999;
-                    print_i(x);
+                    print_i(z);
                 }
-                
                 """);
     }
 
@@ -62,8 +79,8 @@ public class Part4Tests extends Part3Tests{
                     int xB;
                     int xC;
                     int xD;
-//                    int xE;
-//                    int xF;
+                    int xE;
+                    int xF;
                 x0=
                 x1=
                 x2=
@@ -78,8 +95,8 @@ public class Part4Tests extends Part3Tests{
                 xB=
                 xC=
                 xD=
-//                xE=
-//                xF=
+                xE=
+                xF=
                 999;
                 
                 print_i(x0+
@@ -96,8 +113,8 @@ public class Part4Tests extends Part3Tests{
                     xB+
                     xC+
                     xD
-//                    +xE
-//                    +xF
+                    +xE
+                    +xF
                     );
                 }
                 """);

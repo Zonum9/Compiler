@@ -27,14 +27,15 @@ public class InterferenceGraph {
             }
         }
         //18 registers, but 3 reserved for spilling
-        int k = 18-3;
+        int k = 18-3; //todo change this if you change spilling
         colorGraph(k);
     }
 
+    public final HashSet<Register> spilled = new HashSet<>();
     private void colorGraph(int k){
         Stack<Register> stack = new Stack<>();
         HashSet<Register> removed = new HashSet<>();
-        HashSet<Register> spilled = new HashSet<>(); //todo handle this later
+
         while(true){
             getDegLessThanK(k,stack,removed);
             if(removed.size()==interference.size()){
@@ -55,15 +56,9 @@ public class InterferenceGraph {
         }
 
         colorVars(stack,k);
-        spillVars(spilled);
-    }
-
-    private void spillVars(HashSet<Register> spilled) {
-        //todo handle spilled regs
     }
 
     private void colorVars(Stack<Register> stack,int k){
-        //todo color verts
         while (!stack.empty()){
             Register reg = stack.pop();
             Set<Integer> neighbourColors = interference.get(reg).stream()
@@ -109,13 +104,11 @@ public class InterferenceGraph {
 
 
     private PrintWriter writer;
-    private int nodeCnt;
     private HashMap<Register,String> visited;
     private HashSet<String> drawn;
     public void print(PrintWriter writer){
         visited=new HashMap<>();
         drawn = new HashSet<>();
-        nodeCnt=0;
         this.writer=writer;
         interference.keySet().forEach(this::visit);
     }
@@ -124,11 +117,15 @@ public class InterferenceGraph {
         if(visited.containsKey(r)){
             return visited.get(r);
         }
-        nodeCnt++;
         String nid = r.toString();
         visited.put(r, nid);
-
-        String color = intToColor(colorings.get(r));
+        String color;
+        if(colorings.containsKey(r)) {
+            color = intToColor(colorings.get(r));
+        }
+        else {
+            color= "white";
+        }
         writer.println(nid + "[label=\""+ r + "\",style=\"filled\", fillcolor  = \""+color+"\"];");
 
         for (Register suc : interference.get(r)){
