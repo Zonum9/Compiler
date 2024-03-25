@@ -147,8 +147,9 @@ public final class NaiveRegAlloc implements AssemblyPass {
     /**
      * The singleton instance of {@link NaiveRegAlloc}.
      */
-    public static final NaiveRegAlloc INSTANCE = new NaiveRegAlloc();
-
+    //todo revert this
+//    public static final NaiveRegAlloc INSTANCE = new NaiveRegAlloc();
+    public static final GraphColouringRegAlloc INSTANCE = new GraphColouringRegAlloc();
     @Override
     public AssemblyProgram apply(AssemblyProgram program) {
         return run(program);
