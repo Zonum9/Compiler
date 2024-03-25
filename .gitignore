@@ -7,4 +7,3 @@ out
 lib/
 .vscode/
 /src/test/temp/
-/src/java/regalloc/NaiveRegAlloc.java

@@ -13,13 +13,17 @@ public class ControlFlowGraph {
         Set<Node> successors = new HashSet<>();
         AssemblyItem data;
 
+        public Node(AssemblyItem data) {
+            this.data = data;
+        }
+
         @Override
         public String toString() {
             return data.toString();
         }
     }
 
-    public final Node root = new Node();
+    private Node root;
 
 
     public ControlFlowGraph(AssemblyProgram.Section section) {
@@ -30,18 +34,17 @@ public class ControlFlowGraph {
     private void buildGraph(AssemblyProgram.Section section){
         List<AssemblyItem> items =new ArrayList<>(section.items.stream()
                 .filter(i->!(i instanceof Comment || i instanceof Directive)).toList());
+        root= new Node(items.removeFirst());
         Node previous = root;
-        root.data=items.removeFirst();
 
         Map<Label,List<Node>> branchesToConnect = new HashMap<>();
         Map<Label,Node> labelNodeMap= new HashMap<>();
 
         for (AssemblyItem item:items){
-            Node curr = new Node();
+            Node curr = new Node(item);
             if(item instanceof Label lb){
                 labelNodeMap.put(lb,curr);
             }
-            curr.data=item;
             if(previous!=null){
                 previous.successors.add(curr);
             }
@@ -76,13 +79,14 @@ public class ControlFlowGraph {
             previous= curr;
         }
 
-        branchesToConnect.forEach((label, nodes) -> {
-                    Node lblNode = labelNodeMap.get(label);
-                    for(Node n:nodes){
-                        n.successors.add(lblNode);
-                    }
-                }
-        );
+        for (Map.Entry<Label, List<Node>> entry : branchesToConnect.entrySet()) {
+            Label label = entry.getKey();
+            List<Node> nodes = entry.getValue();
+            Node lblNode = labelNodeMap.get(label);
+            for (Node n : nodes) {
+                n.successors.add(lblNode);
+            }
+        }
     }
 
     public final HashMap<Node,HashSet<Register>> liveIn = new HashMap<>();

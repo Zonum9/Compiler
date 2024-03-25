@@ -8,31 +8,34 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class InterferenceGraph {
-    List<ControlFlowGraph.Node> controlNodes;
 
-    HashMap<Register, HashSet<Register>> interference = new HashMap<>();
-    HashMap<Register, Integer> colorings = new HashMap<>();
+    private final HashMap<Register, HashSet<Register>> interference;
+    public final HashMap<Register, Integer> colorings;
 
     public InterferenceGraph(ControlFlowGraph g) {
-        this.controlNodes = new ArrayList<>(g.getNodesPostOrder());
+        interference = new HashMap<>();
+        colorings = new HashMap<>();
+        List<ControlFlowGraph.Node> controlNodes = new ArrayList<>(g.getNodesPostOrder());
 
-        for(ControlFlowGraph.Node n:controlNodes){
+        for(ControlFlowGraph.Node n: controlNodes){
             for (Register register:g.liveIn.get(n)) {
                 interference.computeIfAbsent(register,r->new HashSet<>()).addAll(g.liveIn.get(n));
+                interference.get(register).remove(register); //todo check if this is correct
             }
 
-            for (Register register:g.liveOut.get(n)) {
-                interference.computeIfAbsent(register,r->new HashSet<>()).addAll(g.liveOut.get(n));
-                interference.get(register).remove(register);
-            }
+//            for (Register register:g.liveOut.get(n)) {
+//                interference.computeIfAbsent(register,r->new HashSet<>()).addAll(g.liveOut.get(n));
+//                interference.get(register).remove(register);
+//            }
         }
         //18 registers, but 3 reserved for spilling
         int k = 18-3; //todo change this if you change spilling
         colorGraph(k);
     }
 
-    public final HashSet<Register> spilled = new HashSet<>();
+    public HashSet<Register> spilled;
     private void colorGraph(int k){
+        spilled = new HashSet<>();
         Stack<Register> stack = new Stack<>();
         HashSet<Register> removed = new HashSet<>();
 
@@ -90,7 +93,7 @@ public class InterferenceGraph {
                             }
                             )
                     .map(Map.Entry::getKey)
-                    .findAny();
+                    .findFirst();
             if(optReg.isEmpty()){
                 break;
             }
@@ -110,7 +113,9 @@ public class InterferenceGraph {
         visited=new HashMap<>();
         drawn = new HashSet<>();
         this.writer=writer;
-        interference.keySet().forEach(this::visit);
+        for (Register register : interference.keySet()) {
+            visit(register);
+        }
     }
 
     private String visit(Register r){

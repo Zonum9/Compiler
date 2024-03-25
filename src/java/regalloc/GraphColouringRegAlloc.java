@@ -12,8 +12,8 @@ public class GraphColouringRegAlloc implements AssemblyPass {
 
     public static final GraphColouringRegAlloc INSTANCE = new GraphColouringRegAlloc();
 
-    public List<ControlFlowGraph> flowGraphs = new ArrayList<>();
-    public List<InterferenceGraph> interferenceGraphs = new ArrayList<>();
+    private List<ControlFlowGraph> flowGraphs ;
+    private List<InterferenceGraph> interferenceGraphs ;
 
     private final static List<Register> opRegs= List.of(
             t3, t4, t5, t6, t7, t8, t9,
@@ -26,8 +26,8 @@ public class GraphColouringRegAlloc implements AssemblyPass {
 
     @Override
     public AssemblyProgram apply(AssemblyProgram program) {
-
-
+        flowGraphs= new ArrayList<>();
+        interferenceGraphs = new ArrayList<>();
         AssemblyProgram newProg = new AssemblyProgram();
 
         // we assume that each function has a single corresponding text section
@@ -52,17 +52,19 @@ public class GraphColouringRegAlloc implements AssemblyPass {
                     .filter(node-> node.data instanceof Instruction)
                     .map(node-> (Instruction)node.data)
                     .collect(Collectors.toSet());
-            Map<Register.Virtual,Label> vrMap=collectVirtualRegisters(section,coveredInstructions);
+            Map<Register,Label> vrMap= collectUsedRegisters(section,coveredInstructions,ig);
 
             // allocate one label for each spilled register in a new data section
             AssemblyProgram.Section dataSec = newProg.newSection(AssemblyProgram.Section.Type.DATA);
-            dataSec.emit("Allocated labels for spilled registers");
-            vrMap.forEach((vr, lbl) -> {
+            dataSec.emit("Allocated labels for used registers");
+            for (Map.Entry<Register, Label> e : vrMap.entrySet()) {
+                Label lbl = e.getValue();
                 dataSec.emit(lbl);
                 dataSec.emit(new Directive("space " + 4));
-            });
-
-            List<Map.Entry<Virtual, Label>> reversedRegLabelPairs = vrMap.entrySet().stream().toList().reversed();
+            }
+            List<Map.Entry<Register, Label>> labelPairs= vrMap.entrySet().stream().toList();
+            List<Map.Entry<Register, Label>> reversedRegLabelPairs = new ArrayList<>(labelPairs);
+            Collections.reverse(reversedRegLabelPairs);
 
             for(AssemblyItem item:section.items){
                 switch (item){
@@ -77,7 +79,9 @@ public class GraphColouringRegAlloc implements AssemblyPass {
                         if (insn == Instruction.Nullary.pushRegisters) {
                             newSection.emit("---PUSH REGISTERS START---");
 
-                            vrMap.forEach((register, label) -> {
+                            for (Map.Entry<Register, Label> entry : labelPairs) {
+                                Register register = entry.getKey();
+                                Label label = entry.getValue();
                                 newSection.emit(OpCode.ADDI, Arch.sp, Arch.sp, -4);
                                 if (ig.spilled.contains(register)) {
                                     newSection.emit(OpCode.LA, Arch.t0, label);
@@ -87,29 +91,30 @@ public class GraphColouringRegAlloc implements AssemblyPass {
                                     newSection.emit(OpCode.SW, Arch.t0, Arch.sp, 0);
                                 } else {
                                     // push register onto stack
-                                    newSection.emit(OpCode.SW, opRegs.get(ig.colorings.get(register)), Arch.sp, 0);
+                                    newSection.emit(OpCode.SW, register, Arch.sp, 0);
                                 }
-                            });
+                            }
                             newSection.emit("---PUSH REGISTERS END---");
 
                         } else if (insn == Instruction.Nullary.popRegisters) {
                             newSection.emit("---POP REGISTERS START---");
-                            for (Map.Entry<Virtual, Label> pair : reversedRegLabelPairs) {
+                            for (Map.Entry<Register, Label> pair : reversedRegLabelPairs) {
                                 Register reg = pair.getKey();
                                 Label label= pair.getValue();
                                 if(ig.spilled.contains(reg)) {
+                                    Register t0= spillRegs.getFirst();
+                                    Register t1= spillRegs.get(1);
                                     // pop from stack into $t0
-                                    newSection.emit(OpCode.LW, Register.Arch.t0, Register.Arch.sp, 0);
+                                    newSection.emit(OpCode.LW, t0, sp, 0);
 
                                     // store content of $t0 in memory at label
-                                    newSection.emit(OpCode.LA, Register.Arch.t1, label);
-                                    newSection.emit(OpCode.SW, Register.Arch.t0, Register.Arch.t1, 0);
+                                    newSection.emit(OpCode.LA, t1, label);
+                                    newSection.emit(OpCode.SW, t0, t1, 0);
                                 }else{
                                     // pop from stack into previous reg
-                                    newSection.emit(OpCode.LW, opRegs.get(ig.colorings.get(reg)), Register.Arch.sp, 0);
+                                    newSection.emit(OpCode.LW, reg, sp, 0);
                                 }
-
-                                newSection.emit(OpCode.ADDI, Register.Arch.sp, Register.Arch.sp, 4);
+                                newSection.emit(OpCode.ADDI, sp, sp, 4);
                             }
                             newSection.emit("---POP REGISTERS END---");
                         } else
@@ -117,13 +122,14 @@ public class GraphColouringRegAlloc implements AssemblyPass {
                     }
                 }
             }
-
         }
         return newProg;
     }
 
-    private Map<Virtual, Label> collectVirtualRegisters(AssemblyProgram.Section section, Set<Instruction> coveredInstructions) {
-        final Map<Register.Virtual, Label> vrMap = new HashMap<>();
+    private Map<Register, Label> collectUsedRegisters(AssemblyProgram.Section section,
+                                                      Set<Instruction> coveredInstructions,
+                                                      InterferenceGraph ig) {
+        final Map<Register, Label> vrMap = new HashMap<>();
         for (AssemblyItem item : section.items) {
             if (!(item instanceof Instruction insn)) {
                 continue;
@@ -133,8 +139,14 @@ public class GraphColouringRegAlloc implements AssemblyPass {
             }
             for (Register reg : insn.registers()) {
                 if (reg instanceof Virtual vr) {
-                    Label l = Label.create(vr.toString());
-                    vrMap.put(vr, l);
+                    if(ig.spilled.contains(vr)) {
+                        Label l = Label.create(vr.toString());
+                        vrMap.put(vr, l);
+                    }
+                    else {
+                        Register mappedReg = opRegs.get(ig.colorings.get(vr));
+                        vrMap.putIfAbsent(mappedReg,Label.create(mappedReg.toString()));
+                    }
                 }
             }
         }
@@ -142,7 +154,7 @@ public class GraphColouringRegAlloc implements AssemblyPass {
     }
 
     private void emitInstructionWithoutVirtualRegister(Instruction insn, AssemblyProgram.Section section,
-                                                       InterferenceGraph ig, Map<Virtual, Label> vrMap) {
+                                                       InterferenceGraph ig, Map<Register, Label> vrMap) {
         Map<Register,Register> vrToAr= new HashMap<>();
         Stack<Register> freeTempRegs = new Stack<>();
         freeTempRegs.addAll(spillRegs);
@@ -162,14 +174,14 @@ public class GraphColouringRegAlloc implements AssemblyPass {
             }
         }
 
-        insn.uses().forEach(reg -> {
+        for (Register reg : insn.uses()) {
             if (ig.spilled.contains(reg)) {
                 Register tmp = vrToAr.get(reg);
                 Label label = vrMap.get(reg);
                 section.emit(OpCode.LA, tmp, label);
                 section.emit(OpCode.LW, tmp, tmp, 0);
             }
-        });
+        }
         section.emit(insn.rebuild(vrToAr));
 
         if (insn.def() != null) {

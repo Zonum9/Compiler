@@ -1,15 +1,17 @@
 import gen.asm.AssemblyProgram;
 import lexer.Tokeniser;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
-public class Part3Tests {
+public class Part3and4Tests {
 
     @Test
     void printing1(){
@@ -503,12 +505,12 @@ public class Part3Tests {
 
     @Test void whileLoops(){
 
-        assertCorrectOutput("""
-                void main(){
-                    while (1){
-                    }
-                }
-                """);
+//        assertCorrectOutput("""
+//                void main(){
+//                    while (1){
+//                    }
+//                }
+//                """);
 
         assertCorrectOutput("""
                 void main(){
@@ -1564,7 +1566,7 @@ public class Part3Tests {
                     }
                     return n*factorial(n-1);
                 }
-                
+                                
                 void main(){
                     print_i(factorial(6));
                 }
@@ -2172,6 +2174,153 @@ public class Part3Tests {
 
     }
 
+/*
+****************************************************
+*               PART 4 tests                       *
+****************************************************
+* */
+    @BeforeAll
+    static void setMode(){
+        mode = Utils.RegMode.COLOR;
+        print=true;
+    }
+
+    @Test void t(){
+        factorial();
+//        factorial();
+//        factorial();
+//        factorial();
+//        factorial();
+//        factorial();
+//        factorial();
+//        factorial();
+//        factorial();
+    }
+
+    @Test void earlyJump(){
+        assertCorrectOutput("""
+                void main(){
+                    int i;
+                    i=0;
+                    while(i<10){
+                        print_i(i);
+                        i=i+1;
+                        continue;
+                        print_s((char*)"this should not print");
+                    }
+                    i=999;
+                    print_s((char*)"done");
+                }
+                """);
+    }
+
+    @Test void deadInstruction(){
+        assertCorrectOutput("""
+                struct s{
+                    int x;
+                };
+                void main(){
+                    struct s s;                    
+                    int x;
+                    int y;
+                    int z;
+                    s.x=99;
+                    x=888;
+                    y=999;
+                    print_i(z);
+                }                
+                """);
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    int y;
+                    int z;
+                    x=888;
+                    y=999;
+                    print_i(z);
+                }
+                """);
+    }
+
+
+    @Test void varSoup(){
+        assertCorrectOutput("""
+                void main(){
+                    int x0;int x1;int x2;int x3;int x4;int x5;int x6;int x7;int x8;
+                    int x9;int xA;int xB;int xC;int xD;int xE;int xF;
+                    x0=x1=x2=x3=x4=x5=x6=x7=x8=x9=xA=xB=xC=xD=xE=xF=999;                
+                    print_i(x0+x1+x2+x3+x4+x5+x6+x7+x8+x9+xA+xB+xC+xD+xE+xF);
+                }
+                """);
+    }
+
+    @Test void pascal() {
+        compareToCompiled("""                
+                int pascalValue(int row, int col) {
+                    if (col != 0 && col != row) {
+                        return pascalValue(row-1, col-1) + pascalValue(row-1, col);
+                    }
+                    return 1;
+                }
+                                
+                void printPascalsTriangle(int numRows) {
+                    int i;
+                    while (numRows != 0) { 
+                        i = 0;
+                        while (i < numRows) {
+                            print_i(pascalValue(numRows - 1, i));
+                            i=i+1;
+                        }
+                        print_c('\\n');
+                        numRows=numRows-1;
+                    }
+                }
+                                
+                void main() {
+                    int rows;
+                    rows = read_i();
+                    printPascalsTriangle(rows);
+                }
+                                
+                """, "15\n");
+    }
+
+    @Test void differentPascal(){
+        assertCorrectOutput("""      
+                
+                void printPascalsTriangle() {
+                    int numRows;
+                    int triangle[30][30];
+                    int rowNum;
+                    numRows=30;
+                    rowNum = 0;
+                    while (rowNum < numRows) {
+                        int j;
+                        j= 1;
+                        triangle[rowNum][0] = 1;
+                        print_i(triangle[rowNum][0]);
+                                                
+                        while (j < rowNum) {
+                            triangle[rowNum][j] = triangle[rowNum - 1][j - 1] + triangle[rowNum - 1][j];
+                            print_i(triangle[rowNum][j]);
+                            j=j+1;
+                        }
+                        triangle[rowNum][rowNum] = 1;
+                        print_c('\\n');
+                        print_i(triangle[rowNum][rowNum]);
+                        rowNum=rowNum+1;
+                    }
+                }
+                                            
+                void main() {
+                    printPascalsTriangle();
+                }                            
+                            
+            """);
+
+    }
+
+
     public static Utils.RegMode mode= Utils.RegMode.NAIVE;
     public static boolean print = false;
 
@@ -2281,71 +2430,6 @@ public class Part3Tests {
         }
     }
 
-    @Test void pascal() {
-        compareToCompiled("""                
-                int pascalValue(int row, int col) {
-                    if (col != 0 && col != row) {
-                        return pascalValue(row-1, col-1) + pascalValue(row-1, col);
-                    }
-                    return 1;
-                }
-                                
-                void printPascalsTriangle(int numRows) {
-                    int i;
-                    while (numRows != 0) { 
-                        i = 0;
-                        while (i < numRows) {
-                            print_i(pascalValue(numRows - 1, i));
-                            i=i+1;
-                        }
-                        print_c('\\n');
-                        numRows=numRows-1;
-                    }
-                }
-                                
-                void main() {
-                    int rows;
-                    rows = read_i();
-                    printPascalsTriangle(rows);
-                }
-                                
-                """, "15\n");
-    }
-
-    @Test void differentPascal(){
-        assertCorrectOutput("""      
-                
-                void printPascalsTriangle() {
-                    int numRows;
-                    int triangle[30][30];
-                    int rowNum;
-                    numRows=30;
-                    rowNum = 0;
-                    while (rowNum < numRows) {
-                        int j;
-                        j= 1;
-                        triangle[rowNum][0] = 1;
-                        print_i(triangle[rowNum][0]);
-                                                
-                        while (j < rowNum) {
-                            triangle[rowNum][j] = triangle[rowNum - 1][j - 1] + triangle[rowNum - 1][j];
-                            print_i(triangle[rowNum][j]);
-                            j=j+1;
-                        }
-                        triangle[rowNum][rowNum] = 1;
-                        print_c('\\n');
-                        print_i(triangle[rowNum][rowNum]);
-                        rowNum=rowNum+1;
-                    }
-                }
-                                            
-                void main() {
-                    printPascalsTriangle();
-                }                            
-                            
-            """);
-
-    }
 
     void assertCorrectOutput(String program,String expectedOutput){
         assertCorrectOutput(program,expectedOutput,0,"");

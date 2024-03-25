@@ -100,7 +100,7 @@ public class ExprCodeGen extends CodeGen {
 
                     if(param.type instanceof StructType st){
                         Register previousStack= Register.Virtual.create();
-                        currSection.emit(ADDIU,previousStack,sp,decl.params.get(i).space-4);
+                        currSection.emit(ADDIU,previousStack,sp,decl.params.get(i).space);
                         MemAllocCodeGen.copyStruct(previousStack,st,paramReg,currSection);
                     }else {
                         currSection.emit(ProgramCodeGen.storeByteOrWord(param), paramReg, sp, 0);//push argument onto stack
