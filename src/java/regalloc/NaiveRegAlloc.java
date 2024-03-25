@@ -14,7 +14,7 @@ public final class NaiveRegAlloc implements AssemblyPass {
 
     private NaiveRegAlloc() { }
 
-    public static Map<Register.Virtual, Label>  collectVirtualRegisters(AssemblyProgram.Section section) {
+    private static Map<Register.Virtual, Label>  collectVirtualRegisters(AssemblyProgram.Section section) {
         final Map<Register.Virtual, Label> vrMap = new HashMap<>();
 
         section.items.forEach((item) -> {

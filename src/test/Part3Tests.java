@@ -720,19 +720,19 @@ public class Part3Tests {
     @Test
     void fibonacci(){
         fileCompareToCompiled("textFiles/fibonacci.c",
-                "20");
+                "20\n");
     }
 
-//    @Test
-//    void tictactoe(){ //test can't pass, but it's done it's job
-//        StringBuilder input = new StringBuilder();
-//        for(char c:"a1a2b1b2c1n".toCharArray()){
-//            input.append(c);
-//            input.append("\n");
-//        }
-//        fileCompareToCompiled("textFiles/tictactoe.c",
-//                input.toString());
-//    }
+    @Test
+    void tictactoe(){ //test can't pass, but it's done it's job
+        StringBuilder input = new StringBuilder();
+        for(char c:"a1a2b1b2c1n".toCharArray()){
+            input.append(c);
+            input.append("\r");
+        }
+        fileCompareToCompiled("textFiles/tictactoe.c",
+                input.toString());
+    }
 
     @Test
     void linkedLIst(){
@@ -2193,7 +2193,7 @@ public class Part3Tests {
             }
             String out = new String(process.getInputStream().readAllBytes());
             assertEquals(expectedExitCode,finished?0:-1);
-            assertEquals(expectedOutput,out);
+            assertEquals(expectedOutput.replaceAll("\r\n", "\n"),out.replaceAll("\r\n", "\n"));
 
 
         } catch (Exception e) {
@@ -2266,7 +2266,7 @@ public class Part3Tests {
                     "src/test/temp/out.exe")
                     .redirectError(ProcessBuilder.Redirect.INHERIT)
                     .start();
-            run.outputWriter().write(input+"\n");
+            run.outputWriter().write(input.replaceAll("\r",""));
             run.outputWriter().flush();
             boolean finished=run.waitFor(8,TimeUnit.SECONDS);
             if(!finished){
@@ -2279,6 +2279,72 @@ public class Part3Tests {
         } catch (Exception e) {
             fail(e);
         }
+    }
+
+    @Test void pascal() {
+        compareToCompiled("""                
+                int pascalValue(int row, int col) {
+                    if (col != 0 && col != row) {
+                        return pascalValue(row-1, col-1) + pascalValue(row-1, col);
+                    }
+                    return 1;
+                }
+                                
+                void printPascalsTriangle(int numRows) {
+                    int i;
+                    while (numRows != 0) { 
+                        i = 0;
+                        while (i < numRows) {
+                            print_i(pascalValue(numRows - 1, i));
+                            i=i+1;
+                        }
+                        print_c('\\n');
+                        numRows=numRows-1;
+                    }
+                }
+                                
+                void main() {
+                    int rows;
+                    rows = read_i();
+                    printPascalsTriangle(rows);
+                }
+                                
+                """, "15\n");
+    }
+
+    @Test void differentPascal(){
+        assertCorrectOutput("""      
+                
+                void printPascalsTriangle() {
+                    int numRows;
+                    int triangle[30][30];
+                    int rowNum;
+                    numRows=30;
+                    rowNum = 0;
+                    while (rowNum < numRows) {
+                        int j;
+                        j= 1;
+                        triangle[rowNum][0] = 1;
+                        print_i(triangle[rowNum][0]);
+                                                
+                        while (j < rowNum) {
+                            triangle[rowNum][j] = triangle[rowNum - 1][j - 1] + triangle[rowNum - 1][j];
+                            print_i(triangle[rowNum][j]);
+                            j=j+1;
+                        }
+                        triangle[rowNum][rowNum] = 1;
+                        print_c('\\n');
+                        print_i(triangle[rowNum][rowNum]);
+                        rowNum=rowNum+1;
+                    }
+                }
+                                            
+                void main() {
+                    printPascalsTriangle();
+                }                            
+                            
+            """);
+
     }
 
     void assertCorrectOutput(String program,String expectedOutput){

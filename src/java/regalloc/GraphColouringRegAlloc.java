@@ -4,6 +4,7 @@ import gen.asm.*;
 
 import java.io.PrintWriter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static gen.asm.Register.Arch.*;
 
@@ -46,7 +47,12 @@ public class GraphColouringRegAlloc implements AssemblyPass {
             InterferenceGraph ig= new InterferenceGraph(g);
             interferenceGraphs.add(ig);
 
-            Map<Register.Virtual,Label> vrMap=NaiveRegAlloc.collectVirtualRegisters(section);
+
+            Set<Instruction> coveredInstructions = g.getNodesPostOrder().stream()
+                    .filter(node-> node.data instanceof Instruction)
+                    .map(node-> (Instruction)node.data)
+                    .collect(Collectors.toSet());
+            Map<Register.Virtual,Label> vrMap=collectVirtualRegisters(section,coveredInstructions);
 
             // allocate one label for each spilled register in a new data section
             AssemblyProgram.Section dataSec = newProg.newSection(AssemblyProgram.Section.Type.DATA);
@@ -65,9 +71,7 @@ public class GraphColouringRegAlloc implements AssemblyPass {
                     case Directive x->newSection.emit(x);
 
                     case Instruction insn->{
-                        if(g.getNodesPostOrder().stream()
-                                .filter(node-> node.data ==insn).findAny().isEmpty()){
-                            //instruction is never even reached in the flow graph, we can ignore this instruction
+                        if(!coveredInstructions.contains(insn)){
                             continue;
                         }
                         if (insn == Instruction.Nullary.pushRegisters) {
@@ -116,6 +120,25 @@ public class GraphColouringRegAlloc implements AssemblyPass {
 
         }
         return newProg;
+    }
+
+    private Map<Virtual, Label> collectVirtualRegisters(AssemblyProgram.Section section, Set<Instruction> coveredInstructions) {
+        final Map<Register.Virtual, Label> vrMap = new HashMap<>();
+        for (AssemblyItem item : section.items) {
+            if (!(item instanceof Instruction insn)) {
+                continue;
+            }
+            if (!coveredInstructions.contains(insn)) {
+                continue;
+            }
+            for (Register reg : insn.registers()) {
+                if (reg instanceof Virtual vr) {
+                    Label l = Label.create(vr.toString());
+                    vrMap.put(vr, l);
+                }
+            }
+        }
+        return vrMap;
     }
 
     private void emitInstructionWithoutVirtualRegister(Instruction insn, AssemblyProgram.Section section,

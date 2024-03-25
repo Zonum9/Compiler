@@ -10,9 +10,8 @@ public class Part4Tests extends Part3Tests{
 
     @Test
     void test(){
-//        factorial();
-        recursiveFunWithLocalVar();
-
+//        tictactoe();
+        pascal();
     }
 
 
@@ -119,4 +118,7 @@ public class Part4Tests extends Part3Tests{
                 }
                 """);
     }
+
+
+
 }
