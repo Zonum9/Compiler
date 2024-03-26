@@ -46,7 +46,9 @@ public class FunCodeGen extends CodeGen {
             currSect.emit("------Var decl for "+vd.name);
             currSect.emit(OpCode.ADDIU,sp,sp, -vd.space);
         }
-        currSect.emit(OpCode.PUSH_REGISTERS);
+        if(!fd.name.equals("main")){
+            currSect.emit(OpCode.PUSH_REGISTERS);
+        }
 
         // 2) emit the body of the function
         StmtCodeGen scd = new StmtCodeGen(asmProg);

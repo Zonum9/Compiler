@@ -23,10 +23,10 @@ public class InterferenceGraph {
                 interference.get(register).remove(register); //todo check if this is correct
             }
 
-//            for (Register register:g.liveOut.get(n)) {
-//                interference.computeIfAbsent(register,r->new HashSet<>()).addAll(g.liveOut.get(n));
-//                interference.get(register).remove(register);
-//            }
+            for (Register register:g.liveOut.get(n)) {
+                interference.computeIfAbsent(register,r->new HashSet<>()).addAll(g.liveOut.get(n));
+                interference.get(register).remove(register);
+            }
         }
         //18 registers, but 3 reserved for spilling
         int k = 18-3; //todo change this if you change spilling

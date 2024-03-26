@@ -71,7 +71,7 @@ void visit(ASTNode n) {
                     }
                     //structs are written in memory top to bottom
                     if(decl.type instanceof StructType) {
-                        decl.fpOffset = fpOffset+space;
+                        decl.fpOffset = fpOffset+space-4;
                     }
                     else {
                         decl.fpOffset = fpOffset;

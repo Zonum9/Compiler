@@ -726,7 +726,7 @@ public class Part3and4Tests {
     }
 
     @Test
-    void tictactoe(){ //test can't pass, but it's done it's job
+    void tictactoe(){
         StringBuilder input = new StringBuilder();
         for(char c:"a1a2b1b2c1n".toCharArray()){
             input.append(c);
@@ -1808,109 +1808,109 @@ public class Part3and4Tests {
     }
 
     @Test void nestedStruct(){
-//        assertCorrectOutput("""
-//                struct A{
-//                    int x;
-//                    int y;
-//                };
-//                struct B{
-//                    int x;
-//                    int y;
-//                    struct A inner;
-//                };
-//
-//                void main(){
-//                    struct B s;
-//                    struct A s2;
-//                    s.x=1;
-//                    s.y=2;
-//                    s.inner.x=3;
-//                    s.inner.y=4;
-//                    s2.x=5;
-//                    s2.y=6;
-//
-//                    print_i(s.x);
-//                    print_i(s.y);
-//                    print_i(s.inner.x);
-//                    print_i(s.inner.y);
-//
-//                    s.inner=s2;
-//
-//                    print_i(s.inner.x);
-//                    print_i(s.inner.y);
-//
-//                }
-//
-//                """);
-//
-//        assertCorrectOutput("""
-//                struct A{
-//                    int x;
-//                    int y;
-//                };
-//                struct B{
-//                    int x;
-//                    int y;
-//                    struct A inner;
-//                };
-//                struct B s;
-//                struct A s2;
-//
-//                void main(){
-//                    s.x=1;
-//                    s.y=2;
-//                    s.inner.x=3;
-//                    s.inner.y=4;
-//                    s2.x=5;
-//                    s2.y=6;
-//
-//                    print_i(s.x);
-//                    print_i(s.y);
-//                    print_i(s.inner.x);
-//                    print_i(s.inner.y);
-//
-//                    s.inner=s2;
-//
-//                    print_i(s.inner.x);
-//                    print_i(s.inner.y);
-//
-//                }
-//
-//                """);
-//        assertCorrectOutput("""
-//                struct A{
-//                    int x;
-//                    int y;
-//                };
-//                struct B{
-//                    int x;
-//                    int y;
-//                    struct A inner;
-//                };
-//                struct B s;
-//
-//                void main(){
-//                    struct A s2;
-//                    s.x=1;
-//                    s.y=2;
-//                    s.inner.x=3;
-//                    s.inner.y=4;
-//                    s2.x=5;
-//                    s2.y=6;
-//
-//                    print_i(s.x);
-//                    print_i(s.y);
-//                    print_i(s.inner.x);
-//                    print_i(s.inner.y);
-//
-//                    s.inner=s2;
-//
-//                    print_i(s.inner.x);
-//                    print_i(s.inner.y);
-//
-//                }
-//
-//                """);
+        assertCorrectOutput("""
+                struct A{
+                    int x;
+                    int y;
+                };
+                struct B{
+                    int x;
+                    int y;
+                    struct A inner;
+                };
+
+                void main(){
+                    struct B s;
+                    struct A s2;
+                    s.x=1;
+                    s.y=2;
+                    s.inner.x=3;
+                    s.inner.y=4;
+                    s2.x=5;
+                    s2.y=6;
+
+                    print_i(s.x);
+                    print_i(s.y);
+                    print_i(s.inner.x);
+                    print_i(s.inner.y);
+
+                    s.inner=s2;
+
+                    print_i(s.inner.x);
+                    print_i(s.inner.y);
+
+                }
+
+                """);
+
+        assertCorrectOutput("""
+                struct A{
+                    int x;
+                    int y;
+                };
+                struct B{
+                    int x;
+                    int y;
+                    struct A inner;
+                };
+                struct B s;
+                struct A s2;
+
+                void main(){
+                    s.x=1;
+                    s.y=2;
+                    s.inner.x=3;
+                    s.inner.y=4;
+                    s2.x=5;
+                    s2.y=6;
+
+                    print_i(s.x);
+                    print_i(s.y);
+                    print_i(s.inner.x);
+                    print_i(s.inner.y);
+
+                    s.inner=s2;
+
+                    print_i(s.inner.x);
+                    print_i(s.inner.y);
+
+                }
+
+                """);
+        assertCorrectOutput("""
+                struct A{
+                    int x;
+                    int y;
+                };
+                struct B{
+                    int x;
+                    int y;
+                    struct A inner;
+                };
+                struct B s;
+
+                void main(){
+                    struct A s2;
+                    s.x=1;
+                    s.y=2;
+                    s.inner.x=3;
+                    s.inner.y=4;
+                    s2.x=5;
+                    s2.y=6;
+
+                    print_i(s.x);
+                    print_i(s.y);
+                    print_i(s.inner.x);
+                    print_i(s.inner.y);
+
+                    s.inner=s2;
+
+                    print_i(s.inner.x);
+                    print_i(s.inner.y);
+
+                }
+
+                """);
 
         assertCorrectOutput("""
                 struct A{
@@ -2182,19 +2182,19 @@ public class Part3and4Tests {
     @BeforeAll
     static void setMode(){
         mode = Utils.RegMode.COLOR;
-        print=true;
+//        print=true;
     }
 
     @Test void t(){
         factorial();
-//        factorial();
-//        factorial();
-//        factorial();
-//        factorial();
-//        factorial();
-//        factorial();
-//        factorial();
-//        factorial();
+        factorial();
+        factorial();
+        factorial();
+        factorial();
+        factorial();
+        factorial();
+        factorial();
+        factorial();
     }
 
     @Test void earlyJump(){
