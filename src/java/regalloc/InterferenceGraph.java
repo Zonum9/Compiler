@@ -12,7 +12,7 @@ public class InterferenceGraph {
     private final HashMap<Register, HashSet<Register>> interference;
     public final HashMap<Register, Integer> colorings;
 
-    public InterferenceGraph(ControlFlowGraph g) {
+    public InterferenceGraph(ControlFlowGraph g,int k) {
         interference = new HashMap<>();
         colorings = new HashMap<>();
         List<ControlFlowGraph.Node> controlNodes = new ArrayList<>(g.getNodesPostOrder());
@@ -28,8 +28,7 @@ public class InterferenceGraph {
                 interference.get(register).remove(register);
             }
         }
-        //18 registers, but 3 reserved for spilling
-        int k = 18-3; //todo change this if you change spilling
+        //k registers available
         colorGraph(k);
     }
 
@@ -93,7 +92,7 @@ public class InterferenceGraph {
                             }
                             )
                     .map(Map.Entry::getKey)
-                    .findFirst();
+                    .findAny();
             if(optReg.isEmpty()){
                 break;
             }

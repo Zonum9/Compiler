@@ -1,5 +1,7 @@
 package gen;
 
+import ast.ASTNode;
+import ast.Block;
 import ast.FunDecl;
 import ast.VarDecl;
 import gen.asm.*;
@@ -42,10 +44,9 @@ public class FunCodeGen extends CodeGen {
         currSect.emit(OpCode.SW, ra, sp, 0); //push return address on stack
 
         //allocate space on stack for local variables
-        for (VarDecl vd:fd.block.vds){
-            currSect.emit("------Var decl for "+vd.name);
-            currSect.emit(OpCode.ADDIU,sp,sp, -vd.space);
-        }
+        allocateLocalVarStackSpace(fd.block,currSect);
+
+
         if(!fd.name.equals("main")){
             currSect.emit(OpCode.PUSH_REGISTERS);
         }
@@ -61,6 +62,18 @@ public class FunCodeGen extends CodeGen {
         }
         else{
             emitFunctionExit(currSect);
+        }
+    }
+
+    private void allocateLocalVarStackSpace(ASTNode node, AssemblyProgram.Section currSect) {
+        for (ASTNode child:node.children()){
+            if (child instanceof  VarDecl vd){
+                currSect.emit("------Var decl for "+vd.name);
+                currSect.emit(OpCode.ADDIU,sp,sp, -vd.space);
+            }
+            else {
+                allocateLocalVarStackSpace(child,currSect);
+            }
         }
     }
 

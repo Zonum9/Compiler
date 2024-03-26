@@ -15,17 +15,22 @@ public class GraphColouringRegAlloc implements AssemblyPass {
     private List<ControlFlowGraph> flowGraphs ;
     private List<InterferenceGraph> interferenceGraphs ;
 
-    private final static List<Register> opRegs= List.of(
+    private final static List<Register> allAvailableRegs= List.of(
+            t0, t1, t2,
             t3, t4, t5, t6, t7, t8, t9,
             s0, s1, s2, s3, s4, s5, s6, s7);
+    private static List<Register> opRegs;
 
 
-    private final static List<Register> spillRegs= List.of(
-            t0, t1, t2
-    );
+    private static List<Register> spillRegs;
 
     @Override
     public AssemblyProgram apply(AssemblyProgram program) {
+        spillRegs = allAvailableRegs.subList(0,3);
+        opRegs = allAvailableRegs.subList(3,18); //todo change 18 to smaller values to stress spilling
+
+
+
         flowGraphs= new ArrayList<>();
         interferenceGraphs = new ArrayList<>();
         AssemblyProgram newProg = new AssemblyProgram();
@@ -44,7 +49,7 @@ public class GraphColouringRegAlloc implements AssemblyPass {
 
             ControlFlowGraph g = new ControlFlowGraph(section);
             flowGraphs.add(g);
-            InterferenceGraph ig= new InterferenceGraph(g);
+            InterferenceGraph ig= new InterferenceGraph(g,opRegs.size());
             interferenceGraphs.add(ig);
 
 
@@ -187,7 +192,7 @@ public class GraphColouringRegAlloc implements AssemblyPass {
         if (insn.def() != null) {
             if (ig.spilled.contains(insn.def())) {
                 Register tmpVal = vrToAr.get(insn.def());
-                Register tmpAddr = freeTempRegs.removeFirst();
+                Register tmpAddr = spillRegs.stream().filter(x->x!=tmpVal).findFirst().get();
                 Label label = vrMap.get(insn.def());
 
                 section.emit(OpCode.LA, tmpAddr, label);

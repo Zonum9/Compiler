@@ -7,7 +7,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -2042,6 +2041,44 @@ public class Part3and4Tests {
 
     }
 
+    @Test void newVarDeclInsideInnerBlock(){
+        assertCorrectOutput("""
+                void fun(){
+                    int i;
+                    i=99;
+                }
+                void main(){
+                    int i;
+                    char start;                    
+                    int x[10];
+                    char end;
+                    start = 'S';
+                    end = 'E'; 
+                                       
+                    {
+                        int i;
+                        i=0;
+                        fun();
+                        while(i<10){
+                            x[i]=i+(int)'a';
+                            i=i+1;
+                        }
+                        
+                    }
+                    i=10;
+                    while(0<i){
+                        print_i(x[i-1]);
+                        i=i-1;
+                    }
+                    
+                    
+                    
+                    print_c(start);
+                    print_c(end);
+                }
+                """);
+    }
+
     @Test void returnStruct(){
 
         assertCorrectOutput("""
@@ -2287,10 +2324,10 @@ public class Part3and4Tests {
 
     @Test void differentPascal(){
         assertCorrectOutput("""      
-                
+                int triangle[30][30];
                 void printPascalsTriangle() {
                     int numRows;
-                    int triangle[30][30];
+                    
                     int rowNum;
                     numRows=30;
                     rowNum = 0;
@@ -2317,8 +2354,154 @@ public class Part3and4Tests {
                 }                            
                             
             """);
-
     }
+    @Test void yetAnotherPascal(){
+        compareToCompiled("""
+                int factorial(int n) {
+                    if (n <= 1)
+                        return 1;
+                    else
+                        return n * factorial(n - 1);
+                }
+                                                
+                int combination(int n, int r) {
+                    return factorial(n) / (factorial(r) * factorial(n - r));
+                }
+                                
+                void printPascalTriangle(int rows) {
+                    int i;
+                    i=0;
+                    while ( i < rows){
+                        int j;
+                        j=0;
+                        while(j < rows - i - 1) {
+                            print_c(' ');
+                            j=j+1;
+                        }
+                        
+                        j=0;
+                        while( j <= i) {
+                            print_i(combination(i, j));
+                            print_c(' ');
+                            j=j+1;
+                        }
+                        i = i +1;
+                        print_c('\\n');
+                    }
+                }
+                                
+                void main() {
+                    int rows;char c; int test;
+                    c='#';
+                    test= 123456789;
+                    rows= read_i();
+                    printPascalTriangle(rows);
+                    print_i(rows);
+                    print_i(test);
+                    print_c(c);
+                }
+                                
+                ""","15\n");
+    }
+
+    @Test void pascalElectricBoogaloo(){
+        compareToCompiled("""                
+                int** generatePascalsTriangle(int numRows) {
+                    int **triangle;
+                    int i;
+                    
+                    triangle= (int**)mcmalloc(numRows * sizeof(int*));                    
+                    i=0;
+                    while( i < numRows) {
+                        triangle[i] = (int*)mcmalloc((i + 1) * sizeof(int));
+                        i=i+1;
+                    }
+                    i=0;
+                    while( i < numRows) {
+                        int j;
+                        j=0;
+                        while( j <= i) {
+                            if (j == 0 || j == i) {
+                                triangle[i][j] = 1; // Values at edges are 1
+                            } else {
+                                triangle[i][j] = triangle[i - 1][j - 1] + triangle[i - 1][j]; // Calculate based on values above
+                            }
+                            j=j+1;
+                        }
+                        i=i+1;
+                    }                                
+                    return triangle;
+                }
+                
+                void printPascalsTriangle(int** triangle, int numRows) {
+                    int i;
+                    i=1;
+                    while( i < numRows) {
+                        // Print leading spaces for formatting
+                        int space;
+                        int j;
+                        space =0;
+                        while( space < numRows - i - 1) {
+                            print_c(' ');
+                            space=space+1;
+                        }
+                        
+                        j = 0;
+                        while(j <= i) {
+                            print_i(triangle[i][j]);
+                            j=j+1;
+                        }
+                        print_c('\\n');
+                        i=i+1;
+                    }
+                }
+                                
+                void main() {
+                    int numRows;
+                    int **pascalsTriangle;
+                    numRows=read_i();                    
+                    pascalsTriangle= generatePascalsTriangle(numRows);
+                    printPascalsTriangle(pascalsTriangle, numRows);
+                }
+                                
+                ""","30\n");
+    }
+
+
+
+
+    @Test void localVars(){
+        assertCorrectOutput("""           
+                
+                struct s{
+                    int x1;int x2;int x3;int x4;
+                    char c1;char c2;char c3;char c4;
+                };
+                
+                void print_st(struct s S){
+                   print_c(S.c1);print_c(S.c2);print_c(S.c3);print_c(S.c4);
+                   print_i(S.x1);print_i(S.x2);print_i(S.x3);print_i(S.x4);
+                }
+                
+                void main(){
+                    char c1;char c2;char c3;char c4;
+                    struct s S;struct s S2;
+                    int x1;int x2;int x3;int x4;
+                    c1=c2=c3=c4='X';
+                    x1=x2=x3=x4=(int)c1;
+                    S.c1=S.c2=S.c3=S.c4='F';
+                    S.x1=S.x2=S.x3=S.x4=(int)'G';     
+                    print_st(S);            
+                    S2=S;       
+                    print_st(S2);  
+                    print_st(S);           
+                }
+                
+                
+                
+                """);
+    }
+
 
 
     public static Utils.RegMode mode= Utils.RegMode.NAIVE;
