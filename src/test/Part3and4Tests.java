@@ -2295,14 +2295,18 @@ public class Part3and4Tests {
         compareToCompiled("""                
                 int pascalValue(int row, int col) {
                     if (col != 0 && col != row) {
-                        return pascalValue(row-1, col-1) + pascalValue(row-1, col);
+                        int left;
+                        int right;
+                        left = pascalValue(row-1, col-1);
+                        right = pascalValue(row-1, col);
+                        return left + right ;
                     }
                     return 1;
                 }
                                 
                 void printPascalsTriangle(int numRows) {
-                    int i;
-                    while (numRows != 0) { 
+                    while (numRows != 0) {
+                        int i;
                         i = 0;
                         while (i < numRows) {
                             print_i(pascalValue(numRows - 1, i));
@@ -2351,8 +2355,7 @@ public class Part3and4Tests {
                                             
                 void main() {
                     printPascalsTriangle();
-                }                            
-                            
+                }
             """);
     }
     @Test void yetAnotherPascal(){
@@ -2403,6 +2406,8 @@ public class Part3and4Tests {
                                 
                 ""","15\n");
     }
+
+
 
     @Test void pascalElectricBoogaloo(){
         compareToCompiled("""                
@@ -2500,6 +2505,44 @@ public class Part3and4Tests {
                 
                 
                 """);
+    }
+    @Test
+    void globls() {
+        StringBuilder s = new StringBuilder();
+        for (int i = 0; i < 10; i++) {
+            s.append(String.format("int x%d;\n",i));
+        }
+        for (int i = 0; i < 5; i++) {
+            s.append(String.format("""
+                    void fun%d (){
+                        x%d = %d;
+                    }
+                    """,i,i,i));
+        }
+        for (int i = 5; i < 10; i++) {
+            s.append(String.format("""
+                    void fun%d ();
+                    """,i));
+        }
+        s.append("void main(){\n");
+        for (int i = 0; i < 10; i++) {
+            s.append(String.format("fun%d();\n",i));
+        }
+
+        for (int i = 0; i < 10; i++) {
+            s.append(String.format("print_i(x%d);\n",i));
+        }
+        s.append("}\n");
+
+        for (int i = 5; i < 10; i++) {
+            s.append(String.format("""
+                        void fun%d (){
+                            x%d = %d;
+                        }
+                    """,i,i,i));
+        }
+        assertCorrectOutput(s.toString());
+
     }
 
 

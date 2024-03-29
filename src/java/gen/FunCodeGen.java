@@ -26,12 +26,14 @@ public class FunCodeGen extends CodeGen {
         // This is necessary for the register allocator.
         asmProg.newSection(AssemblyProgram.Section.Type.TEXT);
         AssemblyProgram.Section currSect= asmProg.getCurrentSection();
-        currSect.emit(new Directive("globl "+fd.name));
+        Label funLbl = Label.get(fd.name);
+        currSect.emit(new Directive("globl "+funLbl));
         if(fd.name.equals("main")){
-            currSect.emit(new Directive("globl _start"));
-            currSect.emit(Label.get("_start"));
+            Label startLbl= Label.get("_start");
+            currSect.emit(new Directive("globl "+startLbl));
+            currSect.emit(startLbl);
         }
-        currSect.emit(Label.get(fd.name));
+        currSect.emit(funLbl);
 
 
         // 1) emit the prolog
