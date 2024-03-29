@@ -47,8 +47,12 @@ public class AddrCodeGen extends CodeGen {
                 currSect.emit(MULT,temp,desiredIndex); //typesize*desiredIndex
                 currSect.emit(MFLO,desiredIndex);
 
+                if(arrayAccessExpr.type instanceof StructType){
+                    currSect.emit(ADDIU,desiredIndex,desiredIndex,typeSize-4);
+                }
+
                 //get the desired final address
-                currSect.emit(ADD,baseAddress,baseAddress,desiredIndex);
+                currSect.emit(ADDU,baseAddress,baseAddress,desiredIndex);
                 yield baseAddress;
             }
 

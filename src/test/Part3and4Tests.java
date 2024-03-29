@@ -2576,6 +2576,67 @@ public class Part3and4Tests {
         }
     }
 
+    @Test
+    void structArrayAgain() {
+        assertCorrectOutput("""
+                struct A{
+                    int x;
+                    int y;
+                };
+                struct S {
+                    int x;
+                    struct A a;                   
+                    int y;
+                };
+                
+                void fun(struct S x[10]) {
+                    int i;
+                    i=0;
+                    while (i < 10){
+                        print_i(x[i].a.x);
+                        print_i(x[i].a.y);
+                        print_i(x[i].x);
+                        print_i(x[i].y);
+                        i=i+1;
+                    }
+                }
+                                
+                void main() {
+                    struct S x;
+                    struct S y;
+                    struct S arr[10];
+                    int A;
+                    A=(int)'A';
+                    x.a.x = A;
+                    x.a.y = A+1;
+                    x.x = A+2;
+                    x.y = A+3;
+                    
+                    y.a.x = A+4;
+                    y.a.y = A+5;
+                    y.x = A+7;
+                    y.y = A+6;
+                    {
+                        int i;
+                        i=0;
+                        while (i < 10){
+                            if (i%2 == 0){
+                                arr[i] = x;
+                                i=i+1;
+                                continue;
+                            }
+                            arr[i] = y;
+                            i=i+1;
+                        }
+                    }
+                    fun(arr);
+                }
+                
+                """);
+    }
+
+
+
     void assertCorrectOutput(String program){
         compareToCompiled(program,"");
     }
