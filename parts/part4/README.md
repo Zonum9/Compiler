@@ -93,6 +93,17 @@ As already mentioned, you should never need more than three registers when spill
 In fact, you can even do better and only use two registers, lowering the number of reserved registers for spilling even further.
 This will result in less load/store in case of high register pressure.
 
+### Spilled registers
+Important: you should not put any logic related to spilling in the `pushRegisters` and `popRegisters` pseudo-instructions.
+There is no guarantee that these pseudo-instructions will be present in a function at all (e.g. in the case where the function does not perform any call, there is no need to push/pop the used registers).
+Furthermore, the calling convention used by the tests might be different from the one in your compiler, and the stack pointer might move during the program's execution.
+While a real compiler would spill registers on the stack, in the context of this coursework, you must use the naive approach for spilled registers and allocate them statically instead of allocating them on the stack.
+Note that the `la` (and `li`) instruction does not count as a memory access when testing.
+
+
+
+
+
 
 ## Debugging Tip: Promote variables to registers
 
