@@ -93,7 +93,7 @@ public class ControlFlowGraph {
     public final HashMap<Node,HashSet<Register>> liveOut = new HashMap<>();
 
     private void performLiveAnalysis(){
-            List<Node> nodesPostOrder = getNodesPostOrder();
+            List<Node> nodesPostOrder = getNodesReversePreOrder();
             for(Node n: nodesPostOrder){
                 liveIn.put(n,new HashSet<>());
                 liveOut.put(n,new HashSet<>());
@@ -130,26 +130,33 @@ public class ControlFlowGraph {
                 }
             }while (!(liveIn.equals(tempIn) && liveOut.equals(tempOut)));
 
-            //todo make sure this is correct
-            //for all nodes n, add join their defined sets with their live out sets (handles "dead" instructions)
-            for(Node n: nodesPostOrder){
-                if(n.data instanceof Instruction inst) {
-                    Register def=inst.def();
-                    if(def != null && def.isVirtual()) {
-                        liveOut.get(n).add(def);
-                        for (Node successor : n.successors) {
-                            liveIn.get(successor).add(def);
-                        }
-                    }
-                }
-            }
+            //fixme is this correct?
+            //for all nodes n, join their defined sets with their live out sets (handles "dead" instructions)
+//            for(Node n: nodesPostOrder){
+//                if(n.data instanceof Instruction inst) {
+//                    Register def=inst.def();
+//                    if(def != null && def.isVirtual()) {
+//                        liveOut.get(n).add(def);
+//                        for (Node successor : n.successors) {
+//                            liveIn.get(successor).add(def);
+//                        }
+//                    }
+//                }
+//            }
     }
 
     private PrintWriter writer;
     private int nodeCnt;
     private HashMap<ControlFlowGraph.Node,String> visited;
 
+    private HashMap<Node,Integer> order;
+
     public void print(PrintWriter writer){
+        order = new HashMap<>();
+        List<Node> l= getNodesReversePreOrder();
+        for (int i = 0; i < l.size(); i++) {
+            order.put(l.get(i),i);
+        }
         visited=new HashMap<>();
         nodeCnt=0;
         this.writer=writer;
@@ -168,7 +175,7 @@ public class ControlFlowGraph {
             case Comment ignore -> {}
             case Directive ignore -> {}
             case AssemblyItem x -> {
-                writer.println(nid + "[label=\""+nodeCnt+": " + x + "\"];");
+                writer.println(nid + "[label=\""+order.get(n)+": " + x + "\"];");
             }
         }
 
@@ -185,21 +192,22 @@ public class ControlFlowGraph {
         return nid;
     }
 
-    public List<Node> getNodesPostOrder() {
+    public List<Node> getNodesReversePreOrder() {//fixme changes this dramatically
         HashSet<Node>visited = new HashSet<>();
-        Stack<Node> stack = new Stack<>();
-        dfs(root,visited,stack);
-        return stack;
+        LinkedList<Node> queue = new LinkedList<>();
+        dfs(root,visited,queue);
+        Collections.reverse(queue);
+        return queue;
     }
 
-    private void dfs(Node node, HashSet<Node> visited, Stack<Node> stack) {
+    private void dfs(Node node, HashSet<Node> visited, Queue<Node> queue) {
         visited.add(node);
+        queue.add(node);
         for (Node s:node.successors){
             if(!visited.contains(s)){
-                dfs(s,visited,stack);
+                dfs(s,visited,queue);
             }
         }
-        stack.push(node);
     }
 
 

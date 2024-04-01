@@ -15,7 +15,7 @@ public class InterferenceGraph {
     public InterferenceGraph(ControlFlowGraph g,int k) {
         interference = new HashMap<>();
         colorings = new HashMap<>();
-        List<ControlFlowGraph.Node> controlNodes = new ArrayList<>(g.getNodesPostOrder());
+        List<ControlFlowGraph.Node> controlNodes = new ArrayList<>(g.getNodesReversePreOrder());
 
         for(ControlFlowGraph.Node n: controlNodes){
             for (Register register:g.liveIn.get(n)) {
@@ -64,7 +64,7 @@ public class InterferenceGraph {
         while (!stack.empty()){
             Register reg = stack.pop();
             Set<Integer> neighbourColors = interference.get(reg).stream()
-                    .map(x->colorings.get(x))
+                    .map(colorings::get)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
             for (int i = 0; i < k; i++) {

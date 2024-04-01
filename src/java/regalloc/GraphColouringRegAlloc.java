@@ -53,7 +53,7 @@ public class GraphColouringRegAlloc implements AssemblyPass {
             interferenceGraphs.add(ig);
 
 
-            Set<Instruction> coveredInstructions = g.getNodesPostOrder().stream()
+            Set<Instruction> coveredInstructions = g.getNodesReversePreOrder().stream()
                     .filter(node-> node.data instanceof Instruction)
                     .map(node-> (Instruction)node.data)
                     .collect(Collectors.toSet());

@@ -2407,6 +2407,17 @@ public class Part3and4Tests {
                 ""","15\n");
     }
 
+    @Test void selfAssign(){
+        assertCorrectOutput("""
+                void main(){
+                    int x;
+                    x=99;
+                    x=x+x;
+                    print_i(x);
+                }
+                """);
+    }
+
 
 
     @Test void pascalElectricBoogaloo(){
