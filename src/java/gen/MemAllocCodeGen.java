@@ -35,10 +35,8 @@ void visit(ASTNode n) {
             case VarDecl vd->{
                 if(global){
                     vd.isGlobal=true;
-                    Label lbl= Label.get(vd.name);
                     currSect.emit(new Directive("align "+2));
-                    currSect.emit(lbl);
-                    currSect.emit(new Directive("globl "+lbl));
+                    currSect.emit(Label.get(vd.name));
                     currSect.emit(new Directive("space "+ wordAlign(sizeofType(vd.type))));
                     return;
                 }

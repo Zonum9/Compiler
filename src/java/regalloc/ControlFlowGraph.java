@@ -132,17 +132,14 @@ public class ControlFlowGraph {
 
             //fixme is this correct?
             //for all nodes n, join their defined sets with their live out sets (handles "dead" instructions)
-//            for(Node n: nodesPostOrder){
-//                if(n.data instanceof Instruction inst) {
-//                    Register def=inst.def();
-//                    if(def != null && def.isVirtual()) {
-//                        liveOut.get(n).add(def);
-//                        for (Node successor : n.successors) {
-//                            liveIn.get(successor).add(def);
-//                        }
-//                    }
-//                }
-//            }
+            for(Node n: nodesPostOrder){
+                if(n.data instanceof Instruction inst) {
+                    Register def=inst.def();
+                    if(def != null && def.isVirtual()) {
+                        liveOut.get(n).add(def);
+                    }
+                }
+            }
     }
 
     private PrintWriter writer;
@@ -192,7 +189,7 @@ public class ControlFlowGraph {
         return nid;
     }
 
-    public List<Node> getNodesReversePreOrder() {//fixme changes this dramatically
+    public List<Node> getNodesReversePreOrder() {//fixme changed this dramatically
         HashSet<Node>visited = new HashSet<>();
         LinkedList<Node> queue = new LinkedList<>();
         dfs(root,visited,queue);

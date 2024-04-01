@@ -1,13 +1,17 @@
+import gen.asm.AssemblyParser;
 import gen.asm.AssemblyProgram;
 import lexer.Tokeniser;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import regalloc.GraphColouringRegAlloc;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 public class Part3and4Tests {
@@ -2561,6 +2565,51 @@ public class Part3and4Tests {
     public static Utils.RegMode mode= Utils.RegMode.NAIVE;
     public static boolean print = false;
 
+
+    @Test void rawAsmFiles(){
+        long fileCount;
+        try (Stream<Path> cStream = Files.list(Paths.get("src/test/asmFiles"))) {
+            fileCount = cStream.count()-1;
+            Map <Integer,String> inputs = Map.of(
+
+            );
+            Map <Integer,String> outputs = Map.of(
+                    0,"2",
+                    1,"16",
+                    2,"360",
+                    3,"17"
+            );
+            for (int i = 3; i < fileCount; i++) {
+                System.out.println("------------ Test "+i+"------------");
+                AssemblyProgram asm = AssemblyParser.readAssemblyProgram(
+                            new BufferedReader(new FileReader("src/test/asmFiles/out"+i+".asm")));
+                asm = GraphColouringRegAlloc.INSTANCE.apply(asm);
+                String input = inputs.getOrDefault(i,"");
+                String expectedOutput = outputs.getOrDefault(i,"");
+
+                File f= File.createTempFile("temp",".asm");
+                asm.print(new PrintWriter(f));
+                asm.print(new PrintWriter("src/test/asmFiles/out.asm"));
+                Process process = new ProcessBuilder(
+                        ("java -jar parts/part3/Mars4_5.jar sm nc me "+f.toPath())
+                                .split(" "))
+                        .start();
+                process.outputWriter().write(input+"\r");
+                process.outputWriter().flush();
+                boolean finished=process.waitFor(15,TimeUnit.SECONDS);
+                if(!finished){
+                    process.destroyForcibly();
+                }
+                String out = new String(process.getInputStream().readAllBytes());
+                assertEquals(expectedOutput.replaceAll("\r\n", "\n"),out.replaceAll("\r\n", "\n"));
+
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
     void assertCorrectOutput(String program,String expectedOutput, int expectedExitCode, String input){
         AssemblyProgram p = Utils.programStringToASMObj(program, mode,print);
         try {
@@ -2659,70 +2708,10 @@ public class Part3and4Tests {
         compareToCompiled(Utils.fileToString(fileName),input);
     }
     void compareToCompiled(String program,String input){
-        program = program.replaceAll("#include.*[\\n|\\r]","");
-        try {
-            Path path= Paths.get("src/test/temp/temp.c");
-            if (Files.exists(path)){
-                Files.delete(path);
-            }
-            File f =new File(String.valueOf(Files.createFile(path)));
-
-
-            try (PrintWriter printWriter = new PrintWriter(f)) {
-                printWriter.print("""
-                        #include <stdio.h>
-                        #include <stdlib.h>                                                
-                        void print_s(const char* s) {
-                          fprintf(stdout,"%s",s);
-                        }                                                
-                        void print_i(int i) {
-                          fprintf(stdout,"%d",i);
-                        }                                                
-                        void print_c(char c) {
-                          fprintf(stdout,"%c",c);
-                        }                                                
-                        char read_c() {
-                          char c;
-                          fscanf(stdin, "%c", &c);
-                          return c;
-                        }                                                
-                        int read_i() {
-                          int i;
-                          fscanf(stdin, "%d", &i);
-                          return i;
-                        }                                                
-                        void* mcmalloc(int size) {
-                          return malloc(size);
-                        }
-                                            
-                        """);
-                printWriter.print(program);
-            }
-
-
-            Process compile = new ProcessBuilder(
-                    "gcc",f.getName(),"-o","out.exe"
-            )
-                    .directory(new File("src/test/temp/"))
-                    .redirectError(ProcessBuilder.Redirect.INHERIT)
-                    .start();
-
-            compile.waitFor();
-
-            Process run = new ProcessBuilder(
-                    "src/test/temp/out.exe")
-                    .redirectError(ProcessBuilder.Redirect.INHERIT)
-                    .start();
-            run.outputWriter().write(input.replaceAll("\r",""));
-            run.outputWriter().flush();
-            boolean finished=run.waitFor(8,TimeUnit.SECONDS);
-            if(!finished){
-                run.destroyForcibly();
-            }
-
-            String out = new String(run.getInputStream().readAllBytes());
-            System.out.println(out);
-            assertCorrectOutput(program,out,finished? 0:-1,input);
+        try{
+            boolean[] finished = new boolean[1];
+            String out = Utils.GCC(program,input,finished);
+            assertCorrectOutput(program,out,finished[0]? 0:-1,input);
         } catch (Exception e) {
             fail(e);
         }

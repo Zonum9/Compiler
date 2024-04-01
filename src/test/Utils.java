@@ -13,7 +13,9 @@ import sem.SemanticAnalyzer;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 import static lexer.Token.Category.EOF;
 import static org.junit.jupiter.api.Assertions.*;
@@ -169,7 +171,8 @@ public class Utils {
 
     public enum RegMode {
         NAIVE,
-        COLOR
+        COLOR,
+        VIRTUAL
     }
     public static AssemblyProgram programStringToASMObj(String program, RegMode mode,boolean print){
         Program p = Utils.createParserFromString(program).parse();
@@ -193,9 +196,79 @@ public class Utils {
                 }
                 yield  asm;
             }
+            case VIRTUAL -> virtualRegs;
         };
     }
 
+    public static String GCC(String program, String input, boolean[] finished) throws IOException {
+        program = program.replaceAll("#include.*[\\n|\\r]", "");
+        try {
+            Path path = Paths.get("src/test/temp/temp.c");
+            if (Files.exists(path)) {
+                Files.delete(path);
+            }
+            File f = new File(String.valueOf(Files.createFile(path)));
+
+
+            try (PrintWriter printWriter = new PrintWriter(f)) {
+                printWriter.print("""
+                        #include <stdio.h>
+                        #include <stdlib.h>                                                
+                        void print_s(const char* s) {
+                          fprintf(stdout,"%s",s);
+                        }                                                
+                        void print_i(int i) {
+                          fprintf(stdout,"%d",i);
+                        }                                                
+                        void print_c(char c) {
+                          fprintf(stdout,"%c",c);
+                        }                                                
+                        char read_c() {
+                          char c;
+                          fscanf(stdin, "%c", &c);
+                          return c;
+                        }                                                
+                        int read_i() {
+                          int i;
+                          fscanf(stdin, "%d", &i);
+                          return i;
+                        }                                                
+                        void* mcmalloc(int size) {
+                          return malloc(size);
+                        }
+                                            
+                        """);
+                printWriter.print(program);
+            }
+
+
+            Process compile = new ProcessBuilder(
+                    "gcc", f.getName(), "-o", "out.exe"
+            )
+                    .directory(new File("src/test/temp/"))
+                    .redirectError(ProcessBuilder.Redirect.INHERIT)
+                    .start();
+
+            compile.waitFor();
+
+            Process run = new ProcessBuilder(
+                    "src/test/temp/out.exe")
+                    .redirectError(ProcessBuilder.Redirect.INHERIT)
+                    .start();
+            run.outputWriter().write(input.replaceAll("\r", ""));
+            run.outputWriter().flush();
+            finished[0] = run.waitFor(8, TimeUnit.SECONDS);
+            if (!finished[0]) {
+                run.destroyForcibly();
+            }
+
+            String out = new String(run.getInputStream().readAllBytes());
+            System.out.println(out);
+            return out;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
     public static String fileToString(String filename){
         try {
             return Files.readString(Paths.get(path+filename));

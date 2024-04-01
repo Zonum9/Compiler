@@ -87,7 +87,7 @@ public class GraphColouringRegAlloc implements AssemblyPass {
                             for (Map.Entry<Register, Label> entry : labelPairs) {
                                 Register register = entry.getKey();
                                 Label label = entry.getValue();
-                                newSection.emit(OpCode.ADDI, Arch.sp, Arch.sp, -4);
+                                newSection.emit(OpCode.ADDIU, Arch.sp, Arch.sp, -4);
                                 if (ig.spilled.contains(register)) {
                                     newSection.emit(OpCode.LA, Arch.t0, label);
                                     newSection.emit(OpCode.LW, Arch.t0, Arch.t0, 0);
@@ -119,7 +119,7 @@ public class GraphColouringRegAlloc implements AssemblyPass {
                                     // pop from stack into previous reg
                                     newSection.emit(OpCode.LW, reg, sp, 0);
                                 }
-                                newSection.emit(OpCode.ADDI, sp, sp, 4);
+                                newSection.emit(OpCode.ADDIU, sp, sp, 4);
                             }
                             newSection.emit("---POP REGISTERS END---");
                         } else

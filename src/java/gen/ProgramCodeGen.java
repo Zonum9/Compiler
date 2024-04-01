@@ -5,6 +5,7 @@ import ast.FunDecl;
 import ast.Program;
 import ast.Return;
 import gen.asm.AssemblyProgram;
+import gen.asm.Directive;
 import gen.asm.OpCode;
 
 import static ast.BaseType.CHAR;
@@ -26,6 +27,7 @@ public class ProgramCodeGen extends CodeGen {
 
 
     public void generate(Program p) {
+        dataSection.emit(new Directive("globl main"));
         // allocate all variables
         MemAllocCodeGen allocator = new MemAllocCodeGen(asmProg);
         allocator.visit(p);

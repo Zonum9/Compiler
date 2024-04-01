@@ -27,14 +27,15 @@ public class FunCodeGen extends CodeGen {
         asmProg.newSection(AssemblyProgram.Section.Type.TEXT);
         AssemblyProgram.Section currSect= asmProg.getCurrentSection();
 
-        Label funLbl = Label.get(fd.name);
-        currSect.emit(funLbl);
-        if(fd.name.equals("main")){
-            Label startLbl= Label.get("_start");
-            currSect.emit(startLbl);
-            currSect.emit(new Directive("globl "+startLbl));
+
+        if(fd.name.equals("main")){ //todo revert this after testing
+//            Label startLbl= Label.get("_start");
+//            currSect.emit(startLbl);
+//            currSect.emit(new Directive("globl "+startLbl));
         }
-        currSect.emit(new Directive("globl "+funLbl));
+        else{
+            currSect.emit(Label.get(fd.name));
+        }
 
 
         // 1) emit the prolog
