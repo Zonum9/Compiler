@@ -2576,10 +2576,9 @@ public class Part3and4Tests {
             Map <Integer,String> outputs = Map.of(
                     0,"2",
                     1,"16",
-                    2,"360",
-                    3,"17"
+                    2,"360"
             );
-            for (int i = 3; i < fileCount; i++) {
+            for (int i = 0; i < fileCount; i++) {
                 System.out.println("------------ Test "+i+"------------");
                 AssemblyProgram asm = AssemblyParser.readAssemblyProgram(
                             new BufferedReader(new FileReader("src/test/asmFiles/out"+i+".asm")));
@@ -2635,6 +2634,8 @@ public class Part3and4Tests {
             fail(e);
         }
     }
+
+
 
     @Test
     void structArrayAgain() {

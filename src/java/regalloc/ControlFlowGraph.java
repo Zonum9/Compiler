@@ -130,7 +130,6 @@ public class ControlFlowGraph {
                 }
             }while (!(liveIn.equals(tempIn) && liveOut.equals(tempOut)));
 
-            //fixme is this correct?
             //for all nodes n, join their defined sets with their live out sets (handles "dead" instructions)
             for(Node n: nodesPostOrder){
                 if(n.data instanceof Instruction inst) {

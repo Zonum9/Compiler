@@ -52,11 +52,12 @@ public class GraphColouringRegAlloc implements AssemblyPass {
             InterferenceGraph ig= new InterferenceGraph(g,opRegs.size());
             interferenceGraphs.add(ig);
 
-
+            //todo restore this
             Set<Instruction> coveredInstructions = g.getNodesReversePreOrder().stream()
                     .filter(node-> node.data instanceof Instruction)
                     .map(node-> (Instruction)node.data)
                     .collect(Collectors.toSet());
+
             Map<Register,Label> vrMap= collectUsedRegisters(section,coveredInstructions,ig);
 
             // allocate one label for each spilled register in a new data section
@@ -64,6 +65,7 @@ public class GraphColouringRegAlloc implements AssemblyPass {
             dataSec.emit("Allocated labels for used registers");
             for (Map.Entry<Register, Label> e : vrMap.entrySet()) {
                 Label lbl = e.getValue();
+                dataSec.emit(new Directive("align 2"));
                 dataSec.emit(lbl);
                 dataSec.emit(new Directive("space " + 4));
             }
@@ -78,9 +80,9 @@ public class GraphColouringRegAlloc implements AssemblyPass {
                     case Directive x->newSection.emit(x);
 
                     case Instruction insn->{
-                        if(!coveredInstructions.contains(insn)){
-                            continue;
-                        }
+//                        if(!coveredInstructions.contains(insn)){ todo restore this
+//                            continue;
+//                        }
                         if (insn == Instruction.Nullary.pushRegisters) {
                             newSection.emit("---PUSH REGISTERS START---");
 
@@ -139,9 +141,9 @@ public class GraphColouringRegAlloc implements AssemblyPass {
             if (!(item instanceof Instruction insn)) {
                 continue;
             }
-            if (!coveredInstructions.contains(insn)) {
-                continue;
-            }
+//            if (!coveredInstructions.contains(insn)) { todo restore this
+//                continue;
+//            }
             for (Register reg : insn.registers()) {
                 if (reg instanceof Virtual vr) {
                     if(ig.spilled.contains(vr)) {

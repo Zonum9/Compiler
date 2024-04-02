@@ -20,12 +20,12 @@ public class InterferenceGraph {
         for(ControlFlowGraph.Node n: controlNodes){
             for (Register register:g.liveIn.get(n)) {
                 interference.computeIfAbsent(register,r->new HashSet<>()).addAll(g.liveIn.get(n));
-                interference.get(register).remove(register); //todo check if this is correct
+//                interference.get(register).remove(register); //todo check if this is correct
             }
 
             for (Register register:g.liveOut.get(n)) {
                 interference.computeIfAbsent(register,r->new HashSet<>()).addAll(g.liveOut.get(n));
-                interference.get(register).remove(register);
+//                interference.get(register).remove(register);
             }
         }
         //k registers available

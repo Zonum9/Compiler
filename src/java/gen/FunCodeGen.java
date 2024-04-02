@@ -32,6 +32,7 @@ public class FunCodeGen extends CodeGen {
 //            Label startLbl= Label.get("_start");
 //            currSect.emit(startLbl);
 //            currSect.emit(new Directive("globl "+startLbl));
+            currSect.emit(Label.get(fd.name));
         }
         else{
             currSect.emit(Label.get(fd.name));
