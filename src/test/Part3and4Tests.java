@@ -2576,13 +2576,16 @@ public class Part3and4Tests {
             Map <Integer,String> outputs = Map.of(
                     0,"2",
                     1,"16",
-                    2,"360"
+                    2,"360",
+                    3,"9977"
             );
             for (int i = 0; i < fileCount; i++) {
                 System.out.println("------------ Test "+i+"------------");
                 AssemblyProgram asm = AssemblyParser.readAssemblyProgram(
                             new BufferedReader(new FileReader("src/test/asmFiles/out"+i+".asm")));
                 asm = GraphColouringRegAlloc.INSTANCE.apply(asm);
+                GraphColouringRegAlloc.INSTANCE.printLiveness(new PrintWriter(new FileWriter("src/test/temp/flowDot.dot"), true));
+                GraphColouringRegAlloc.INSTANCE.printInterference(new PrintWriter(new FileWriter("src/test/temp/interferenceDot.dot"), true));
                 String input = inputs.getOrDefault(i,"");
                 String expectedOutput = outputs.getOrDefault(i,"");
 
@@ -2600,6 +2603,7 @@ public class Part3and4Tests {
                     process.destroyForcibly();
                 }
                 String out = new String(process.getInputStream().readAllBytes());
+                System.out.println(expectedOutput);
                 assertEquals(expectedOutput.replaceAll("\r\n", "\n"),out.replaceAll("\r\n", "\n"));
 
             }

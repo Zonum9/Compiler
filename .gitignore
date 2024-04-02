@@ -7,3 +7,4 @@ out
 lib/
 .vscode/
 /src/test/temp/
+src/test/asmFiles/out.asm

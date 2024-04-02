@@ -52,7 +52,7 @@ public class GraphColouringRegAlloc implements AssemblyPass {
             InterferenceGraph ig= new InterferenceGraph(g,opRegs.size());
             interferenceGraphs.add(ig);
 
-            //todo restore this
+
             Set<Instruction> coveredInstructions = g.getNodesReversePreOrder().stream()
                     .filter(node-> node.data instanceof Instruction)
                     .map(node-> (Instruction)node.data)
@@ -80,9 +80,9 @@ public class GraphColouringRegAlloc implements AssemblyPass {
                     case Directive x->newSection.emit(x);
 
                     case Instruction insn->{
-//                        if(!coveredInstructions.contains(insn)){ todo restore this
-//                            continue;
-//                        }
+                        if(!coveredInstructions.contains(insn)){
+                            continue;
+                        }
                         if (insn == Instruction.Nullary.pushRegisters) {
                             newSection.emit("---PUSH REGISTERS START---");
 
@@ -141,9 +141,9 @@ public class GraphColouringRegAlloc implements AssemblyPass {
             if (!(item instanceof Instruction insn)) {
                 continue;
             }
-//            if (!coveredInstructions.contains(insn)) { todo restore this
-//                continue;
-//            }
+            if (!coveredInstructions.contains(insn)) {
+                continue;
+            }
             for (Register reg : insn.registers()) {
                 if (reg instanceof Virtual vr) {
                     if(ig.spilled.contains(vr)) {
