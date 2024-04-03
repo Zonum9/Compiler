@@ -58,18 +58,11 @@ public class ControlFlowGraph {
 
                     //B, BAL, J, JAL
                     case Instruction.Jump x -> {
-                        //only jump should be considered for control flow, the rest are for func calls
-//                        if(x.opcode !=J){
-//                            break;
-//                        }
                         Label label= x.label;
                         branchesToConnect.computeIfAbsent(label,k -> new ArrayList<>()).add(curr);
-//                        curr=null; todo add this back?
                     }
                     //JR, JALR
-                    case Instruction.JumpRegister ignored -> {
-//                        curr = null; todo add this back?
-                    }
+                    case Instruction.JumpRegister ignored -> {}
 
                     //BEQZ, BGEZ, BGEZAL, BGTZ, BLEZ, BLTZ, BLTZAL, BNEZ
                     case Instruction.UnaryBranch x -> {
