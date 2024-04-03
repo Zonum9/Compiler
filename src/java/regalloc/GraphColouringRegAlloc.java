@@ -26,8 +26,8 @@ public class GraphColouringRegAlloc implements AssemblyPass {
 
     @Override
     public AssemblyProgram apply(AssemblyProgram program) {
-        spillRegs = allAvailableRegs.subList(0,3);
-        opRegs = allAvailableRegs.subList(3,18); //todo change 18 to smaller values to stress spilling
+        spillRegs = allAvailableRegs.subList(0,2);
+        opRegs = allAvailableRegs.subList(2,18); //todo change 18 to smaller values to stress spilling
 
 
 
@@ -166,13 +166,26 @@ public class GraphColouringRegAlloc implements AssemblyPass {
         Stack<Register> freeTempRegs = new Stack<>();
         freeTempRegs.addAll(spillRegs);
 
-        for(Register r:insn.registers()){
-            if(!r.isVirtual()){//only need to modify virtual regs
+        for(Register r:insn.uses()){
+            if(!r.isVirtual() || vrToAr.containsKey(r)){//only need to modify virtual regs
                 continue;
             }
             if(ig.spilled.contains(r)){
-                Register temp= freeTempRegs.pop();
-                vrToAr.put(r,temp);
+                Register temp = freeTempRegs.pop();
+                vrToAr.put(r, temp);
+            }
+            else{
+                int index = ig.colorings.get(r);
+                Register newReg = opRegs.get(index);
+                vrToAr.put(r, newReg);
+            }
+        }
+        Register r;
+        //def register can use the same arch register as one of its use() registers
+        if ((r=insn.def()) != null && r.isVirtual()) {
+            if (ig.spilled.contains(r)) {
+                Register temp= freeTempRegs.empty()? spillRegs.getFirst():freeTempRegs.pop();
+                vrToAr.putIfAbsent(r,temp);
             }
             else{
                 int index = ig.colorings.get(r);
@@ -181,7 +194,8 @@ public class GraphColouringRegAlloc implements AssemblyPass {
             }
         }
 
-        for (Register reg : insn.uses()) {
+
+        for (Register reg : new HashSet<>(insn.uses())) {
             if (ig.spilled.contains(reg)) {
                 Register tmp = vrToAr.get(reg);
                 Label label = vrMap.get(reg);

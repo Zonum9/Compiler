@@ -717,7 +717,7 @@ public class Part3and4Tests {
                     print_i(99==-99);
                     
                 }
-                ""","10010");
+                """);
 
     }
 
@@ -2285,14 +2285,24 @@ public class Part3and4Tests {
 
 
     @Test void varSoup(){
-        assertCorrectOutput("""
-                void main(){
-                    int x0;int x1;int x2;int x3;int x4;int x5;int x6;int x7;int x8;
-                    int x9;int xA;int xB;int xC;int xD;int xE;int xF;
-                    x0=x1=x2=x3=x4=x5=x6=x7=x8=x9=xA=xB=xC=xD=xE=xF=999;                
-                    print_i(x0+x1+x2+x3+x4+x5+x6+x7+x8+x9+xA+xB+xC+xD+xE+xF);
-                }
-                """);
+        StringBuilder s = new StringBuilder();
+        s.append("void main(){\n");
+        int size=30;
+        for (int i = 0; i < size; i++) {
+            s.append(String.format("int x%d;\n",i));
+        }
+        for (int i = 0; i < size-1; i++) {
+            s.append(String.format("x%d=x%d=",i,i+1));
+        }
+        s.append("99;\n print_i(");
+        for (int i = 0; i < size-1; i++) {
+            s.append(String.format("x%d+x%d+",i,i+1));
+        }
+        s.deleteCharAt(s.length()-1);
+        s.append(");\n");
+        s.append("}");
+        System.out.println(s);
+        assertCorrectOutput(s.toString());
     }
 
     @Test void pascal() {
@@ -2577,7 +2587,8 @@ public class Part3and4Tests {
                     0,"2",
                     1,"16",
                     2,"360",
-                    3,"9977"
+                    3,"9977",
+                    4,"198"
             );
             for (int i = 0; i < fileCount; i++) {
                 System.out.println("------------ Test "+i+"------------");
