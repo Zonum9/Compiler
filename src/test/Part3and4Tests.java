@@ -1571,7 +1571,7 @@ public class Part3and4Tests {
                 }
                                 
                 void main(){
-                    print_i(factorial(6));
+                    print_i(factorial(10));
                 }
                 """);
     }

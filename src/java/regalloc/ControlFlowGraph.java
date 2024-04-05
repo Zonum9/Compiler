@@ -185,7 +185,7 @@ public class ControlFlowGraph {
         return nid;
     }
 
-    public List<Node> getNodesReversePreOrder() {//fixme changed this dramatically
+    public List<Node> getNodesReversePreOrder() {
         HashSet<Node>visited = new HashSet<>();
         LinkedList<Node> queue = new LinkedList<>();
         dfs(root,visited,queue);

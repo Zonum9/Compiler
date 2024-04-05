@@ -58,18 +58,18 @@ public class GraphColouringRegAlloc implements AssemblyPass {
                     .map(node-> (Instruction)node.data)
                     .collect(Collectors.toSet());
 
-            Map<Register,Label> vrMap= collectUsedRegisters(section,coveredInstructions,ig);
+            Map<Register,Label> registerLabelMap = collectVirtualRegisters(section,coveredInstructions,ig);
+            Set<Register> modifiedRegs = collectModifiedRegisters(section,coveredInstructions,ig);
 
             // allocate one label for each spilled register in a new data section
             AssemblyProgram.Section dataSec = newProg.newSection(AssemblyProgram.Section.Type.DATA);
-            dataSec.emit("Allocated labels for used registers");
-            for (Map.Entry<Register, Label> e : vrMap.entrySet()) {
-                Label lbl = e.getValue();
+            dataSec.emit("Allocated labels for function registers");
+            registerLabelMap.forEach((x,lbl)-> {
                 dataSec.emit(new Directive("align 2"));
                 dataSec.emit(lbl);
                 dataSec.emit(new Directive("space " + 4));
-            }
-            List<Map.Entry<Register, Label>> labelPairs= vrMap.entrySet().stream().toList();
+            });
+            List<Map.Entry<Register, Label>> labelPairs= registerLabelMap.entrySet().stream().toList();
             List<Map.Entry<Register, Label>> reversedRegLabelPairs = new ArrayList<>(labelPairs);
             Collections.reverse(reversedRegLabelPairs);
 
@@ -88,6 +88,10 @@ public class GraphColouringRegAlloc implements AssemblyPass {
 
                             for (Map.Entry<Register, Label> entry : labelPairs) {
                                 Register register = entry.getKey();
+                                //do not push registers that are not modified
+                                if (!modifiedRegs.contains(register)) {
+                                    continue;
+                                }
                                 Label label = entry.getValue();
                                 newSection.emit(OpCode.ADDIU, Arch.sp, Arch.sp, -4);
                                 if (ig.spilled.contains(register)) {
@@ -107,6 +111,10 @@ public class GraphColouringRegAlloc implements AssemblyPass {
                             newSection.emit("---POP REGISTERS START---");
                             for (Map.Entry<Register, Label> pair : reversedRegLabelPairs) {
                                 Register reg = pair.getKey();
+                                //do not pop registers that are not modified
+                                if (!modifiedRegs.contains(reg)) {
+                                    continue;
+                                }
                                 Label label= pair.getValue();
                                 if(ig.spilled.contains(reg)) {
                                     Register t0= spillRegs.getFirst();
@@ -125,7 +133,7 @@ public class GraphColouringRegAlloc implements AssemblyPass {
                             }
                             newSection.emit("---POP REGISTERS END---");
                         } else
-                            emitInstructionWithoutVirtualRegister(insn,newSection,ig,vrMap);
+                            emitInstructionWithoutVirtualRegister(insn,newSection,ig,registerLabelMap);
                     }
                 }
             }
@@ -133,9 +141,9 @@ public class GraphColouringRegAlloc implements AssemblyPass {
         return newProg;
     }
 
-    private Map<Register, Label> collectUsedRegisters(AssemblyProgram.Section section,
-                                                      Set<Instruction> coveredInstructions,
-                                                      InterferenceGraph ig) {
+    private Map<Register, Label> collectVirtualRegisters(AssemblyProgram.Section section,
+                                                         Set<Instruction> coveredInstructions,
+                                                         InterferenceGraph ig) {
         final Map<Register, Label> vrMap = new HashMap<>();
         for (AssemblyItem item : section.items) {
             if (!(item instanceof Instruction insn)) {
@@ -158,6 +166,30 @@ public class GraphColouringRegAlloc implements AssemblyPass {
             }
         }
         return vrMap;
+    }
+
+    private Set<Register> collectModifiedRegisters(AssemblyProgram.Section section,
+                                                   Set<Instruction> coveredInstructions,
+                                                   InterferenceGraph ig){
+        final Set<Register> modifiedRegs  = new HashSet<>();
+        for (AssemblyItem item : section.items) {
+            if (!(item instanceof Instruction insn)) {
+                continue;
+            }
+            if (!coveredInstructions.contains(insn)) {
+                continue;
+            }
+            Register modified = insn.def();
+            if(!(modified instanceof Virtual)){
+                continue;
+            }
+            if(ig.spilled.contains(modified)) {
+                modifiedRegs.add(modified);
+                continue;
+            }
+            modifiedRegs.add(opRegs.get(ig.colorings.get(modified)));
+        }
+        return modifiedRegs;
     }
 
     private void emitInstructionWithoutVirtualRegister(Instruction insn, AssemblyProgram.Section section,

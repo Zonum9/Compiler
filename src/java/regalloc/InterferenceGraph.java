@@ -26,7 +26,7 @@ public class InterferenceGraph {
                 interference.computeIfAbsent(register,r->new HashSet<>()).addAll(g.liveOut.get(n));
             }
         }
-        interference.forEach((reg,set)->set.remove(reg)); //todo check if this is correct
+        interference.forEach((reg,set)->set.remove(reg));
         //k registers available
         colorGraph(k);
     }
