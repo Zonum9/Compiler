@@ -3,6 +3,7 @@ import ast.ASTdotPrinter;
 import ast.Program;
 import gen.ProgramCodeGen;
 import gen.asm.AssemblyProgram;
+import gen.asm.Instruction;
 import lexer.Scanner;
 import lexer.Token;
 import lexer.Tokeniser;
@@ -269,6 +270,16 @@ public class Utils {
             throw new RuntimeException(e);
         }
     }
+
+    public static void displayMemoryAccessCount(AssemblyProgram asm){
+        long memAccessCount=asm.sections.stream()
+                .flatMap(x->x.items.stream())
+                .filter(x-> x instanceof Instruction.MemIndirect)
+                .count();
+        System.out.printf("Memory access count: %d%n",memAccessCount);
+
+    }
+
     public static String fileToString(String filename){
         try {
             return Files.readString(Paths.get(path+filename));

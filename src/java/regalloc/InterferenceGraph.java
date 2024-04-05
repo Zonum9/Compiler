@@ -1,5 +1,6 @@
 package regalloc;
 
+import gen.asm.Instruction;
 import gen.asm.Register;
 
 import java.io.PrintWriter;
@@ -11,12 +12,13 @@ public class InterferenceGraph {
 
     private final HashMap<Register, HashSet<Register>> interference;
     public final HashMap<Register, Integer> colorings;
+    public final HashMap<Register,Long> regUseCount;
 
     public InterferenceGraph(ControlFlowGraph g,int k) {
         interference = new HashMap<>();
         colorings = new HashMap<>();
         List<ControlFlowGraph.Node> controlNodes = new ArrayList<>(g.getNodesReversePreOrder());
-
+        regUseCount=getRegUseCount(controlNodes);
         for(ControlFlowGraph.Node n: controlNodes){
             for (Register register:g.liveIn.get(n)) {
                 interference.computeIfAbsent(register,r->new HashSet<>()).addAll(g.liveIn.get(n));
@@ -45,11 +47,15 @@ public class InterferenceGraph {
 
             Register maxDegreeReg = interference.entrySet().stream()
                     .filter(pair->!removed.contains(pair.getKey()))
-                    .max((p1,p2)->
-                        Long.compare(
-                                p1.getValue().stream().filter(x -> !removed.contains(x)).count(),
-                                p2.getValue().stream().filter(x -> !removed.contains(x)).count()
-                        )
+                    .max((p1,p2)-> {
+                                int comp = Long.compare(
+                                        p1.getValue().stream().filter(x -> !removed.contains(x)).count(),
+                                        p2.getValue().stream().filter(x -> !removed.contains(x)).count()
+                                );
+                                if (comp!=0L)
+                                    return comp;
+                                return -Long.compare(regUseCount.get(p1.getKey()),regUseCount.get(p2.getKey()));
+                            }
                     ).get().getKey(); //should never be empty
             removed.add(maxDegreeReg);
             spilled.add(maxDegreeReg);
@@ -57,6 +63,19 @@ public class InterferenceGraph {
         }
 
         colorVars(stack,k);
+    }
+
+    private HashMap<Register, Long> getRegUseCount(List<ControlFlowGraph.Node> controlNodes){
+        HashMap<Register,Long> sectionRegs = new HashMap<>();
+        controlNodes.stream()
+                .filter(x-> x.data instanceof Instruction)
+                .map(x->(Instruction)x.data)
+                .forEach(ins->
+                        ins.registers().forEach(reg->
+                                sectionRegs.put(reg,sectionRegs.getOrDefault(reg, 0L)+1)
+                        )
+                );
+        return sectionRegs;
     }
 
     private void colorVars(Stack<Register> stack,int k){

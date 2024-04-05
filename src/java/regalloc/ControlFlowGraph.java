@@ -34,6 +34,9 @@ public class ControlFlowGraph {
     private void buildGraph(AssemblyProgram.Section section){
         List<AssemblyItem> items =new ArrayList<>(section.items.stream()
                 .filter(i->!(i instanceof Comment || i instanceof Directive)).toList());
+        if(items.isEmpty()){
+            return;
+        }
         root= new Node(items.removeFirst());
         Node previous = root;
 
@@ -153,7 +156,9 @@ public class ControlFlowGraph {
         visited=new HashMap<>();
         nodeCnt=0;
         this.writer=writer;
-        visit(root);
+        if(root != null) {
+            visit(root);
+        }
     }
 
     private String visit(Node n){
@@ -188,6 +193,9 @@ public class ControlFlowGraph {
     public List<Node> getNodesReversePreOrder() {
         HashSet<Node>visited = new HashSet<>();
         LinkedList<Node> queue = new LinkedList<>();
+        if (root == null){
+            return queue;
+        }
         dfs(root,visited,queue);
         Collections.reverse(queue);
         return queue;

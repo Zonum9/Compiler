@@ -1,5 +1,6 @@
 import gen.asm.AssemblyParser;
 import gen.asm.AssemblyProgram;
+import gen.asm.Instruction;
 import lexer.Tokeniser;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -2588,7 +2590,8 @@ public class Part3and4Tests {
                     1,"16",
                     2,"360",
                     3,"9977",
-                    4,"198"
+                    4,"198",
+                    5,"360720"
             );
             for (int i = 0; i < fileCount; i++) {
                 System.out.println("------------ Test "+i+"------------");
@@ -2601,6 +2604,8 @@ public class Part3and4Tests {
                 String expectedOutput = outputs.getOrDefault(i,"");
 
                 File f= File.createTempFile("temp",".asm");
+
+                Utils.displayMemoryAccessCount(asm);
                 asm.print(new PrintWriter(f));
                 asm.print(new PrintWriter("src/test/asmFiles/out.asm"));
                 Process process = new ProcessBuilder(
@@ -2626,6 +2631,7 @@ public class Part3and4Tests {
 
     void assertCorrectOutput(String program,String expectedOutput, int expectedExitCode, String input){
         AssemblyProgram p = Utils.programStringToASMObj(program, mode,print);
+        Utils.displayMemoryAccessCount(p);
         try {
             File f= File.createTempFile("temp",".asm");
             p.print(new PrintWriter(f));
