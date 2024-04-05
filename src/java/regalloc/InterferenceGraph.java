@@ -52,7 +52,7 @@ public class InterferenceGraph {
                                         p1.getValue().stream().filter(x -> !removed.contains(x)).count(),
                                         p2.getValue().stream().filter(x -> !removed.contains(x)).count()
                                 );
-                                if (comp!=0L)
+                                if (comp!=0)
                                     return comp;
                                 return -Long.compare(regUseCount.get(p1.getKey()),regUseCount.get(p2.getKey()));
                             }
