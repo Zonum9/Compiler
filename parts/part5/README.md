@@ -258,7 +258,7 @@ We will not mark based on the AST printer; however, modifying your AST printer t
 ## 8. Name Analysis
 
 A class can have multiple fields and method declarations inside its scope and inherits from another class.
-The body of a class cannot contain nested classes, or redeclared fields and methods with the same name.
+The body of a class cannot redeclare fields and methods with the same name.
 Class declarations are made in the global scope.
 
  
