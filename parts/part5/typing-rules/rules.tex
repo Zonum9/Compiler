@@ -5,6 +5,7 @@
 
 \usepackage{mathpartir}
 \usepackage{amssymb}
+\usepackage{xcolor}
 
 \title{\vspace{-2ex}Typing rules for MiniC\vspace{-2ex}}
 \date{}
@@ -96,7 +97,32 @@
 
 % FieldAccessExpr
 \begin{mathpar}
-\inferrule*[left={FieldAccessExpr(\textup{e,fieldName})}]{\Gamma \vdash e : \textbf{StructType}_{fieldName : \textbf{T}}}{\Gamma \vdash e.fieldName : \textbf{T} }
+\color{red}
+\inferrule*[left={FieldAccessExpr(\textup{e,fieldName})}]{\Gamma \vdash e : \textbf{ClassType, StructType}_{fieldName : \textbf{T}}}{\Gamma \vdash e.fieldName : \textbf{T} }
+\end{mathpar}
+
+
+% instanceFuncall
+\begin{mathpar}
+\color{red}
+\inferrule*[left={InstanceFunCallExpr(\textup{e,f})}]{
+\Gamma \vdash e : \textbf{ClassType}
+\and
+\Gamma \vdash f: (U_1, \ldots, U_n) \rightarrow \textbf{T}
+\and
+\Gamma \vdash x_1 : U_1
+\and
+\ldots
+\and
+\Gamma \vdash x_n : U_n
+%
+}{\Gamma \vdash e.f(x_1, \ldots, x_n) : \textbf{T}}
+\end{mathpar}
+
+% New instance
+\begin{mathpar}
+    \color{red}
+    \inferrule*[left=NewInstance(\textup{C})]{\vdash \langle C : \textbf{CT}\in\textbf{ClassType}\rangle \in{\Gamma} }{\Gamma \vdash new\ C() : \textbf{CT}}
 \end{mathpar}
 
 % ValueAtExpr
@@ -118,6 +144,13 @@
 % TypeCastExpr
 \begin{mathpar}
 \inferrule*[left={TypeCastExpr(char to int)}]{\Gamma \vdash e : \textbf{char}}{\Gamma \vdash \ (\textbf{int})e : \textbf{int} }
+\end{mathpar}
+
+
+% TypeCastExpr for class
+\begin{mathpar}
+\color{red}
+\inferrule*[left={TypeCastExpr(subclass to ancestor class)}]{\Gamma \vdash e : \textbf{T}_\textbf{1} \\ \textbf{T}_\textbf{1} <: \textbf{T}_\textbf{2}}{\Gamma \vdash \ (\textbf{T}_\textbf{2})e : \textbf{T}_\textbf{2} }
 \end{mathpar}
 
 
