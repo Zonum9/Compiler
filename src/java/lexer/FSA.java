@@ -101,6 +101,9 @@ public class FSA {
         populateMapKeywords("SIZEOF");
         populateMapKeywords("CONTINUE");
         populateMapKeywords("BREAK");
+        populateMapKeywords("CLASS");
+        populateMapKeywords("NEW");
+        populateMapKeywords("EXTENDS");
     }
 
 
@@ -125,9 +128,9 @@ public class FSA {
             scanner.next();
             currentData.append(c);
         }
-        //if the state is identifier but the loop ended, it means eof was reached. State should thus be identifier final
-        if (currentState== State.IDENTIFIER){
-            currentState=State.IDENTIFIER_F;
+        //If the loop ended, it means eof was reached. Make sure we have proper final states
+        if (!scanner.hasNext() && !finalStates.contains(currentState) && currentState!= State.INVALID){ //fixme not sure if this is correct
+            currentState=transitionMap.get(new Key(currentState,' '));
         }
 
         if (currentState == State.INVALID || !finalStates.contains(currentState))
@@ -156,7 +159,10 @@ public class FSA {
         State.CONTINUE_F,
         State.BREAK_F,
         State.IDENTIFIER_F,
-        State.IF_F
+        State.IF_F,
+        State.CLASS_F,
+        State.NEW_F,
+        State.EXTENDS_F
     );
 
     private enum State{
@@ -237,6 +243,25 @@ public class FSA {
         BREA,
         BREAK,
         BREAK_F,
+
+        CL,
+        CLA,
+        CLAS,
+        CLASS,
+        CLASS_F,
+
+        N,
+        NE,
+        NEW,
+        NEW_F,
+
+        EX,
+        EXT,
+        EXTE,
+        EXTEN,
+        EXTEND,
+        EXTENDS,
+        EXTENDS_F,
 
         INVALID
     }

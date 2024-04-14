@@ -124,11 +124,15 @@ public class Parser  extends CompilerPass {
         parseIncludes();
 
         List<Decl> decls = new ArrayList<>();
-        while (accept(STRUCT, INT, CHAR, VOID)) {
+        while (accept(STRUCT, INT, CHAR, VOID,CLASS)) {
             if (token.category == STRUCT &&
                     lookAhead(1).category == IDENTIFIER &&
                     lookAhead(2).category == LBRA) {
                 decls.add(parseStructDecl());
+            }
+            else if (accept(CLASS) && lookAhead(2).category == EXTENDS
+                    || lookAhead(2).category==LBRA){
+                decls.add(parseClassDecl());
             }
             //if this fails, then the program is automatically not valid, since
             //we must have a variable declaration, or a function or a struct declaration
@@ -148,13 +152,39 @@ public class Parser  extends CompilerPass {
         return new Program(decls);
     }
 
+    private ClassDecl parseClassDecl() {
+        ClassType type = (ClassType) parseType();
+        Optional<ClassType> extension= Optional.empty();
+        if(accept(EXTENDS)){
+            nextToken();
+            extension= Optional.of(new ClassType(expect(IDENTIFIER).data));
+        }
+        expect(LBRA);
+        List<Decl> decls = new ArrayList<>();
+        while (accept(INT, CHAR, VOID,CLASS)) {
+            Type t=parseType();
+            //current token should be an identifier
+            //a left parenthesis must mean a function
+            if(lookAhead(1).category == LPAR) {
+                decls.add(parseFunc(t,false));
+            }else{
+                decls.add(parseVarDeclaration(t));
+            }
+        }
+        expect(RBRA);
+        return new ClassDecl(type,extension,decls);
+    }
+
     private Decl parseFunc(Type funType){
+        return parseFunc(funType,true);
+    }
+    private Decl parseFunc(Type funType, boolean includeProtos){
         String name=expect(IDENTIFIER).data;
         expect(LPAR);
         List<VarDecl> params = new ArrayList<>();
         parseParams(params);
         expect(RPAR);
-        if(accept(LBRA)) {
+        if( !includeProtos || accept(LBRA)) {
             Block block=parseBlock();
             return new FunDecl(funType,name,params,block);
         }
@@ -162,7 +192,6 @@ public class Parser  extends CompilerPass {
             expect(SC);
             return new FunProto(funType,name,params);
         }
-
     }
 
     private Block parseBlock(){
@@ -291,7 +320,7 @@ public class Parser  extends CompilerPass {
     }
     private Expr parsePred2(){
         Expr expr;
-        if (accept(PLUS,MINUS,LPAR,AND,ASTERISK)){ //"+" | "-" | typecast | addressof | valueat
+        if (accept(PLUS,MINUS,LPAR,AND,ASTERISK,NEW)){ //"+" | "-" | typecast | addressof | valueat | new
             expr= switch (token.category){
                 case PLUS -> {
                     nextToken();
@@ -303,7 +332,7 @@ public class Parser  extends CompilerPass {
                 }
                 case LPAR -> {
                     switch (lookAhead(1).category){
-                        case STRUCT,INT,CHAR,VOID: break;
+                        case STRUCT,INT,CHAR,VOID,CLASS: break;
                         default: yield parsePred1();
                     }
                     nextToken();
@@ -318,6 +347,17 @@ public class Parser  extends CompilerPass {
                 case ASTERISK -> {
                     nextToken();
                     yield new ValueAtExpr(parsePred2());
+                }
+                case NEW -> {
+                    nextToken();
+                    Type type = parseType();
+                    if (!(type instanceof ClassType ct)){
+                        error(CLASS);
+                        yield null;
+                    }
+                    expect(LPAR);
+                    expect(RPAR);
+                    yield new NewInstance(ct);
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + token.category);
             };
@@ -340,6 +380,11 @@ public class Parser  extends CompilerPass {
                 case DOT -> {
                     nextToken();
                     String fieldName= expect(IDENTIFIER).data;
+                    if (token.category == LPAR){
+                         FunCallExpr funCall=parseFunctionCall(fieldName);
+                         yield new InstanceFunCallExpr(lhs,funCall);
+                    }
+
                     yield new FieldAccessExpr(lhs,fieldName);
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + token.category);
@@ -485,7 +530,7 @@ public class Parser  extends CompilerPass {
             return;
         nextToken();//consume comma
         if (!acceptType()){
-            error(STRUCT,INT,CHAR,VOID);
+            error(STRUCT,INT,CHAR,VOID,CLASS);
         }
         parseParams(params);
     }
@@ -551,6 +596,10 @@ public class Parser  extends CompilerPass {
             nextToken();
             type = new StructType(expect(IDENTIFIER).data);
         }
+        else if (accept(CLASS)){
+            nextToken();
+            type = new ClassType(expect(IDENTIFIER).data);
+        }
         else {
             Token token = expect(INT, CHAR, VOID);
             switch (token.category) {
@@ -563,7 +612,7 @@ public class Parser  extends CompilerPass {
         return parse0orMorePointers(type);
     }
     private boolean acceptType(){
-        return accept(STRUCT,INT,CHAR,VOID);
+        return accept(STRUCT,INT,CHAR,VOID,CLASS);
     }
 
     private Type parse0orMorePointers(Type type){

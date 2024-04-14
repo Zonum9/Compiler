@@ -78,6 +78,11 @@ public class Token {
         // struct member access
         DOT, // '.'
 
+        // classes
+        CLASS,
+        NEW,
+        EXTENDS,
+
         // special tokens
         EOF,    // signal end of file
         INVALID // in case we cannot recognise a character as part of a valid token

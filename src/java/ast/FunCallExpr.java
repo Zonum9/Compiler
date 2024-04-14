@@ -3,7 +3,7 @@ package ast;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class FunCallExpr extends Expr {
+public final class FunCallExpr extends Expr { //todo support instance calls
     public final String name;
     public final List<Expr> exprs;
     public FunDecl origin; //to be added by name analyzer

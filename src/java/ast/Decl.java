@@ -1,7 +1,7 @@
 package ast;
 
 public abstract sealed class Decl implements ASTNode
-        permits FunDecl, StructTypeDecl, VarDecl, FunProto{
+        permits ClassDecl, FunDecl, FunProto, StructTypeDecl, VarDecl {
 
     public Type type;
     public String name;

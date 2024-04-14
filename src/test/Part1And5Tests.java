@@ -11,7 +11,7 @@ import java.io.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-class Part1Tests {
+class Part1And5Tests {
     @Test
     void basicTest() throws IOException {
         Tokeniser t = Utils.createTokeniserFromString("hello world");
@@ -355,6 +355,72 @@ class Part1Tests {
         assertParsePass("void fun (){" +
                 "if(x&&(x&&x)){}" +
                 "}");
+    }
+
+    /*
+     ****************************************************
+     *               PART 5 tests                       *
+     ****************************************************
+     * */
+
+    @Test void classes() throws IOException {
+        Tokeniser t = Utils.createTokeniserFromString("class extends new");
+        assertTokenEquals(t.nextToken(),CLASS);
+        assertTokenEquals(t.nextToken(),EXTENDS);
+        assertTokenEquals(t.nextToken(),NEW);
+        assertTokenEquals(t.nextToken(),EOF);
+
+        assertParsePass("""
+                class VirtualCourse extends Course {
+                    char zoomLink[200];
+                    int isOnZoom;
+
+                    void whereToAttend(){
+                        print_s((char*)"The course is going to be held on Zoom!\\n");
+                    }
+                }
+                """);
+    }
+
+    @Test void harderClasses() {
+        assertParsePass("""
+                class VirtualCourse extends Course {
+                    class X x;
+                    class Y y;
+                    class z z;
+
+                    void whereToAttend(){
+                        x.hello;
+                        x.fun();
+                        x.fun(1,2,3,4,5);
+                        print_s((char*)"The course is going to be held on Zoom!\\n");
+                    }
+                }
+                """);
+        assertParsePass("""
+                class VirtualCourse extends Course {
+                    class X x;
+                    class Y y;
+                    class z z;
+
+                    void whereToAttend(){
+                        x = new class X();
+                        x = (class Z)x;
+                        x.hello;
+                        x.fun();
+                        x.fun(1,2,3,4,5);
+                        print_s((char*)"The course is going to be held on Zoom!\\n");
+                    }
+                }
+                
+                void fun(class x x, class y y , class z z){
+                
+                }
+                class X lmao(){
+                
+                }
+                
+                """);
     }
 
     private void assertFileParseFail(String filename){
