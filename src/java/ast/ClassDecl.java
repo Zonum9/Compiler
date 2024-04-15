@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.Optional;
 
 public final class ClassDecl extends Decl{//todo
-    public final ClassType classType;
+    public final Type classType;
     public final Optional<ClassType> extension;
     public final List<VarDecl> varDecls;
     public final List<FunDecl> funDecls;
 
-    public ClassDecl(ClassType classType, Optional<ClassType> extension, List<Decl> decls) {
+    public ClassDecl(Type classType, Optional<ClassType> extension, List<Decl> decls) {
         if (decls.stream().anyMatch(x -> !(x instanceof VarDecl || x instanceof FunDecl))){
             throw new IllegalStateException("Class decl should only get var decls and fun decls");
         }

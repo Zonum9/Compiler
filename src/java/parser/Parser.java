@@ -153,7 +153,13 @@ public class Parser  extends CompilerPass {
     }
 
     private ClassDecl parseClassDecl() {
-        ClassType type = (ClassType) parseType();
+        Type type;
+        if(parseType() instanceof ClassType ct) {
+            type=ct;
+        }
+        else {
+            type = BaseType.UNKNOWN;
+        }
         Optional<ClassType> extension= Optional.empty();
         if(accept(EXTENDS)){
             nextToken();
