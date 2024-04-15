@@ -61,12 +61,12 @@ public class ASTPrinter {
                 }
                 writer.print(")");
                 writer.flush();
-                p.decls.add(
-                        new FunDecl(BaseType.VOID,"print_s",
-                        List.of(new VarDecl(new PointerType(BaseType.CHAR),"s")),
-                        new Block(Collections.emptyList(),Collections.emptyList())
-                        )
-                );
+//                p.decls.add(
+//                        new FunDecl(BaseType.VOID,"print_s",
+//                        List.of(new VarDecl(new PointerType(BaseType.CHAR),"s")),
+//                        new Block(Collections.emptyList(),Collections.emptyList())
+//                        )
+//                );
             }
 
             case VarDecl vd -> {
@@ -226,6 +226,16 @@ public class ASTPrinter {
             case ValueAtExpr valueAtExpr -> {
                 writer.print("ValueAtExpr(");
                 visit(valueAtExpr.expr);
+                writer.print(")");
+            }
+            case ASTNode x -> {
+                writer.print(x.getClass().getSimpleName()+"(");
+                String delimiter = "";
+                for (ASTNode child : x.children()) {
+                    writer.print(delimiter);
+                    delimiter = ",";
+                    visit(child);
+                }
                 writer.print(")");
             }
         }

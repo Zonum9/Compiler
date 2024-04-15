@@ -26,20 +26,20 @@ public class ExprCodeGen extends CodeGen {
         currSection.emit("----Start of "+e.getClass().getSimpleName()+"----");
         Register retReg= switch (e){
             case IntLiteral it->{
-                Register resReg= Register.Virtual.create();
-                currSection.emit(OpCode.LI,resReg,it.value);
+                Register resReg= Virtual.create();
+                currSection.emit(LI,resReg,it.value);
                 yield resReg;
             }
             case ChrLiteral chrLiteral -> {
-                Register resReg= Register.Virtual.create();
-                currSection.emit(OpCode.LI,resReg,chrLiteral.value);
+                Register resReg= Virtual.create();
+                currSection.emit(LI,resReg,chrLiteral.value);
                 yield resReg;
             }
 
             case VarExpr vx->{
-                Register resReg= Register.Virtual.create();
+                Register resReg= Virtual.create();
                 if(vx.origin.isGlobal) {
-                    currSection.emit(OpCode.LA, resReg, Label.get(vx.name));
+                    currSection.emit(LA, resReg, Label.get(vx.name));
                     currSection.emit(ProgramCodeGen.loadByteOrWord(vx), resReg, resReg, 0);
                 }else {
                     currSection.emit(ProgramCodeGen.loadByteOrWord(vx),resReg,fp,vx.origin.fpOffset);
@@ -66,13 +66,13 @@ public class ExprCodeGen extends CodeGen {
                 if(arrayAccessExpr.type instanceof ArrayType || arrayAccessExpr.type instanceof  PointerType){
                     yield arrAddress;
                 }
-                Register r = Register.Virtual.create();
+                Register r = Virtual.create();
                 currSection.emit(ProgramCodeGen.loadByteOrWord(arrayAccessExpr),r,arrAddress,0);
                 yield r;
             }
             case FieldAccessExpr fax -> {
                 Register fieldAddress = new AddrCodeGen(asmProg).visit(fax);
-                Register r = Register.Virtual.create();
+                Register r = Virtual.create();
                 currSection.emit(ProgramCodeGen.loadByteOrWord(fax),r,fieldAddress,0);
                 yield r;
             }
@@ -99,7 +99,7 @@ public class ExprCodeGen extends CodeGen {
                     currSection.emit(ADDIU,sp,sp,-decl.params.get(i).space);//allocate space on stack
 
                     if(param.type instanceof StructType st){
-                        Register previousStack= Register.Virtual.create();
+                        Register previousStack= Virtual.create();
                         currSection.emit(ADDIU,previousStack,sp,decl.params.get(i).space-4);
                         MemAllocCodeGen.copyStruct(previousStack,st,paramReg,currSection);
                     }else {
@@ -118,11 +118,11 @@ public class ExprCodeGen extends CodeGen {
                     returnReg=null;
                 }
                 else if(fun.type instanceof StructType ){//get the address of the struct
-                    returnReg=Register.Virtual.create();
+                    returnReg= Virtual.create();
                     currSection.emit(ADDIU,returnReg,sp,fun.origin.returnValueSize-4);
                 }
                 else {
-                    returnReg=Register.Virtual.create();
+                    returnReg= Virtual.create();
                     currSection.emit(ProgramCodeGen.loadByteOrWord(fun),returnReg,sp,0);
                 }
 
@@ -135,7 +135,7 @@ public class ExprCodeGen extends CodeGen {
 
             case BinOp binOp -> {
                 Register lhsReg= visit(binOp.expr1);
-                Register resultReg= Register.Virtual.create();
+                Register resultReg= Virtual.create();
                 if(binOp.op == Op.AND || binOp.op == Op.OR){
                     switch (binOp.op){
                         case OR->{
@@ -235,7 +235,7 @@ public class ExprCodeGen extends CodeGen {
                         currSection.emit("--------- equality check-------");
 
                         currSection.emit(XOR,resultReg,lhsReg,rhsReg);
-                        Register tempReg= Register.Virtual.create();
+                        Register tempReg= Virtual.create();
                         currSection.emit(LI,tempReg,1);
                         currSection.emit(SLTU,resultReg,resultReg,tempReg);
                     }
@@ -263,16 +263,20 @@ public class ExprCodeGen extends CodeGen {
             }
 
             case StrLiteral s -> {
-                Register stringAddress = Register.Virtual.create();
+                Register stringAddress = Virtual.create();
                 currSection.emit(LA,stringAddress,s.label);
                 yield stringAddress;
             }
 
             case SizeOfExpr sizeOfExpr -> {
-                Register reg = Register.Virtual.create();
+                Register reg = Virtual.create();
                 currSection.emit(LI,reg,MemAllocCodeGen.sizeofType(sizeOfExpr.sizeOfType));
                 yield reg;
             }
+            //todo
+//            default -> throw new IllegalStateException("Unexpected value: " + e);
+            case InstanceFunCallExpr instanceFunCallExpr -> null;
+            case NewInstance newInstance -> null;
         };
         currSection.emit("----End of "+e.getClass().getSimpleName()+"----");
         return retReg;
@@ -319,14 +323,14 @@ public class ExprCodeGen extends CodeGen {
         Register inner= visit(funcall.exprs.getFirst());
 
         //load args
-        currSection.emit(OpCode.ADDI,a0,inner,0);
+        currSection.emit(ADDI,a0,inner,0);
 
         //perform syscall
         syscall(currSection,code);
     }
     private void syscall(AssemblyProgram.Section currSection,int code){
-        currSection.emit(OpCode.LI,v0,code);
-        currSection.emit(OpCode.SYSCALL);
+        currSection.emit(LI,v0,code);
+        currSection.emit(SYSCALL);
     }
 
 }

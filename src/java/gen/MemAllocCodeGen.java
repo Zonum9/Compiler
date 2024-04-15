@@ -139,6 +139,7 @@ void visit(ASTNode n) {
             case UNKNOWN, NONE-> {
                 throw new IllegalStateException();
             }
+            case ClassType ignored -> 4;
         };
     }
 

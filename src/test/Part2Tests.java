@@ -57,7 +57,7 @@ public class Part2Tests {
     }
 
     @Test
-    void precedencteTest(){
+    void precedenceTest(){
         String s="void fun(){" +
                 "return 1+2/3+5 && x*11%2+3;" +
                 "}";
@@ -76,17 +76,17 @@ public class Part2Tests {
                 s);
     }
 
-//    @Test
-//    void ticTacTree(){
-//        Utils.writeASTDotFromFile(path+"textFiles/tictactoe.c");
+    @Test
+    void ticTacTree(){
+        Utils.writeASTDotFromFile(path+"textFiles/tictactoe.c");
 //        assertCorrectASTFromFile("tictacAST","tictactoe.c");
-//    }
+    }
 
-//    @Test
-//    void linkedListTree(){
-//        Utils.writeASTDotFromFile(path+"textFiles/linkedList.c");
-////        assertCorrectASTFromFile("tictacAST","linkedList.c");
-//    }
+    @Test
+    void linkedListTree(){
+        Utils.writeASTDotFromFile(path+"textFiles/linkedList.c");
+//        assertCorrectASTFromFile("tictacAST","linkedList.c");
+    }
 
     @Test
     void fibAST()  {
@@ -284,17 +284,17 @@ public class Part2Tests {
         failTypeAnalyzis("""
                 struct s{
                     void x;
-                    void y[2];                        
+                    void y[2];
                 };
                 """);
         passTypeAnalyzis("""
                 struct s{
-                    void* x;                      
+                    void* x;
                 };
                 """);
         passTypeAnalyzis("""
                 struct s{
-                    void* x;                      
+                    void* x;
                 };
                 void main(){
                     struct s s;
@@ -308,25 +308,25 @@ public class Part2Tests {
     void recursiveStruct(){
         passTypeAnalyzis("""
                 struct s{
-                    struct s *x;                    
-                };                
+                    struct s *x;
+                };
                 """);
         failTypeAnalyzis("""
                 struct s{
-                    struct s x[6];    
-                    struct s y[6][6];                 
-                };                
+                    struct s x[6];
+                    struct s y[6][6];
+                };
                 """);
         failTypeAnalyzis("""
                 struct s{
-                    struct s x;                    
-                };                
+                    struct s x;
+                };
                 """);
         passTypeAnalyzis("""
                 struct A {
                   int x;
                 };
-                                
+                
                 struct B {
                   struct A x;
                 };
@@ -505,7 +505,7 @@ public class Part2Tests {
                 int x[6];
                 char *y;
                 int b;
-                x[foo()];        
+                x[foo()];
                 }
                 """);
         failTypeAnalyzis("""
@@ -562,12 +562,12 @@ public class Part2Tests {
                 void main(){
                     int x;
                     struct foo strct;
-                    &strct.x;                    
+                    &strct.x;
                 }
                 """);
         failTypeAnalyzis("""
                 void main(){
-                    &1;                    
+                    &1;
                 }
                 """);
     }
@@ -587,7 +587,7 @@ public class Part2Tests {
                 p2=&c;
                 p3=p1;
                 p3=(int*)p2;
-                p3 = (int*)p1;               
+                p3 = (int*)p1;
                 }
                 """);
         failTypeAnalyzis("""
@@ -651,7 +651,7 @@ public class Part2Tests {
                 """);
         passTypeAnalyzis("""
                     void main(){
-                        
+                
                     }
                 """);
         passTypeAnalyzis("""
@@ -665,8 +665,8 @@ public class Part2Tests {
                     }
                 """);
         failTypeAnalyzis("""
-                    int main(){  
-                        return 'c';                      
+                    int main(){
+                        return 'c';
                     }
                 """);
     }
@@ -690,7 +690,7 @@ public class Part2Tests {
                 }
                 void main(){
                     int x;
-                    x= foo()[0];                    
+                    x= foo()[0];
                 }
                 """);
     }

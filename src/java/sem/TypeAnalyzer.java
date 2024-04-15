@@ -19,14 +19,14 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 			case Block b -> {
 				for (ASTNode c : b.children())
 					visit(c);
-				yield BaseType.NONE;
+				yield NONE;
 			}
 
 			case FunDecl fd -> {
 				for (ASTNode child: fd.children()){
 					visit(child);
 				}
-				yield BaseType.NONE;
+				yield NONE;
 			}
 
 			case Program p -> {
@@ -38,7 +38,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				for(ASTNode c: p.decls){
 					visit(c);
 				}
-				yield BaseType.NONE;
+				yield NONE;
 			}
 
 			case VarDecl vd -> {
@@ -47,7 +47,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				else {
 					visit(vd.type);
 				}
-				yield BaseType.NONE;
+				yield NONE;
 			}
 
 			case VarExpr v -> {
@@ -60,7 +60,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				if (!declaredStructTypes.containsKey(st.strTypeName))
 				{
 					error("Struct type [" + st.strTypeName + "] has not been declared");
-					yield BaseType.UNKNOWN;
+					yield UNKNOWN;
 				}
 				st.origin=declaredStructTypes.get(st.strTypeName);
 				yield st;
@@ -71,7 +71,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				String name= std.name;
 				if (declaredStructTypes.containsKey(name)) {
 					error("Struct type ["+name+"] already declared");
-					yield BaseType.UNKNOWN;
+					yield UNKNOWN;
 				}
 				declaredStructTypes.put(name,std);
 				for (VarDecl vd: std.varDecls){
@@ -80,7 +80,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 					}
 					visit(vd);
 				}
-				yield BaseType.NONE;
+				yield NONE;
 			}
 
 
@@ -89,12 +89,12 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 
 			case ArrayType arrayType -> {
 				 Type t= visit(arrayType.type);
-				 if (t == BaseType.UNKNOWN){
+				 if (t == UNKNOWN){
 					 yield t;
 				 }
 				if (t == VOID){
 					error("array of type VOID is not allowed");
-					yield BaseType.UNKNOWN;
+					yield UNKNOWN;
 				}
 				 yield arrayType;
 			}
@@ -102,7 +102,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 
 			case PointerType pointerType -> {
 				Type t= visit(pointerType.type);
-				if (t == BaseType.UNKNOWN ){
+				if (t == UNKNOWN ){
 					yield t;
 				}
 				yield pointerType;
@@ -116,13 +116,13 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 
 			case StrLiteral strLiteral -> {
 				int len= strLiteral.value.length()+1;
-				strLiteral.type = new ArrayType(BaseType.CHAR,len);
+				strLiteral.type = new ArrayType(CHAR,len);
 				yield strLiteral.type;
 			}
 
 			case ChrLiteral chrLiteral -> {
-				chrLiteral.type=BaseType.CHAR;
-				yield BaseType.CHAR;
+				chrLiteral.type= CHAR;
+				yield CHAR;
 			}
 
 
@@ -376,12 +376,16 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 			}
 
 			//done?
-			case FunProto funProto -> BaseType.NONE;
-			case Op op -> BaseType.NONE;
+			case FunProto funProto -> NONE;
+			case Op op -> NONE;
 			case Break aBreak -> NONE;
 			case Continue aContinue -> NONE;
 
-
+			//todo
+            case ClassDecl classDecl -> null;
+            case ClassType classType -> null;
+            case InstanceFunCallExpr instanceFunCallExpr -> null;
+            case NewInstance newInstance -> null;
         };
 	}
 
@@ -448,7 +452,11 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				StructType x2 = (StructType) t2;
 				return x1.strTypeName.equals(x2.strTypeName);
 			}
-		}
+            case ClassType x1 -> {
+				ClassType x2 = (ClassType) t2;
+				return x1.identifier.equals(x2.identifier);
+            }
+        }
 	}
 
 
