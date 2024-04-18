@@ -129,12 +129,7 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 				if (s != null)
 					error("["+s.name + "] has already been declared in this scope");
 				else {
-//					s = scope.lookupGlobal(vd.name); //check that no function exists with this name
-//					if(!(s instanceof FunProtoSymbol) && !(s instanceof FunSymbol))
 					scope.put(new VarSymbol(vd));
-//					else{
-//						error("var decl attempting to shadow function ["+s.name + "]");
-//					}
 				}
 			}
 
@@ -180,6 +175,19 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 				scope=oldScope;
 			}
 
+			case ClassDecl cdl->{
+				Scope oldScope = scope;
+				scope= new Scope(oldScope);
+				for(ASTNode child:cdl.children()){
+					visit(child);
+				}
+				scope=oldScope;
+			}
+			case InstanceFunCallExpr inst -> visit(inst.self);
+			//todo
+
+//			case NewInstance newI->{}
+//			case ClassType ctp->{}
 
 
 			default -> {

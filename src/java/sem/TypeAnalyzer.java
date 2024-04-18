@@ -4,11 +4,13 @@ import ast.*;
 
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Optional;
 
 import static ast.BaseType.*;
 
 public class TypeAnalyzer extends BaseSemanticAnalyzer {
 	HashMap<String,StructTypeDecl>declaredStructTypes = new HashMap<>();
+	HashMap<String,ClassDecl>declaredClasses = new HashMap<>();
 
 	public Type visit(ASTNode node) {
 		return switch(node) {
@@ -220,28 +222,51 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 
 			case FieldAccessExpr fieldAccessExpr -> {
 				Type lhs = visit(fieldAccessExpr.expr);
-				if (lhs instanceof StructType st){
-					if(!declaredStructTypes.containsKey(st.strTypeName)){
-						error(String.format("Struct type [%s] does not exist",st.strTypeName));
-						fieldAccessExpr.type=UNKNOWN;
+				yield switch (lhs) {
+					case StructType st -> {
+						if (!declaredStructTypes.containsKey(st.strTypeName)) {
+							error(String.format("Struct type [%s] does not exist", st.strTypeName));
+							fieldAccessExpr.type = UNKNOWN;
+							yield UNKNOWN;
+						}
+						StructTypeDecl decl = declaredStructTypes.get(st.strTypeName);
+						st.origin = decl;
+						String desiredField = fieldAccessExpr.fieldName;
+						for (VarDecl field : decl.varDecls) {
+							if (desiredField.equals(field.name)) {
+								fieldAccessExpr.type = field.type;
+								yield field.type;
+							}
+						}
+						error(String.format("Trying to access field [%s], which does not exist", desiredField));
+						fieldAccessExpr.type = UNKNOWN;
 						yield UNKNOWN;
 					}
-					StructTypeDecl decl = declaredStructTypes.get(st.strTypeName);
-					st.origin=decl;
-					String desiredField = fieldAccessExpr.fieldName;
-					for (VarDecl field: decl.varDecls){
-						if (desiredField.equals(field.name)){
-							fieldAccessExpr.type=field.type;
-							yield field.type;
+					case ClassType ct->{
+						if (!declaredClasses.containsKey(ct.identifier)) {
+							error(String.format("Class [%s] does not exist", ct.identifier));
+							fieldAccessExpr.type = UNKNOWN;
+							yield UNKNOWN;
 						}
+						ClassDecl decl = declaredClasses.get(ct.identifier);
+						ct.origin = decl;
+						String desiredField = fieldAccessExpr.fieldName;
+						Optional<VarDecl> field;
+						if ((field= classHirHasField(decl,desiredField)).isPresent()){
+							fieldAccessExpr.type=field.get().type;
+							yield field.get().type;
+						}
+						error(String.format("Trying to access field [%s], which does not exist", desiredField));
+						fieldAccessExpr.type = UNKNOWN;
+						yield UNKNOWN;
 					}
-					error(String.format("Trying to access field [%s], which does not exist",desiredField));
-					fieldAccessExpr.type=UNKNOWN;
-					yield UNKNOWN;
-				}
-				error(String.format("Trying to access fields of non struct type. Actual type is [%s]",lhs));
-				fieldAccessExpr.type=UNKNOWN;
-				yield UNKNOWN;
+
+					default -> {
+						error(String.format("Trying to access fields of non struct/class type. Actual type is [%s]", lhs));
+						fieldAccessExpr.type = UNKNOWN;
+						yield UNKNOWN;
+					}
+				};
 			}
 			case ValueAtExpr valueAtExpr -> {
 				Type exprType= visit(valueAtExpr.expr);
@@ -271,7 +296,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 
 			case TypecastExpr typecastExpr -> {
 				Type rhs=visit(typecastExpr.expr);
-				Type t= switch (typecastExpr.castType){
+				Type t= switch (visit(typecastExpr.castType)){
 					case INT -> {//casting to int
 						if (rhs != CHAR){
 							error(String.format("Cannot do casts type [%s] to int", rhs));
@@ -279,6 +304,14 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 						}
 						yield INT;
 					}
+					case ClassType ct->{
+						if (rhs instanceof ClassType x && isInheritor(x,ct)){
+							yield ct;
+						}
+						error(String.format("Cannot do casts type [%s] to class [%s]]", rhs,ct.identifier));
+						yield UNKNOWN;
+					}
+
 					case PointerType pt->{//casting to pointer
 						switch (rhs){
 							case ArrayType x->{//casting an array to a pointer only if same type
@@ -344,7 +377,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 					yield UNKNOWN;
 				}
 				Type stmpType= visit(anIf.stmt);
-				if (!anIf.els.isPresent())
+				if (anIf.els.isEmpty())
 					yield stmpType;
 				Type elsType= visit(anIf.els.get());
 				if(elsType == UNKNOWN || stmpType == UNKNOWN)
@@ -362,7 +395,7 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 					}
 					yield NONE;
 				}
-				if (!aReturn.expr.isPresent()) {
+				if (aReturn.expr.isEmpty()) {
 					error(String.format("Empty return statement for function of type [%s]",aReturn.functionReturnType));
 					yield UNKNOWN;
 				}
@@ -375,19 +408,123 @@ public class TypeAnalyzer extends BaseSemanticAnalyzer {
 				yield NONE;
 			}
 
+			case ClassType ct ->{
+				if (!declaredClasses.containsKey(ct.identifier))
+				{
+					error("Class [" + ct.identifier + "] has not been declared");
+					yield UNKNOWN;
+				}
+				ct.origin=declaredClasses.get(ct.identifier);
+				yield ct;
+			}
+
+
+			case ClassDecl classDecl -> {
+				String name= classDecl.name;
+				if (declaredClasses.containsKey(name)) {
+					error("Class ["+name+"] already declared");
+					yield UNKNOWN;
+				}
+				declaredClasses.put(name,classDecl);
+				if(classDecl.extension.isPresent()){
+					ClassType ext = classDecl.extension.get();
+					if(!isLegalExtension(name,ext.identifier)){
+						error(String.format("Illegal extension of class [%s]",ext.identifier));
+						yield UNKNOWN;
+					}
+				}
+				for(FunDecl fd: classDecl.funDecls){
+					informReturnsOfFuncType(fd);
+				}
+				for (ASTNode child: classDecl.children()){
+					visit(child);
+				}
+				yield NONE;
+			}
+			case NewInstance newInstance -> visit(newInstance.classType);
+
+
+
+			case InstanceFunCallExpr classFunCall -> {
+				Type lhs = visit(classFunCall.self);
+				if (!(lhs instanceof ClassType ct)){
+					error("Trying to do instance function call on non class type");
+					yield UNKNOWN;
+				}
+				ClassDecl origin = ct.origin;
+				Optional<FunDecl> optFun= classHirHasFun(origin,classFunCall.fun.name);
+				if(optFun.isEmpty()){
+					error(String.format("Class [%s] does not have function called [%s]",ct.identifier,classFunCall.fun.name));
+					yield UNKNOWN;
+				}
+				classFunCall.fun.origin=optFun.get();
+				yield visit(classFunCall.fun);
+			}
+
+
 			//done?
 			case FunProto funProto -> NONE;
 			case Op op -> NONE;
 			case Break aBreak -> NONE;
 			case Continue aContinue -> NONE;
 
-			//todo
-            case ClassDecl classDecl -> null;
-            case ClassType classType -> null;
-            case InstanceFunCallExpr instanceFunCallExpr -> null;
-            case NewInstance newInstance -> null;
+
         };
 	}
+
+	private Optional<VarDecl> classHirHasField(ClassDecl decl, String desiredField) {
+		Optional<VarDecl> opt = decl.varDecls.stream().filter(x-> x.name.equals(desiredField)).findAny();
+		if (opt.isEmpty()) {
+			if (decl.extension.isEmpty()) {
+				return opt;
+			}
+			return classHirHasField(declaredClasses.get(decl.extension.get().identifier),desiredField);
+		}
+		return opt;
+	}
+	private Optional<FunDecl> classHirHasFun(ClassDecl decl, String desiredFun) {
+		Optional<FunDecl> opt = decl.funDecls.stream().filter(x-> x.name.equals(desiredFun)).findAny();
+		if (opt.isEmpty()) {
+			if (decl.extension.isEmpty()) {
+				return opt;
+			}
+			return classHirHasFun(declaredClasses.get(decl.extension.get().identifier),desiredFun);
+		}
+		return opt;
+	}
+
+	private boolean isInheritor(ClassType potentialChild, ClassType parent) {
+		ClassDecl c = declaredClasses.get(potentialChild.identifier);
+		ClassDecl p = declaredClasses.get(parent.identifier);
+		if (c==null || p == null){
+			error("undeclared classes");
+			return false;
+		}
+		if(potentialChild.identifier.equals(parent.identifier)){
+			return true;
+		}
+		if (c.extension.isEmpty()){
+			return false;
+		}
+		if (c.extension.get().identifier.equals(parent.identifier)){
+			return true;
+		}
+		return isInheritor(c.extension.get(),parent);
+
+	}
+
+	private boolean isLegalExtension(String classToCheck, String extendedClass) {
+		if(extendedClass.equals(classToCheck)){
+			return false;
+		}
+		if (!declaredClasses.containsKey(extendedClass)){
+			return false;
+		}
+		return declaredClasses.get(extendedClass)
+				.extension
+				.map(nextExtended -> isLegalExtension(classToCheck, nextExtended.identifier)).orElse(true);
+
+    }
 
 	private boolean isRecursiveStructType(Type type,String name) {
 		return switch (type){

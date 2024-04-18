@@ -153,12 +153,12 @@ public class Parser  extends CompilerPass {
     }
 
     private ClassDecl parseClassDecl() {
-        Type type;
+        ClassType type;
         if(parseType() instanceof ClassType ct) {
             type=ct;
         }
         else {
-            type = BaseType.UNKNOWN;
+            type = null;
         }
         Optional<ClassType> extension= Optional.empty();
         if(accept(EXTENDS)){
@@ -516,7 +516,7 @@ public class Parser  extends CompilerPass {
     }
     private boolean acceptExpression(){
         return accept( LPAR,IDENTIFIER,INT_LITERAL,MINUS,PLUS, //exp
-                CHAR_LITERAL,STRING_LITERAL, ASTERISK,AND,SIZEOF); //exp
+                CHAR_LITERAL,STRING_LITERAL, ASTERISK,AND,SIZEOF,NEW); //exp
     }
 
     private void parseParams(List<VarDecl> params){

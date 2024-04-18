@@ -694,6 +694,199 @@ public class Part2Tests {
                 }
                 """);
     }
+    @Test void classExtensions(){
+        failTypeAnalyzis("""
+                class C{
+                    int x;
+                    int y;
+                    int fun(){
+                        return x+y;
+                    }
+                }
+                void main(){
+                    class C c;
+                    c = new class C();
+                    x.z;
+                }
+                """);
+        failTypeAnalyzis("""
+                class C{
+                }
+                class C{
+                }
+                """);
+        failTypeAnalyzis("""
+                class C extends C{
+                }
+                """);
+        failTypeAnalyzis("""
+                class C extends A{
+                }
+                """);
+        passTypeAnalyzis("""
+                class C{
+                }
+                class A extends C{
+                }
+                """);
+        passTypeAnalyzis("""
+                class C{
+                }
+                class A extends C{
+                }
+                void main(){
+                    class C c;
+                    class A a;
+                    c = (class C) a;
+                }
+                """);
+        failTypeAnalyzis("""
+                class C{
+                }
+                class A {
+                }
+                void main(){
+                    class C c;
+                    class A a;
+                    c = (class C) a;
+                }
+                """);
+        failTypeAnalyzis("""
+                class C{
+                }
+                class A {
+                }
+                void main(){
+                    class C c;
+                    class X a;
+                }
+                """);
+    }
+    @Test void funsAndClasses(){
+        passTypeAnalyzis("""
+                class c{
+                    int x; int y;
+                }
+                class c fun(class c c){
+                    return c;
+                }
+                int fun2(int x){
+                    return x;
+                }
+                void main(){
+                    class c c;
+                    print_i(fun2((new class c()).x));
+                    print_i(fun(new class c()).x);
+                }
+                """);
+    }
+    @Test void accessingParentFields(){
+        passTypeAnalyzis("""
+                class Parent{
+                    int x;
+                    int fun(){
+                        return 0;
+                    }
+                }
+                class Child extends Parent{
+                
+                }
+                void main(){
+                    class Child c;
+                    c = new class Child();
+                    print_i(c.x);
+                    print_i(c.fun());
+                }
+                """);
+    }
+    @Test void classes(){
+        passTypeAnalyzis("""
+                class C{
+                    int x;
+                    int y;
+                    class C next;
+                    void init(){
+                        x=2;
+                        y=2;
+                    }
+                    int fun(){
+                        return x+y;
+                    }
+                }
+                void main(){
+                    class C c;
+                    c = new class C();
+                    c= (class C)c;
+                    c.init();
+                    c.y;
+                    c.x;
+                    print_i(c.fun());
+                }
+                """);
+        failTypeAnalyzis("""
+                class C{
+                    int x;
+                    int y;
+                    int fun(){
+                        return x+y;
+                    }
+                }
+                void main(){
+                    class C c;
+                    c = new class C();
+                    c.z;
+                }
+                """);
+        failTypeAnalyzis("""
+                class C{
+                    int x;
+                    int y;
+                    int fun(){
+                        return x+y;
+                    }
+                }
+                void main(){
+                    class C c;
+                    c = new class C();
+                    c.xun();
+                }
+                """);
+        failTypeAnalyzis("""
+                class C{
+                    int x;
+                    int y;
+                    int fun(){
+                        return x+y;
+                    }
+                }
+                void main(){
+                    fun();
+                }
+                """);
+
+        passTypeAnalyzis("""
+                class C{
+                    int x;
+                    int y;
+                    class C next;
+                    void init(){
+                        x=2;
+                        y=2;
+                    }
+                    int fun(){
+                        return x+y;
+                    }
+                }
+                void main(){
+                    class C c;
+                    c = new class C();
+                    c.init();
+                    c.y;
+                    c.x;
+                    print_i(c.fun());
+                }
+                """);
+    }
 
 
 

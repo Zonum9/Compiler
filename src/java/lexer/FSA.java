@@ -129,7 +129,7 @@ public class FSA {
             currentData.append(c);
         }
         //If the loop ended, it means eof was reached. Make sure we have proper final states
-        if (!scanner.hasNext() && !finalStates.contains(currentState) && currentState!= State.INVALID){ //fixme not sure if this is correct
+        if (!scanner.hasNext() && !finalStates.contains(currentState) && currentState!= State.INVALID){
             currentState=transitionMap.get(new Key(currentState,' '));
         }
 
