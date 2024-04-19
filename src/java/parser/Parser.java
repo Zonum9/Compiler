@@ -130,8 +130,8 @@ public class Parser  extends CompilerPass {
                     lookAhead(2).category == LBRA) {
                 decls.add(parseStructDecl());
             }
-            else if (accept(CLASS) && lookAhead(2).category == EXTENDS
-                    || lookAhead(2).category==LBRA){
+            else if (accept(CLASS) && lookAhead(1).category == IDENTIFIER
+                    &&(lookAhead(2).category == EXTENDS || lookAhead(2).category==LBRA)){
                 decls.add(parseClassDecl());
             }
             //if this fails, then the program is automatically not valid, since
@@ -153,13 +153,7 @@ public class Parser  extends CompilerPass {
     }
 
     private ClassDecl parseClassDecl() {
-        ClassType type;
-        if(parseType() instanceof ClassType ct) {
-            type=ct;
-        }
-        else {
-            type = null;
-        }
+        ClassType type = (ClassType) parseType();
         Optional<ClassType> extension= Optional.empty();
         if(accept(EXTENDS)){
             nextToken();
