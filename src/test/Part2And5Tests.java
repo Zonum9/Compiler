@@ -9,7 +9,7 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-public class Part2Tests {
+public class Part2And5Tests {
 
     String path= "src/test/";
     @Test
@@ -694,6 +694,11 @@ public class Part2Tests {
                 }
                 """);
     }
+    /*
+     ****************************************************
+     *               PART 5 tests                       *
+     ****************************************************
+     * */
     @Test void classExtensions(){
         failTypeAnalyzis("""
                 class C{
@@ -781,6 +786,17 @@ public class Part2Tests {
                 """);
     }
     @Test void accessingParentFields(){
+        failTypeAnalyzis("""
+                class Parent{
+                    int x;
+                    int fun(){
+                        return 0;
+                    }
+                }
+                class Child extends Parent{
+                    int x;
+                }
+                """);
         passTypeAnalyzis("""
                 class Parent{
                     int x;
@@ -793,12 +809,97 @@ public class Part2Tests {
                 }
                 void main(){
                     class Child c;
+                    class Parent p;
                     c = new class Child();
+                    p = (class Parent)c;
                     print_i(c.x);
                     print_i(c.fun());
+                    print_i(p.x);
+                    print_i(p.fun());
+                }
+                """);
+        failTypeAnalyzis("""
+                class GrandParent{
+                    int x;
+                    int fun(){
+                        return 0;
+                    }
+                }
+                class Parent extends GrandParent{
+                    int x;
+                    int fun(){
+                        return 0;
+                    }
+                }
+                class Child extends Parent{
+                
+                }
+                void main(){
+                    class Child c;
+                    class Parent p;
+                    c = new class Child();
+                    p = (class Parent)c;
+                    print_i(c.x);
+                    print_i(c.fun());
+                    print_i(p.x);
+                    print_i(p.fun());
+                }
+                """);
+        passTypeAnalyzis("""
+                class GrandParent{
+                    int x;
+                    int fun(){
+                        return 0;
+                    }
+                }
+                class Parent extends GrandParent{
+                    int fun(){
+                        return 0;
+                    }
+                    int parentfun(){return 0;}
+                }
+                class Child extends Parent{
+                    int childFun(){return 0;}
+                }
+                void main(){
+                    class Child c;
+                    class Parent p;
+                    c = new class Child();
+                    p = (class Parent)c;
+                    print_i(c.x);
+                    print_i(c.fun());
+                    c.parentfun();
+                    print_i(p.x);
+                    print_i(p.fun());
                 }
                 """);
     }
+
+    @Test void overridingMethods(){
+
+        passTypeAnalyzis("""
+                class a{
+                    int y;
+                    void foo(){}
+                    void bar(){}
+                    int fun(){return y;}
+                }
+                class b extends a{
+                    int foo(){
+                        bar();
+                        return y;
+                    }
+                }
+                void main(){
+                    class b x;
+                    x = new class b();
+                    x.y=1;
+                    print_i(x.foo());
+                    print_i(x.fun());
+                }
+                """);
+    }
+
     @Test void classes(){
         passTypeAnalyzis("""
                 class C{

@@ -10,6 +10,7 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 
 	Scope scope = new Scope(); //original outer scope has null value for its scope field
 	HashMap<String,List<FunCallExpr>> hangingFunCallRefs = new HashMap<>();
+	HashMap<String,ClassDecl> classDecls = new HashMap<>();
 	public void visit(ASTNode node) {
 		switch(node) {
 			case null -> throw new IllegalStateException("Unexpected null value");
@@ -176,15 +177,36 @@ public class NameAnalyzer extends BaseSemanticAnalyzer {
 			}
 
 			case ClassDecl cdl->{
+				classDecls.put(cdl.name,cdl);
 				Scope oldScope = scope;
 				scope= new Scope(oldScope);
+				cdl.extension.ifPresent(x-> {
+					ClassDecl s = classDecls.get(x.identifier);
+					if (s ==null || s.name.equals(cdl.name)){
+						error(String.format("Illegal extension to [%s]",x.identifier));
+					}
+					else {
+						cdl.parentFunDecls.addAll(s.funDecls);
+						cdl.parentFunDecls.addAll(s.parentFunDecls);
+
+						cdl.parentVarDecls.addAll(s.varDecls);
+						cdl.parentVarDecls.addAll(s.parentVarDecls);
+						for(VarDecl vd : cdl.parentVarDecls){
+							scope.put(new VarSymbol(vd));
+						}
+						for(FunDecl fd:cdl.parentFunDecls){
+							if(cdl.funDecls.stream().noneMatch(fun->fun.name.equals(fd.name))){
+								scope.put(new FunSymbol(fd));
+							}
+						}
+					}
+				});
 				for(ASTNode child:cdl.children()){
 					visit(child);
 				}
 				scope=oldScope;
 			}
 			case InstanceFunCallExpr inst -> visit(inst.self);
-			//todo
 
 //			case NewInstance newI->{}
 //			case ClassType ctp->{}

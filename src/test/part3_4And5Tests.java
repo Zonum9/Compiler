@@ -1,6 +1,5 @@
 import gen.asm.AssemblyParser;
 import gen.asm.AssemblyProgram;
-import gen.asm.Instruction;
 import lexer.Tokeniser;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -10,13 +9,12 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-public class Part3and4Tests {
+public class part3_4And5Tests {
 
     @Test
     void printing1(){
