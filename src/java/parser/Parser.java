@@ -177,6 +177,9 @@ public class Parser  extends CompilerPass {
                 decls.add(parseVarDeclaration(t));
             }
         }
+        if (decls.stream().anyMatch(x -> !(x instanceof VarDecl || x instanceof FunDecl))){
+            error();
+        }
         expect(RBRA);
         return new ClassDecl(type,extension,decls);
     }

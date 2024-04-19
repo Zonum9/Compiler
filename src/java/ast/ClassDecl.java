@@ -14,9 +14,7 @@ public final class ClassDecl extends Decl{//todo
     public List<FunDecl> parentFunDecls= new ArrayList<>();
 
     public ClassDecl(ClassType classType, Optional<ClassType> extension, List<Decl> decls) {
-        if (decls.stream().anyMatch(x -> !(x instanceof VarDecl || x instanceof FunDecl))){
-            throw new IllegalStateException("Class decl should only get var decls and fun decls");
-        }
+
         type = classType;
         name = classType.identifier;
         this.extension = extension;
